@@ -1,0 +1,113 @@
+name: Build & Publish Latest OSM Snapshots
+
+on:
+  schedule:
+    - cron: '0 1 * * *'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: openplanetdata-hetzner-ccx43
+
+    steps:
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 21
+
+      - name: Set date tag
+        id: date
+        run: echo "tag=$(date '+%Y%m%d')" >>"$GITHUB_OUTPUT"
+
+      - name: Install core tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y aria2 osmctools osmium-tool unzip
+
+      - name: Install gol (latest release)
+        run: |
+          set -euo pipefail
+
+          tmp=$(mktemp -d)
+          url=$(curl -sSL https://api.github.com/repos/clarisma/gol-tool/releases/latest \
+                  | grep -oP '"browser_download_url":\s*"\K[^"]+gol-tool-[^"]+\.zip')
+          curl -L "$url" -o "$tmp/gol.zip"
+
+          # unpack under /opt
+          sudo unzip -q "$tmp/gol.zip" -d /opt
+
+          # /opt/gol-tool → /opt/gol-tool-<version>
+          latest=$(ls -d /opt/gol-tool-* | sort -V | tail -n1)
+          sudo ln -sfn "$latest" /opt/gol-tool
+
+          # tiny wrapper on PATH
+          sudo tee /usr/local/bin/gol >/dev/null <<'EOF'
+          #!/usr/bin/env bash
+          exec /opt/gol-tool/bin/gol "$@"
+          EOF
+          sudo chmod +x /usr/local/bin/gol
+
+          gol --version
+
+      - name: Install rclone
+        env:
+          RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}
+        run: |
+          install_rclone() {
+            mkdir -p ~/.config/rclone
+            [ -n "$RCLONE_CONFIG_DATA" ] && echo "$RCLONE_CONFIG_DATA" > ~/.config/rclone/rclone.conf
+            export RCLONE_CONFIG=~/.config/rclone/rclone.conf
+            command -v rclone >/dev/null || curl https://rclone.org/install.sh | sudo bash
+            rclone --version
+          }
+          install_rclone
+
+      - name: Download latest OSM planet
+        run: |
+          aria2c --seed-time=0 \
+            https://planet.openstreetmap.org/pbf/planet-latest.osm.pbf.torrent \
+            --index-out=1=osm-planet-latest.pbf
+
+      - name: Generate new PBF version with latest changes
+        run: |
+          f="osm-planet-${{ steps.date.outputs.tag }}.pbf"
+          time osmupdate osm-planet-latest.pbf "$f" --hour --verbose
+          rm osm-planet-latest.pbf
+          time shasum -a 256 "$f" >"$f.sha256"
+          stat -c '%s %W %Z' "$f" | \
+            awk '{print "{\"created\":"($2==0?$3:$2)",\"size\":"$1"}"}' >"$f.metadata"
+
+      - name: Upload PBF files to R2
+        env:
+          RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}
+        run: |
+          date=${{ steps.date.outputs.tag }}
+          remote="openplanetdata-r2"
+          rclone copyto "osm-planet-$date.pbf"          "$remote:osm/planet/pbf/osm-planet-latest.pbf"
+          rclone copyto "osm-planet-$date.pbf.metadata" "$remote:osm/planet/pbf/osm-planet-latest.pbf.metadata"
+          rclone copyto "osm-planet-$date.pbf.sha256"   "$remote:osm/planet/pbf/osm-planet-latest.pbf.sha256"
+          rm -f osm-planet-$date.pbf.metadata
+          rm -f osm-planet-$date.pbf.sha256
+
+      - name: Build GOL variant
+        run: |
+          date=${{ steps.date.outputs.tag }}
+          g="osm-planet-${{ steps.date.outputs.tag }}.gol"
+          time gol build "$g" "osm-planet-${{ steps.date.outputs.tag }}.pbf"
+          time shasum -a 256 "$g" >"$g.sha256"
+          stat -c '%s %W %Z' "$g" | \
+            awk '{print "{\"created\":"($2==0?$3:$2)",\"size\":"$1"}"}' >"$g.metadata"
+          rm -f osm-planet-$date.pbf
+
+      - name: Upload GOL files to R2
+        env:
+          RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}
+        run: |
+          date=${{ steps.date.outputs.tag }}
+          remote="openplanetdata-r2"
+          rclone copyto "osm-planet-$date.gol"          "$remote:osm/planet/gol/osm-planet-latest.gol"
+          rclone copyto "osm-planet-$date.gol.metadata" "$remote:osm/planet/gol/osm-planesst-latest.gol.metadata"
+          rclone copyto "osm-planet-$date.gol.sha256"   "$remote:osm/planet/gol/osm-planet-latest.gol.sha256"
+          rm -f osm-planet-*.{gol,sha256,metadata}
+
