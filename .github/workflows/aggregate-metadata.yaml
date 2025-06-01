@@ -1,0 +1,60 @@
+name: Aggregate and Publish OSM Metadata
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: [ "Build & Publish OSM Snapshots" ]
+    types: [ completed ]
+
+env:
+  METADATA_URLS: |
+    https://download.openplanetdata.com/osm/planet/gol/planet-latest.osm.gol.metadata
+    https://download.openplanetdata.com/osm/planet/pbf/planet-latest.osm.pbf.metadata
+  RCLONE_REMOTE: openplanetdata-r2
+
+jobs:
+  build_index:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install jq & rclone
+        env:
+          RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y jq
+          mkdir -p ~/.config/rclone
+          printf '%s' "$RCLONE_CONFIG_DATA" > ~/.config/rclone/rclone.conf
+          curl -s https://rclone.org/install.sh | sudo bash
+
+      - name: Download metadata & assemble JSON
+        run: |
+          set -euo pipefail
+          TMPDIR=$(mktemp -d)
+
+          # Build JSON of the form { "pbf":[...], "gol":[...] }
+          jq -n '{}' > "$TMPDIR/out.json"
+
+          while read -r url; do
+            [ -z "$url" ] && continue
+            curl -sSL "$url" -o "$TMPDIR/file.meta"
+
+            # extract type (pbf / gol / etc.) & base path (= url without .metadata)
+            type=$(echo "$url" | grep -oE '\.(pbf|gol)(?=\.metadata$)' | cut -c2-)
+            path=${url%.metadata}
+
+            # merge into output
+            jq --argjson meta "$(cat "$TMPDIR/file.meta")" \
+               --arg path "$path" \
+               --arg type "$type" \
+               '
+               .[$type] = (.[$type] // []) + [ $meta + {url:$path} ]
+               ' "$TMPDIR/out.json" > "$TMPDIR/tmp" && mv "$TMPDIR/tmp" "$TMPDIR/out.json"
+          done <<<"$METADATA_URLS"
+
+          mv "$TMPDIR/out.json" metadata.json
+          cat metadata.json
+
+      - name: Upload to R2
+        run: |
+          rclone copyto metadata.json "$RCLONE_REMOTE:osm/metadata.json"
