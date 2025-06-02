@@ -1,10 +1,10 @@
-name: Aggregate and Publish OSM Metadata
+name: Aggregate and Publish Metadata
 
 on:
   workflow_dispatch:
   workflow_run:
-    workflows: [ "Build & Publish OSM Snapshots" ]
-    types: [ completed ]
+    workflows: ["Build & Publish GOL Snapshots"]
+    types: [completed]
 
 env:
   METADATA_URLS: |
@@ -13,7 +13,7 @@ env:
   RCLONE_REMOTE: openplanetdata-r2
 
 jobs:
-  build_index:
+  aggregate:
     runs-on: ubuntu-latest
 
     steps:
@@ -39,8 +39,9 @@ jobs:
             [ -z "$url" ] && continue
             curl -sSL "$url" -o "$TMPDIR/file.meta"
 
-            # extract type (pbf / gol / etc.) & base path (= url without .metadata)
-            type=$(echo "$url" | grep -oE '\.(pbf|gol)(?=\.metadata$)' | cut -c2-)
+            # extract type (pbf / gol / …) & base path (= url without .metadata)
+            type=${url%.*}      # trim trailing ".metadata"
+            type=${type##*.}    # take text after last dot
             path=${url%.metadata}
 
             # merge into output
