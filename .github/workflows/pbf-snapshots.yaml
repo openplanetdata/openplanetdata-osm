@@ -54,6 +54,6 @@ jobs:
           RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}
         run: |
           date=${{ steps.date.outputs.tag }}
-          rclone copyto "planet-$date.osm.pbf"          "$REMOTE_NAME:osm/planet/pbf/planet-latest.osm.pbf"
-          rclone copyto "planet-$date.osm.pbf.metadata" "$REMOTE_NAME:osm/planet/pbf/planet-latest.osm.pbf.metadata"
-          rclone copyto "planet-$date.osm.pbf.sha256"   "$REMOTE_NAME:osm/planet/pbf/planet-latest.osm.pbf.sha256"
+          rclone copyto "planet-$date.osm.pbf"          "$REMOTE_NAME:openplanetdata/osm/planet/pbf/planet-latest.osm.pbf"
+          rclone copyto "planet-$date.osm.pbf.metadata" "$REMOTE_NAME:openplanetdata/osm/planet/pbf/planet-latest.osm.pbf.metadata"
+          rclone copyto "planet-$date.osm.pbf.sha256"   "$REMOTE_NAME:openplanetdata/osm/planet/pbf/planet-latest.osm.pbf.sha256"

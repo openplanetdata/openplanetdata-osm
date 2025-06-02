@@ -79,6 +79,6 @@ jobs:
         env:
           RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}
         run: |
-          rclone copyto "planet-${{ steps.date.outputs.tag }}.osm.gol"          "$REMOTE_NAME:osm/planet/gol/planet-latest.osm.gol"
-          rclone copyto "planet-${{ steps.date.outputs.tag }}.osm.gol.metadata" "$REMOTE_NAME:osm/planet/gol/planet-latest.osm.gol.metadata"
-          rclone copyto "planet-${{ steps.date.outputs.tag }}.osm.gol.sha256"   "$REMOTE_NAME:osm/planet/gol/planet-latest.osm.gol.sha256"
+          rclone copyto "planet-${{ steps.date.outputs.tag }}.osm.gol"          "$REMOTE_NAME:openplanetdata/osm/planet/gol/planet-latest.osm.gol"
+          rclone copyto "planet-${{ steps.date.outputs.tag }}.osm.gol.metadata" "$REMOTE_NAME:openplanetdata/osm/planet/gol/planet-latest.osm.gol.metadata"
+          rclone copyto "planet-${{ steps.date.outputs.tag }}.osm.gol.sha256"   "$REMOTE_NAME:openplanetdata/osm/planet/gol/planet-latest.osm.gol.sha256"

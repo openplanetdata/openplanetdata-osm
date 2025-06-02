@@ -58,4 +58,4 @@ jobs:
 
       - name: Upload to R2
         run: |
-          rclone copyto metadata.json "$RCLONE_REMOTE:osm/metadata.json"
+          rclone copyto metadata.json "$RCLONE_REMOTE:openplanetdata/osm/metadata.json"
