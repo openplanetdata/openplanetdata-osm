@@ -66,14 +66,13 @@ jobs:
             --multi-thread-streams 64 \
             --multi-thread-chunk-size 512M \
             --transfers 1 --progress
-          mv planet-latest.osm.gol "planet-${{ steps.date.outputs.tag }}.osm.gol"
 
       - name: Extract CRCP features
         run: |
           time gol query planet-latest.osm.gol "a['ISO3166-1:alpha2']" -t=ISO3166-1:alpha2 -f=geojson > countries.geojson
           time gol query planet-latest.osm.gol "a['ISO3166-2']" -t=ISO3166-2 -f=geojson > regions.geojson
           time gol query planet-latest.osm.gol "n['place'='city', 'town', 'village'][population>10]" -t=lat,lon,name,name:en -f=geojson > cities.geojson
-          time gol query planet-latest.osm.gol "[addr:postcode]" -t=lat,lon,addr:postcode -f=geojson > postalcodes.geojson
+          time gol query planet-latest.osm.gol "n[addr:postcode]" -t=lat,lon,addr:postcode -f=geojson > postalcodes.geojson
 
       # ── convert ALL GeoJSON → GeoParquet ────────────────────────────────
       - name: Convert GeoJSON → GeoParquet
@@ -83,7 +82,7 @@ jobs:
             for f in /data/*.geojson; do
               base=$(basename "$f" .geojson)
               ogr2ogr -f Parquet "/data/${base}-latest.osm.geoparquet" "$f" \
-                      -lco GEOMETRY_ENCODING=WKB
+                      -lco GEOMETRY_ENCODING=WKB -lco COMPRESSION=ZSTD
             done
           '
 
