@@ -60,8 +60,13 @@ jobs:
 
       - name: Download latest published GOL
         run: |
-          time curl -L https://download.openplanetdata.com/osm/planet/gol/planet-latest.osm.gol \
-            -o "planet-latest.osm.gol"
+          time rclone copy \
+            --http-url https://download.openplanetdata.com :http:osm/planet/gol/planet-latest.osm.gol . \
+            --multi-thread-cutoff 0 \
+            --multi-thread-streams 64 \
+            --multi-thread-chunk-size 512M \
+            --transfers 1 --progress
+          mv planet-latest.osm.gol "planet-${{ steps.date.outputs.tag }}.osm.gol"
 
       - name: Extract CRCP features
         run: |

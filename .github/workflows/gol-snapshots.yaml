@@ -63,8 +63,13 @@ jobs:
 
       - name: Download latest published PBF
         run: |
-          time curl -L https://download.openplanetdata.com/osm/planet/pbf/planet-latest.osm.pbf \
-            -o "planet-${{ steps.date.outputs.tag }}.osm.pbf"
+          time rclone copy \
+            --http-url https://download.openplanetdata.com :http:osm/planet/pbf/planet-latest.osm.pbf . \
+            --multi-thread-cutoff 0 \
+            --multi-thread-streams 64 \
+            --multi-thread-chunk-size 512M \
+            --transfers 1 --progress
+          mv planet-latest.osm.pbf "planet-${{ steps.date.outputs.tag }}.osm.pbf"
 
       - name: Build GOL variant
         run: |
