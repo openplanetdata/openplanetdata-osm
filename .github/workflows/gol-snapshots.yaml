@@ -3,24 +3,37 @@ name: Build & Publish GOL Snapshots
 on:
   workflow_dispatch:
   workflow_run:
-    workflows: [ "Build & Publish PBF Snapshots" ]
-    types: [ completed ]
+    workflows: ["Build & Publish PBF Snapshots"]
+    types: [completed]
 
 env:
   REMOTE_NAME: openplanetdata-r2
 
 jobs:
   gol:
-    runs-on: openplanetdata-hetzner-ccx43
+    runs-on: openplanetdata-cortex
 
     outputs:
       tag: ${{ steps.date.outputs.tag }}
 
     steps:
-      - name: Install dependencies
+      - name: Set date tag
+        id: date
+        run: echo "tag=$(date '+%Y%m%d')" >>"$GITHUB_OUTPUT"
+
+      - name: Install dependencies (skip if already present)
+        shell: bash
         run: |
-          sudo apt-get update
-          sudo apt-get install -y unzip
+          need_install() { ! command -v "$1" >/dev/null 2>&1; }
+          
+          pkgs=()
+          need_install unzip && pkgs+=(unzip)
+          
+          if ((${#pkgs[@]})); then
+            sudo dnf -y install "${pkgs[@]}"
+          else
+            echo "All required packages already present."
+          fi
 
       - name: Set up JDK
         uses: actions/setup-java@v4
@@ -31,29 +44,28 @@ jobs:
       - name: Install gol
         run: |
           set -euo pipefail
-
+      
+          # download latest release ZIP
           tmp=$(mktemp -d)
           url=$(curl -sSL https://api.github.com/repos/clarisma/gol-tool/releases/latest \
                   | grep -oP '"browser_download_url":\s*"\K[^"]+gol-tool-[^"]+\.zip')
           curl -L "$url" -o "$tmp/gol.zip"
-
-          # unpack under /opt
-          sudo unzip -q "$tmp/gol.zip" -d /opt
-
-          # /opt/gol-tool → /opt/gol-tool-<version>
-          latest=$(ls -d /opt/gol-tool-* | sort -V | tail -n1)
-          sudo ln -sfn "$latest" /opt/gol-tool
-
-          # tiny wrapper on PATH
-          sudo tee /usr/local/bin/gol >/dev/null <<'EOF'
-          #!/usr/bin/env bash
-          exec /opt/gol-tool/bin/gol "$@"
-          EOF
-          sudo chmod +x /usr/local/bin/gol
-
+      
+          # unpack under ~/.local/opt/gol-tool-<ver> and create stable symlinks
+          prefix="$HOME/.local/opt"
+          mkdir -p "$prefix"
+          unzip -q -o "$tmp/gol.zip" -d "$prefix"
+          latest=$(ls -d "$prefix"/gol-tool-* | sort -V | tail -n1)
+          ln -sfn "$latest" "$prefix/gol-tool"
+      
+          # add tiny wrapper to ~/.local/bin and expose PATH to later steps
+          mkdir -p "$HOME/.local/bin"
+          ln -sfn "$prefix/gol-tool/bin/gol" "$HOME/.local/bin/gol"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      
           gol --version
 
-      - name: Install rclone
+      - name: Install rclone (skip if already present)
         env:
           RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}
         run: |
@@ -76,7 +88,7 @@ jobs:
           g="planet-${{ steps.date.outputs.tag }}.osm.gol"
           p="planet-${{ steps.date.outputs.tag }}.osm.pbf"
           time gol build "$g" "$p"
-          shasum -a 256 "$g" >"$g.sha256"
+          sha256sum "$g" >"$g.sha256"
           stat -c '%s %W %Z' "$g" | \
             awk '{print "{\"created\":"($2==0?$3:$2)",\"size\":"$1"}"}' >"$g.metadata"
 
@@ -84,6 +96,7 @@ jobs:
         env:
           RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}
         run: |
-          rclone copyto "planet-${{ steps.date.outputs.tag }}.osm.gol"          "$REMOTE_NAME:openplanetdata/osm/planet/gol/planet-latest.osm.gol"
-          rclone copyto "planet-${{ steps.date.outputs.tag }}.osm.gol.metadata" "$REMOTE_NAME:openplanetdata/osm/planet/gol/planet-latest.osm.gol.metadata"
-          rclone copyto "planet-${{ steps.date.outputs.tag }}.osm.gol.sha256"   "$REMOTE_NAME:openplanetdata/osm/planet/gol/planet-latest.osm.gol.sha256"
+          date=${{ steps.date.outputs.tag }}
+          rclone copyto "planet-$date.osm.gol"          "$REMOTE_NAME:openplanetdata/osm/planet/gol/planet-latest.osm.gol"
+          rclone copyto "planet-$date.osm.gol.metadata" "$REMOTE_NAME:openplanetdata/osm/planet/gol/planet-latest.osm.gol.metadata"
+          rclone copyto "planet-$date.osm.gol.sha256"   "$REMOTE_NAME:openplanetdata/osm/planet/gol/planet-latest.osm.gol.sha256"
