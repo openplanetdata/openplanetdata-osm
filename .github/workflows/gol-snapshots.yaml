@@ -87,7 +87,7 @@ jobs:
         run: |
           g="planet-${{ steps.date.outputs.tag }}.osm.gol"
           p="planet-${{ steps.date.outputs.tag }}.osm.pbf"
-          time gol build "$g" "$p"
+          time gol build --tag-duplicate-nodes=yes "$g" "$p"
           sha256sum "$g" >"$g.sha256"
           stat -c '%s %W %Z' "$g" | \
             awk '{print "{\"created\":"($2==0?$3:$2)",\"size\":"$1"}"}' >"$g.metadata"
