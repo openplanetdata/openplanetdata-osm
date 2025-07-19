@@ -37,8 +37,6 @@ jobs:
 
       - name: Set up python
         uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
     
       # Quackosm is needed to convert the PBF to geoparquet format.
       - name: Install quackosm
