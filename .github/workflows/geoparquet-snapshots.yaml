@@ -43,15 +43,26 @@ jobs:
       - name: Python deps for merge
         run: pip install --quiet duckdb
 
-      - name: Clone ohsome @ latest tag & build JAR
-        id: build_ohsome
+      - name: Get latest ohsome-planet release tag
+        id: get_tag
         run: |
           TAG=$(curl -s https://api.github.com/repos/GIScience/ohsome-planet/releases/latest | jq -r .tag_name)
-          git clone --depth 1 --branch "$TAG" --recurse-submodules https://github.com/GIScience/ohsome-planet.git
+          echo "tag=$TAG" >>"$GITHUB_OUTPUT"
+
+      - name: Checkout ohsome-planet
+        uses: actions/checkout@v4
+        with:
+          repository: GIScience/ohsome-planet
+          ref: ${{ steps.get_tag.outputs.tag }}
+          path: ohsome-planet
+          submodules: recursive
+
+      - name: Build ohsome-planet JAR
+        run: |
           cd ohsome-planet
           ./mvnw -q clean package -DskipTests
-          JAR=$(ls ohsome-planet-cli/target/ohsome-planet*.jar | head -n1)
-          echo "JAR_PATH=$(pwd)/$JAR" >>"$GITHUB_ENV"
+          find . -name "*.jar" -type f
+          echo "JAR_PATH=$(pwd)/ohsome-planet-cli/target/ohsome-planet.jar" >>"$GITHUB_ENV"
 
       - name: Configure rclone
         env:
