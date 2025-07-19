@@ -104,3 +104,12 @@ jobs:
           rclone copyto "planet-$d.osm.parquet"          "$REMOTE_NAME:openplanetdata/osm/planet/geoparquet/planet-latest.osm.parquet"
           rclone copyto "planet-$d.osm.parquet.metadata" "$REMOTE_NAME:openplanetdata/osm/planet/geoparquet/planet-latest.osm.parquet.metadata"
           rclone copyto "planet-$d.osm.parquet.sha256"   "$REMOTE_NAME:openplanetdata/osm/planet/geoparquet/planet-latest.osm.parquet.sha256"
+
+      - name: Cleanup downloaded and generated files
+        if: always()
+        run: |
+          rm -f planet-*.osm.pbf planet-*.osm.parquet planet-*.osm.parquet.{sha256,metadata}
+          rm -rf ohsome-*
+          rm -rf ohsome-planet
+          find . -name "*.jar" -delete
+          find /tmp -name "tmp.*" -user "$USER" -delete 2>/dev/null || true

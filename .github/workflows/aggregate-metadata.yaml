@@ -59,3 +59,9 @@ jobs:
       - name: Upload to R2
         run: |
           rclone copyto metadata.json "$RCLONE_REMOTE:openplanetdata/osm/metadata.json"
+
+      - name: Cleanup downloaded and generated files
+        if: always()
+        run: |
+          rm -f metadata.json
+          find /tmp -name "tmp.*" -user "$USER" -delete 2>/dev/null || true

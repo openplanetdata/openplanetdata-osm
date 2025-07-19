@@ -111,3 +111,11 @@ jobs:
             rclone copyto "$f" \
               "$REMOTE_NAME:openplanetdata/osm/${dataset}/geoparquet/$f"
           done
+
+      - name: Cleanup downloaded and generated files
+        if: always()
+        run: |
+          rm -f planet-latest.osm.gol
+          rm -f *.geojson
+          rm -f *-latest.osm.geoparquet *-latest.osm.geoparquet.{sha256,metadata}
+          find /tmp -name "tmp.*" -user "$USER" -delete 2>/dev/null || true

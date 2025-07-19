@@ -100,3 +100,9 @@ jobs:
           rclone copyto "planet-$date.osm.gol"          "$REMOTE_NAME:openplanetdata/osm/planet/gol/planet-latest.osm.gol"
           rclone copyto "planet-$date.osm.gol.metadata" "$REMOTE_NAME:openplanetdata/osm/planet/gol/planet-latest.osm.gol.metadata"
           rclone copyto "planet-$date.osm.gol.sha256"   "$REMOTE_NAME:openplanetdata/osm/planet/gol/planet-latest.osm.gol.sha256"
+
+      - name: Cleanup downloaded and generated files
+        if: always()
+        run: |
+          rm -f planet-*.osm.pbf planet-*.osm.gol planet-*.osm.gol.{sha256,metadata}
+          find /tmp -name "tmp.*" -user "$USER" -delete 2>/dev/null || true
