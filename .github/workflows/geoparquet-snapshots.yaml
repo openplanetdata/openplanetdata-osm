@@ -21,28 +21,39 @@ jobs:
         id: date
         run: echo "tag=$(date '+%Y%m%d')" >>"$GITHUB_OUTPUT"
 
-      - name: Install dependencies (skip if already present)
+      - name: Install system dependencies
         shell: bash
         run: |
-          need_install() { ! command -v "$1" >/dev/null 2>&1; }
-          
+          need_install() { ! command -v "$1" &>/dev/null; }
           pkgs=()
+          need_install jq    && pkgs+=(jq)
           need_install unzip && pkgs+=(unzip)
-          
-          if ((${#pkgs[@]})); then
+          if [ ${#pkgs[@]} -gt 0 ]; then
             sudo dnf -y install "${pkgs[@]}"
-          else
-            echo "All required packages already present."
           fi
 
-      - name: Set up python
-        uses: actions/setup-python@v5
-    
-      # Quackosm is needed to convert the PBF to geoparquet format.
-      - name: Install quackosm
-        run: pip install 'quackosm[cli]'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
 
-      - name: Install rclone (skip if already present)
+      - uses: actions/setup-python@v5
+        with: {cache: "pip"}
+
+      - name: Python deps for merge
+        run: pip install --quiet duckdb
+
+      - name: Clone ohsome @ latest tag & build JAR
+        id: build_ohsome
+        run: |
+          TAG=$(curl -s https://api.github.com/repos/GIScience/ohsome-planet/releases/latest | jq -r .tag_name)
+          git clone --depth 1 --branch "$TAG" --recurse-submodules https://github.com/GIScience/ohsome-planet.git
+          cd ohsome-planet
+          ./mvnw -q clean package -DskipTests
+          JAR=$(ls ohsome-planet-cli/target/ohsome-planet*.jar | head -n1)
+          echo "JAR_PATH=$(pwd)/$JAR" >>"$GITHUB_ENV"
+
+      - name: Configure rclone
         env:
           RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}
         run: |
@@ -52,28 +63,44 @@ jobs:
 
       - name: Download latest published PBF
         run: |
-          time rclone copy \
+          rclone copy \
             --http-url https://download.openplanetdata.com :http:osm/planet/pbf/planet-latest.osm.pbf . \
-            --multi-thread-cutoff 0 \
-            --multi-thread-streams 128 \
-            --multi-thread-chunk-size 512M \
+            --multi-thread-cutoff 0 --multi-thread-streams 128 --multi-thread-chunk-size 512M \
             --transfers 1 --progress
           mv planet-latest.osm.pbf "planet-${{ steps.date.outputs.tag }}.osm.pbf"
 
-      - name: Build Geoparquet variant
+      - name: Build GeoParquet with ohsome-planet from PBF
+        env:
+          TAG: ${{ steps.date.outputs.tag }}
         run: |
-          g="planet-${{ steps.date.outputs.tag }}.osm.parquet"
-          p="planet-${{ steps.date.outputs.tag }}.osm.pbf"
-          time quackosm "$p" --output "$g"
-          sha256sum "$g" >"$g.sha256"
-          stat -c '%s %W %Z' "$g" | \
-            awk '{print "{\"created\":"($2==0?$3:$2)",\"size\":"$1"}"}' >"$g.metadata"
+          PBF="planet-${TAG}.osm.pbf"
+          OUT_DIR="ohsome-${TAG}"
+          time java -Xmx32g -jar "$JAR_PATH" contributions \
+               --pbf "$PBF" --output "$OUT_DIR" --overwrite   # produces parquet partitions
+          # merge "latest" partitions to single legacy file
+          time python - <<'PY'
+          import duckdb, os, glob, os.path as p
+          tag = os.environ["TAG"]
+          glob_pat = f"ohsome-{tag}/contributions/latest/*.parquet"
+          duckdb.sql(f"COPY (SELECT * FROM parquet_scan('{glob_pat}')) "
+          f"TO 'planet-{tag}.osm.parquet' "
+          " (FORMAT PARQUET, COMPRESSION ZSTD);")
+          PY
 
-      - name: Upload Geoparquet files to R2
+      - name: Generate checksums & metadata
+        env:
+          TAG: ${{ steps.date.outputs.tag }}
+        run: |
+          f="planet-${TAG}.osm.parquet"
+          sha256sum "$f" >"$f.sha256"
+          stat -c '%s %W %Z' "$f" | \
+            awk '{print "{\"created\":"($2==0?$3:$2)",\"size\":"$1"}"}' >"$f.metadata"
+
+      - name: Upload GeoParquet files to R2
         env:
           RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}
         run: |
-          date=${{ steps.date.outputs.tag }}
-          rclone copyto "planet-$date.osm.parquet"          "$REMOTE_NAME:openplanetdata/osm/planet/geoparquet/planet-latest.osm.parquet"
-          rclone copyto "planet-$date.osm.parquet.metadata" "$REMOTE_NAME:openplanetdata/osm/planet/geoparquet/planet-latest.osm.parquet.metadata"
-          rclone copyto "planet-$date.osm.parquet.sha256"   "$REMOTE_NAME:openplanetdata/osm/planet/geoparquet/planet-latest.osm.parquet.sha256"
+          d=${{ steps.date.outputs.tag }}
+          rclone copyto "planet-$d.osm.parquet"          "$REMOTE_NAME:openplanetdata/osm/planet/geoparquet/planet-latest.osm.parquet"
+          rclone copyto "planet-$d.osm.parquet.metadata" "$REMOTE_NAME:openplanetdata/osm/planet/geoparquet/planet-latest.osm.parquet.metadata"
+          rclone copyto "planet-$d.osm.parquet.sha256"   "$REMOTE_NAME:openplanetdata/osm/planet/geoparquet/planet-latest.osm.parquet.sha256"
