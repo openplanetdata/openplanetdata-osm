@@ -3,7 +3,7 @@ name: Build & Publish Geoparquet Snapshots
 on:
   workflow_dispatch:
   workflow_run:
-    workflows: ["Build & Publish PBF Snapshots"]
+    workflows: ["Build & Publish CRCP Snapshots"]
     types: [completed]
 
 env:
