@@ -1,8 +1,6 @@
 name: Build & Publish CRCP Snapshots
 
 on:
-  schedule:
-    - cron: '0 1 * * *'   # daily 01:00 UTC
   workflow_dispatch:
   workflow_run:
     workflows: ["Build & Publish GOL Snapshots"]
