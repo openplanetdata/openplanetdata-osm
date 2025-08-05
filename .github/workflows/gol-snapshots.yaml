@@ -47,7 +47,7 @@ jobs:
       
           # download latest release ZIP
           tmp=$(mktemp -d)
-          url=$(curl -sSL https://api.github.com/repos/laurentpellegrino/gol-tool/releases/latest \
+          url=$(curl -sSL https://api.github.com/repos/clarisma/gol-tool/releases/latest \
                   | grep -oP '"browser_download_url":\s*"\K[^"]+gol-tool-[^"]+\.zip')
           curl -L "$url" -o "$tmp/gol.zip"
       
