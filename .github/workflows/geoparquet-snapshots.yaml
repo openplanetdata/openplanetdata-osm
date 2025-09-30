@@ -104,7 +104,7 @@ jobs:
           tag = os.environ["TAG"]
           glob_pat = f"ohsome-{tag}/contributions/latest/*.parquet"
           duckdb.sql(
-              f"COPY (SELECT * FROM parquet_scan('{glob_pat}')) "
+              f"COPY (FROM parquet_scan('{glob_pat}') ORDER BY bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax) "
               f"TO 'planet-{tag}.osm.parquet' "
               " (FORMAT PARQUET, COMPRESSION ZSTD, COMPRESSION_LEVEL 20, PARQUET_VERSION v2);"
           )
