@@ -8,6 +8,7 @@ on:
 
 env:
   REMOTE_NAME: openplanetdata-r2
+  OHSOME_JAR_PATH: ohsome-planet/ohsome-planet-cli/target/ohsome-planet.jar
 
 jobs:
   geoparquet:
@@ -52,6 +53,7 @@ jobs:
         run: |
           TAG=$(curl -s https://api.github.com/repos/GIScience/ohsome-planet/releases/latest | jq -r .tag_name)
           echo "tag=$TAG" >>"$GITHUB_OUTPUT"
+      
 
       - name: Checkout ohsome-planet
         uses: actions/checkout@v4
@@ -60,13 +62,20 @@ jobs:
           ref: ${{ steps.get_tag.outputs.tag }}
           path: ohsome-planet
           submodules: recursive
+      
+      - name: Cache ohsome-planet JAR
+        uses: actions/cache@v3
+        id: jar-cache
+        with:
+          path: ${{ env.OHSOME_JAR_PATH }}
+          key: ${{ runner.os }}-ohsome-planet-${{ steps.get_tag.outputs.tag }}
 
       - name: Build ohsome-planet JAR
+        if: steps.jar-cache.outputs.cache-hit != 'true'
         run: |
           cd ohsome-planet
           ./mvnw -q clean package -DskipTests
           find . -name "*.jar" -type f
-          echo "JAR_PATH=$(pwd)/ohsome-planet-cli/target/ohsome-planet.jar" >>"$GITHUB_ENV"
 
       - name: Configure rclone
         env:
@@ -90,8 +99,8 @@ jobs:
         run: |
           PBF="planet-${TAG}.osm.pbf"
           OUT_DIR="ohsome-${TAG}"
-          time java -Xmx32g -jar "$JAR_PATH" contributions \
-               --pbf "$PBF" --parallel=$(nproc) --output "$OUT_DIR" --overwrite
+          time java -Xmx32g -jar "${{ env.OHSOME_JAR_PATH }}" contributions \
+               --pbf "$PBF" --output "$OUT_DIR" --overwrite
           
           # list everything just produced
           echo "::group::Produced files"
