@@ -13,6 +13,7 @@ env:
 jobs:
   geoparquet:
     runs-on: openplanetdata-cortex
+    timeout-minutes: 600
 
     outputs:
       tag: ${{ steps.date.outputs.tag }}
