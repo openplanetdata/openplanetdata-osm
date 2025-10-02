@@ -91,7 +91,7 @@ jobs:
           PBF="planet-${TAG}.osm.pbf"
           OUT_DIR="ohsome-${TAG}"
           time java -Xmx32g -jar "$JAR_PATH" contributions \
-               --pbf "$PBF" --output "$OUT_DIR" --overwrite
+               --pbf "$PBF" --parallel=$(nproc) --output "$OUT_DIR" --overwrite
           
           # list everything just produced
           echo "::group::Produced files"
@@ -104,9 +104,9 @@ jobs:
           tag = os.environ["TAG"]
           glob_pat = f"ohsome-{tag}/contributions/latest/*.parquet"
           duckdb.sql(
-              f"COPY (SELECT * FROM parquet_scan('{glob_pat}')) "
+              f"COPY (FROM parquet_scan('{glob_pat}') ORDER BY bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax) "
               f"TO 'planet-{tag}.osm.parquet' "
-              " (FORMAT PARQUET, COMPRESSION ZSTD);"
+              " (FORMAT PARQUET, COMPRESSION ZSTD, COMPRESSION_LEVEL 20, PARQUET_VERSION v2);"
           )
           PY
 
