@@ -7,8 +7,8 @@ on:
     types: [completed]
 
 env:
-  REMOTE_NAME: openplanetdata-r2
   OHSOME_JAR_PATH: ohsome-planet/ohsome-planet-cli/target/ohsome-planet.jar
+  REMOTE_NAME: openplanetdata-r2
 
 jobs:
   geoparquet:
@@ -55,7 +55,7 @@ jobs:
             ARM64) system_config="linux-arm64" ;;
           esac
           wget https://github.com/duckdb/duckdb/releases/download/${{ steps.get_duckdb_tag.outputs.tag }}/duckdb_cli-$system_config.zip
-          unzip duckdb_cli-$system_config.zip
+          unzip -o duckdb_cli-$system_config.zip
           chmod a+x ./duckdb
 
       - name: Get latest ohsome-planet release tag
@@ -156,6 +156,7 @@ jobs:
       - name: Cleanup downloaded and generated files
         if: always()
         run: |
+          rm -f duckdb duckdb_cli-*.zip
           rm -f planet-*.osm.pbf planet-*.osm.parquet planet-*.osm.parquet.{sha256,metadata}
           rm -rf ohsome-*
           rm -rf ohsome-planet
