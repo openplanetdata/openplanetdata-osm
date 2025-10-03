@@ -50,8 +50,12 @@ jobs:
 
       - name: Install latest DuckDB cli
         run: |
-          wget https://github.com/duckdb/duckdb/releases/download/${{ steps.get_duckdb_tag.outputs.tag }}/duckdb_cli-linux-amd64.zip
-          unzip duckdb_cli-linux-amd64.zip
+          case "${{ runner.arch }}" in
+            X64)   system_config="linux-amd64" ;;
+            ARM64) system_config="linux-arm64" ;;
+          esac
+          wget https://github.com/duckdb/duckdb/releases/download/${{ steps.get_duckdb_tag.outputs.tag }}/duckdb_cli-$system_config.zip
+          unzip duckdb_cli-$system_config.zip
           chmod a+x ./duckdb
 
       - name: Get latest ohsome-planet release tag
