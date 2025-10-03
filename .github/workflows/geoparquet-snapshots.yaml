@@ -42,25 +42,29 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - uses: actions/setup-python@v5
-        with:
-          cache: pip
+      - name: Get latest DuckDB release tag
+        id: get_duckdb_tag
+        run: |
+          TAG=$(curl -s https://api.github.com/repos/duckdb/duckdb/releases/latest | jq -r .tag_name)
+          echo "tag=$TAG" >>"$GITHUB_OUTPUT"
 
-      - name: Python deps for merge
-        run: pip install --quiet duckdb
+      - name: Install latest DuckDB cli
+        run: |
+          wget https://github.com/duckdb/duckdb/releases/download/${{ steps.get_duckdb_tag.outputs.tag }}/duckdb_cli-linux-amd64.zip
+          unzip duckdb_cli-linux-amd64.zip
+          chmod a+x ./duckdb
 
       - name: Get latest ohsome-planet release tag
-        id: get_tag
+        id: get_ohsome_tag
         run: |
           TAG=$(curl -s https://api.github.com/repos/GIScience/ohsome-planet/releases/latest | jq -r .tag_name)
           echo "tag=$TAG" >>"$GITHUB_OUTPUT"
-      
 
       - name: Checkout ohsome-planet
         uses: actions/checkout@v4
         with:
           repository: GIScience/ohsome-planet
-          ref: ${{ steps.get_tag.outputs.tag }}
+          ref: ${{ steps.get_ohsome_tag.outputs.tag }}
           path: ohsome-planet
           submodules: recursive
       
@@ -69,7 +73,7 @@ jobs:
         id: jar-cache
         with:
           path: ${{ env.OHSOME_JAR_PATH }}
-          key: ${{ runner.os }}-ohsome-planet-${{ steps.get_tag.outputs.tag }}
+          key: ${{ runner.os }}-ohsome-planet-${{ steps.get_ohsome_tag.outputs.tag }}
 
       - name: Build ohsome-planet JAR
         if: steps.jar-cache.outputs.cache-hit != 'true'
@@ -108,17 +112,24 @@ jobs:
           find "$OUT_DIR" -print | sort
           echo "::endgroup::"
 
-          # merge "latest" partitions to single legacy file
-          time python3 - <<'PY'
-          import duckdb, os, glob
-          tag = os.environ["TAG"]
-          glob_pat = f"ohsome-{tag}/contributions/latest/*.parquet"
-          duckdb.sql(
-              f"COPY (FROM parquet_scan('{glob_pat}') ORDER BY bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax) "
-              f"TO 'planet-{tag}.osm.parquet' "
-              " (FORMAT PARQUET, COMPRESSION ZSTD, COMPRESSION_LEVEL 20, PARQUET_VERSION v2);"
-          )
-          PY
+          ./duckdb -c "
+              INSTALL 'spatial'; LOAD 'spatial';
+              COPY (
+                  SELECT 
+                    osm_type::ENUM ('node', 'way', 'relation') AS osm_type,
+                    osm_id,
+                    tags,
+                    bbox,
+                    ST_GeomFromWKB(geometry) as geometry,
+                  FROM '${OUT_DIR}/contributions/latest/*.parquet'
+                  ORDER BY bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax
+              ) TO 'planet-${TAG}.osm.parquet' (
+                  FORMAT PARQUET,
+                  CODEC 'zstd',
+                  COMPRESSION_LEVEL 4,
+                  PARQUET_VERSION v2
+              );
+          "
 
       - name: Generate checksums & metadata
         env:
