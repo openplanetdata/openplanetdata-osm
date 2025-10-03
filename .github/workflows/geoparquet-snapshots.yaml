@@ -37,7 +37,7 @@ jobs:
             sudo dnf -y install "${pkgs[@]}"
           fi
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 21
@@ -65,7 +65,7 @@ jobs:
           echo "tag=$TAG" >>"$GITHUB_OUTPUT"
 
       - name: Checkout ohsome-planet
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: GIScience/ohsome-planet
           ref: ${{ steps.get_ohsome_tag.outputs.tag }}
@@ -73,11 +73,11 @@ jobs:
           submodules: recursive
       
       - name: Cache ohsome-planet JAR
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: jar-cache
         with:
-          path: ${{ env.OHSOME_JAR_PATH }}
           key: ${{ runner.os }}-ohsome-planet-${{ steps.get_ohsome_tag.outputs.tag }}
+          path: ${{ env.OHSOME_JAR_PATH }}
 
       - name: Build ohsome-planet JAR
         if: steps.jar-cache.outputs.cache-hit != 'true'
