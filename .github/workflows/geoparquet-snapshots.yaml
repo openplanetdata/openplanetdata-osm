@@ -149,9 +149,9 @@ jobs:
           RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}
         run: |
           d=${{ steps.date.outputs.tag }}
-          rclone copyto "planet-$d.osm.parquet"          "$REMOTE_NAME:openplanetdata/osm/planet/geoparquet/planet-latest.osm.parquet"
+          rclone copyto --progress --stats=60s --stats-one-line-date "planet-$d.osm.parquet" "$REMOTE_NAME:openplanetdata/osm/planet/geoparquet/planet-latest.osm.parquet"
           rclone copyto "planet-$d.osm.parquet.metadata" "$REMOTE_NAME:openplanetdata/osm/planet/geoparquet/planet-latest.osm.parquet.metadata"
-          rclone copyto "planet-$d.osm.parquet.sha256"   "$REMOTE_NAME:openplanetdata/osm/planet/geoparquet/planet-latest.osm.parquet.sha256"
+          rclone copyto "planet-$d.osm.parquet.sha256" "$REMOTE_NAME:openplanetdata/osm/planet/geoparquet/planet-latest.osm.parquet.sha256"
 
       - name: Cleanup downloaded and generated files
         if: always()

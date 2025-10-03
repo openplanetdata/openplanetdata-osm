@@ -106,7 +106,7 @@ jobs:
         run: |
           for f in *-latest.osm.geoparquet *-latest.osm.geoparquet.{sha256,metadata}; do
             dataset="${f%%-latest*}"          # countries, regions, cities, postalcodes …
-            rclone copyto "$f" \
+            rclone copyto --progress --stats=60s --stats-one-line-date "$f" \
               "$REMOTE_NAME:openplanetdata/osm/${dataset}/geoparquet/$f"
           done
 
