@@ -8,6 +8,7 @@ on:
 
 env:
   METADATA_URLS: |
+    https://download.openplanetdata.com/osm/planet/geoparquet/planet-latest.osm.parquet.metadata
     https://download.openplanetdata.com/osm/planet/gol/planet-latest.osm.gol.metadata
     https://download.openplanetdata.com/osm/planet/pbf/planet-latest.osm.pbf.metadata
   RCLONE_REMOTE: openplanetdata-r2
