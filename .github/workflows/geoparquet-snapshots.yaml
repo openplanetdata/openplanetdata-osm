@@ -108,7 +108,7 @@ jobs:
         run: |
           PBF="planet-${TAG}.osm.pbf"
           OUT_DIR="ohsome-${TAG}"
-          time java -Xms32g -Xmx42g -jar "${{ env.OHSOME_JAR_PATH }}" contributions \
+          time java -Xms32g -Xmx36g -jar "${{ env.OHSOME_JAR_PATH }}" contributions \
                --pbf "$PBF" --output "$OUT_DIR" --overwrite
           
           # list everything just produced
