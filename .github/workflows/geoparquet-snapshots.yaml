@@ -130,7 +130,7 @@ jobs:
               ) TO 'planet-${TAG}.osm.parquet' (
                   FORMAT PARQUET,
                   CODEC 'zstd',
-                  COMPRESSION_LEVEL 20,
+                  COMPRESSION_LEVEL 12,
                   PARQUET_VERSION v2
               );
           "
