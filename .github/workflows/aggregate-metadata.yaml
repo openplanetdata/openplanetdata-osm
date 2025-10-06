@@ -3,7 +3,7 @@ name: Aggregate and Publish Metadata
 on:
   workflow_dispatch:
   workflow_run:
-    workflows: ["Build & Publish GOL Snapshots", "Build & Publish PBF Snapshots"]
+    workflows: ["Build & Publish Geoparquet Snapshots", "Build & Publish GOL Snapshots", "Build & Publish PBF Snapshots"]
     types: [completed]
 
 env:
