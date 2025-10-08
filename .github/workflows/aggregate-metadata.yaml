@@ -5,6 +5,7 @@ on:
   workflow_run:
     workflows: ["Build & Publish Geoparquet Snapshots", "Build & Publish GOL Snapshots", "Build & Publish PBF Snapshots"]
     types: [completed]
+    branches: [main]
 
 env:
   METADATA_URLS: |
