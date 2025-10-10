@@ -35,32 +35,24 @@ jobs:
             echo "All required packages already present."
           fi
 
-      - name: Set up JDK
-        uses: actions/setup-java@v5
-        with:
-          distribution: zulu
-          java-version: 21
-
       - name: Install gol
         run: |
           set -euo pipefail
       
-          # download latest release ZIP
+          # download latest release ZIP (for Linux)
           tmp=$(mktemp -d)
-          url=$(curl -sSL https://api.github.com/repos/clarisma/gol-tool/releases/latest \
-                  | grep -oP '"browser_download_url":\s*"\K[^"]+gol-tool-[^"]+\.zip')
+          url=$(curl -sSL https://api.github.com/repos/clarisma/geodesk-gol/releases/latest \
+                  | grep -oP '"browser_download_url":\s*"\K[^"]+geodesk-gol-[^"]+-linux\.zip')
           curl -L "$url" -o "$tmp/gol.zip"
       
-          # unpack under ~/.local/opt/gol-tool-<ver> and create stable symlinks
+          # unpack under ~/.local/opt
           prefix="$HOME/.local/opt"
           mkdir -p "$prefix"
           unzip -q -o "$tmp/gol.zip" -d "$prefix"
-          latest=$(ls -d "$prefix"/gol-tool-* | sort -V | tail -n1)
-          ln -sfn "$latest" "$prefix/gol-tool"
       
           # add tiny wrapper to ~/.local/bin and expose PATH to later steps
           mkdir -p "$HOME/.local/bin"
-          ln -sfn "$prefix/gol-tool/bin/gol" "$HOME/.local/bin/gol"
+          ln -sfn "$prefix/gol" "$HOME/.local/bin/gol"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       
           gol --version
@@ -85,24 +77,35 @@ jobs:
 
       - name: Build GOL variant
         run: |
-          g="planet-${{ steps.date.outputs.tag }}.osm.gol"
+          g="planet-${{ steps.date.outputs.tag }}.gol"
           p="planet-${{ steps.date.outputs.tag }}.osm.pbf"
-          time gol build --tag-duplicate-nodes=yes "$g" "$p"
+          time gol build "$g" "$p"
           sha256sum "$g" >"$g.sha256"
           stat -c '%s %W %Z' "$g" | \
             awk '{print "{\"created\":"($2==0?$3:$2)",\"size\":"$1"}"}' >"$g.metadata"
+
+      - name: Build GOB
+        if: false         # remove this line once GOL 2.1 is released 
+        run: |
+          gol="planet-${{ steps.date.outputs.tag }}.gol"
+          gob="planet-${{ steps.date.outputs.tag }}.gob"
+          time gol save "$gol" "$gob"
+          sha256sum "$gob" >"$gob.sha256"
+          stat -c '%s %W %Z' "$gob" | \
+            awk '{print "{\"created\":"($2==0?$3:$2)",\"size\":"$1"}"}' >"$gob.metadata"
 
       - name: Upload GOL files to R2
         env:
           RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}
         run: |
           date=${{ steps.date.outputs.tag }}
-          rclone copyto --progress --stats=60s --stats-one-line-date "planet-$date.osm.gol" "$REMOTE_NAME:openplanetdata/osm/planet/gol/planet-latest.osm.gol"
-          rclone copyto "planet-$date.osm.gol.metadata" "$REMOTE_NAME:openplanetdata/osm/planet/gol/planet-latest.osm.gol.metadata"
-          rclone copyto "planet-$date.osm.gol.sha256" "$REMOTE_NAME:openplanetdata/osm/planet/gol/planet-latest.osm.gol.sha256"
+          rclone copyto --progress --stats=60s --stats-one-line-date "planet-$date.gol" "$REMOTE_NAME:openplanetdata/osm/planet/gol/planet-latest.gol"
+          rclone copyto "planet-$date.gol.metadata" "$REMOTE_NAME:openplanetdata/osm/planet/gol/planet-latest.gol.metadata"
+          rclone copyto "planet-$date.gol.sha256" "$REMOTE_NAME:openplanetdata/osm/planet/gol/planet-latest.gol.sha256"
+          # TODO: Change .gol to .gob
 
-      - name: Cleanup downloaded and generated files
+      - name: Cleanup downloaded and generated files  # TODO: delete GOB
         if: always()
         run: |
-          rm -f planet-*.osm.pbf planet-*.osm.gol planet-*.osm.gol.{sha256,metadata}
+          rm -f planet-*.osm.pbf planet-*.gol planet-*.gol.{sha256,metadata}
           find /tmp -name "tmp.*" -user "$USER" -delete 2>/dev/null || true
