@@ -1,4 +1,4 @@
-name: Build & Publish GOL Snapshots
+name: Build & Publish GeoDesk v2 Snapshots
 
 on:
   workflow_dispatch:
@@ -28,6 +28,7 @@ jobs:
           
           pkgs=()
           need_install unzip && pkgs+=(unzip)
+          need_install jq && pkgs+=(jq)
           
           if ((${#pkgs[@]})); then
             sudo dnf -y install "${pkgs[@]}"
@@ -35,14 +36,23 @@ jobs:
             echo "All required packages already present."
           fi
 
-      - name: Install gol
+      - name: Install latest gol 2.x
         run: |
           set -euo pipefail
       
-          # download latest release ZIP (for Linux)
+          # download latest 2.x release ZIP (for Linux)
           tmp=$(mktemp -d)
-          url=$(curl -sSL https://api.github.com/repos/clarisma/geodesk-gol/releases/latest \
-                  | grep -oP '"browser_download_url":\s*"\K[^"]+geodesk-gol-[^"]+-linux\.zip')
+          releases=$(curl -sSL 'https://api.github.com/repos/clarisma/geodesk-gol/releases?per_page=100')
+          url=$(jq -r '[.[]
+              | select(.draft==false and .prerelease==false and (.tag_name|tostring|ltrimstr("v")|startswith("2.")))
+            ][0]
+            .assets[]
+            | select(.name | test("geodesk-gol-.*-linux\\.zip$"))
+            | .browser_download_url' <<<"$releases" | head -n1)
+          if [[ -z "${url:-}" || "$url" == null ]]; then
+            echo "Failed to locate gol 2.x release asset URL" >&2
+            exit 1
+          fi
           curl -L "$url" -o "$tmp/gol.zip"
       
           # unpack under ~/.local/opt
@@ -77,7 +87,7 @@ jobs:
 
       - name: Build GOL variant
         run: |
-          g="planet-${{ steps.date.outputs.tag }}.gol"
+          g="planet-${{ steps.date.outputs.tag }}.osm.gol"
           p="planet-${{ steps.date.outputs.tag }}.osm.pbf"
           time gol build "$g" "$p"
           sha256sum "$g" >"$g.sha256"
@@ -85,10 +95,10 @@ jobs:
             awk '{print "{\"created\":"($2==0?$3:$2)",\"size\":"$1"}"}' >"$g.metadata"
 
       - name: Build GOB
-        if: false         # remove this line once GOL 2.1 is released 
+        if: false # TODO: remove this line once GOL 2.1 is released
         run: |
-          gol="planet-${{ steps.date.outputs.tag }}.gol"
-          gob="planet-${{ steps.date.outputs.tag }}.gob"
+          gol="planet-${{ steps.date.outputs.tag }}.osm.gol"
+          gob="planet-${{ steps.date.outputs.tag }}.pbf.gob"
           time gol save "$gol" "$gob"
           sha256sum "$gob" >"$gob.sha256"
           stat -c '%s %W %Z' "$gob" | \
@@ -99,13 +109,14 @@ jobs:
           RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}
         run: |
           date=${{ steps.date.outputs.tag }}
-          rclone copyto --progress --stats=60s --stats-one-line-date "planet-$date.gol" "$REMOTE_NAME:openplanetdata/osm/planet/gol/planet-latest.gol"
-          rclone copyto "planet-$date.gol.metadata" "$REMOTE_NAME:openplanetdata/osm/planet/gol/planet-latest.gol.metadata"
-          rclone copyto "planet-$date.gol.sha256" "$REMOTE_NAME:openplanetdata/osm/planet/gol/planet-latest.gol.sha256"
-          # TODO: Change .gol to .gob
+          rclone copyto --progress --stats=60s --stats-one-line-date "planet-$date.osm.gol" "$REMOTE_NAME:openplanetdata/osm/planet/gol/v2/planet-latest.osm.gol"
+          rclone copyto "planet-$date.osm.gol.metadata" "$REMOTE_NAME:openplanetdata/osm/planet/gol/v2/planet-latest.osm.gol.metadata"
+          rclone copyto "planet-$date.osm.gol.sha256" "$REMOTE_NAME:openplanetdata/osm/planet/gol/v2/planet-latest.osm.gol.sha256"
+          # TODO: add .gob upload
 
-      - name: Cleanup downloaded and generated files  # TODO: delete GOB
+      - name: Cleanup downloaded and generated files
         if: always()
         run: |
-          rm -f planet-*.osm.pbf planet-*.gol planet-*.gol.{sha256,metadata}
+          # TODO: delete GOB
+          rm -f planet-*.osm.pbf planet-*.osm.gol planet-*.osm.gol.{sha256,metadata}
           find /tmp -name "tmp.*" -user "$USER" -delete 2>/dev/null || true
