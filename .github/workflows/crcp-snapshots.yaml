@@ -9,69 +9,25 @@ on:
 jobs:
   build:
     runs-on: openplanetdata-cortex
-    env:
-      REMOTE_NAME: openplanetdata-r2
+
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
 
     steps:
-      - name: Install dependencies (skip if already present)
-        shell: bash
-        run: |
-          need_install() { ! command -v "$1" >/dev/null 2>&1; }
-          pkgs=()
-          need_install unzip && pkgs+=(unzip)
-          
-          if ((${#pkgs[@]})); then
-            sudo dnf -y install "${pkgs[@]}"
-          else
-            echo "All required packages already present."
-          fi
+      - name: Set date tag
+        id: tag
+        uses: openplanetdata/actions/set-date-tag@main
 
-      - name: Set up JDK
-        uses: actions/setup-java@v5
+      - name: Install GOL 2.x
+        uses: openplanetdata/actions/install-gol@main
         with:
-          distribution: zulu
-          java-version: 21
-
-      - name: Install gol
-        run: |
-          set -euo pipefail
-          
-          # download latest release ZIP
-          tmp=$(mktemp -d)
-          url=$(curl -sSL https://api.github.com/repos/clarisma/gol-tool/releases/latest \
-                  | grep -oP '"browser_download_url":\s*"\K[^"]+gol-tool-[^"]+\.zip')
-          curl -L "$url" -o "$tmp/gol.zip"
-          
-          # unpack under ~/.local/opt/gol-tool-<ver> and create stable symlinks
-          prefix="$HOME/.local/opt"
-          mkdir -p "$prefix"
-          unzip -q -o "$tmp/gol.zip" -d "$prefix"
-          latest=$(ls -d "$prefix"/gol-tool-* | sort -V | tail -n1)
-          ln -sfn "$latest" "$prefix/gol-tool"
-          
-          # add tiny wrapper to ~/.local/bin and expose PATH to later steps
-          mkdir -p "$HOME/.local/bin"
-          ln -sfn "$prefix/gol-tool/bin/gol" "$HOME/.local/bin/gol"
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-          
-          gol --version
-
-      - name: Install rclone (skip if already present)
-        env:
-          RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}
-        run: |
-          mkdir -p ~/.config/rclone
-          printf '%s' "$RCLONE_CONFIG_DATA" > ~/.config/rclone/rclone.conf
-          command -v rclone >/dev/null || curl https://rclone.org/install.sh | sudo bash
+          version: 2
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Download latest published GOL
-        run: |
-          time rclone copy \
-            --http-url https://download.openplanetdata.com :http:osm/planet/gol/planet-latest.osm.gol . \
-            --multi-thread-cutoff 0 \
-            --multi-thread-streams 128 \
-            --multi-thread-chunk-size 512M \
-            --transfers 1 --progress
+        uses: openplanetdata/actions/download@main
+        with:
+          remote_path: osm/planet/gol/v2/planet-latest.osm.gol
 
       - name: Extract CRCP features
         run: |
@@ -82,7 +38,7 @@ jobs:
 
       - name: Convert GeoJSON → GeoParquet
         run: |
-          docker run --rm -v "$PWD":/data ghcr.io/osgeo/gdal:ubuntu-full-3.11.0 bash -c '
+          docker run --rm -v "$PWD":/data ghcr.io/osgeo/gdal:ubuntu-full-latest bash -c '
             set -euo pipefail
             for f in /data/*.geojson; do
               base=$(basename "$f" .geojson)
@@ -90,25 +46,7 @@ jobs:
                       -lco GEOMETRY_ENCODING=WKB -lco COMPRESSION=ZSTD
             done
           '
-
-      - name: SHA‑256 and metadata
-        run: |
-          for p in *-latest.osm.parquet; do
-            sha256sum "$p" > "${p}.sha256"
-            stat -c '%s %W %Z' "$p" | \
-              awk '{print "{\"created\":"($2==0?$3:$2)",\"size\":"$1"}"}' \
-              > "${p}.metadata"
-          done
-
-      - name: Upload to R2
-        env:
-          RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}
-        run: |
-          for f in *-latest.osm.parquet *-latest.osm.parquet.{sha256,metadata}; do
-            dataset="${f%%-latest*}"          # countries, regions, cities, postalcodes …
-            rclone copyto --progress --stats=60s --stats-one-line-date "$f" \
-              "$REMOTE_NAME:openplanetdata/osm/${dataset}/geoparquet/$f"
-          done
+          ls -alh
 
       - name: Cleanup downloaded and generated files
         if: always()
@@ -117,3 +55,42 @@ jobs:
           rm -f *.geojson
           rm -f *-latest.osm.parquet *-latest.osm.parquet.{sha256,metadata}
           find /tmp -name "tmp.*" -user "$USER" -delete 2>/dev/null || true
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: build
+    strategy:
+      matrix:
+        dataset: [countries, regions, cities, postalcodes]
+    env:
+      FILE_NAME: ${{ matrix.dataset }}-latest.osm.parquet
+
+    steps:
+      - name: Create metadata for ${{ matrix.dataset }} file
+        id: create_meta
+        uses: openplanetdata/actions/create-metadata@main
+        with:
+          file: ${{ env.FILE_NAME }}
+          remote_filename: ${{ env.FILE_NAME }}
+          remote_path: /osm/${{ matrix.dataset }}/geoparquet
+          remote_version: 1
+          tags: |
+            ${{ matrix.dataset }}
+            geoparquet
+            openstreetmap
+            private
+
+      - name: Publish ${{ matrix.dataset }} dataset to R2
+        uses: openplanetdata/actions/upload@main
+        env:
+          RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}
+        with:
+          file: ${{ env.FILE_NAME }}
+          remote_filename: ${{ env.FILE_NAME }}
+          remote_path: /osm/${{ matrix.dataset }}/geoparquet
+          remote_version: 1
+
+      - name: Cleanup workspace
+        if: always()
+        run: |
+          rm -f ${{ env.FILE_NAME }} ${{ env.FILE_NAME }}.{metadata,sha256}

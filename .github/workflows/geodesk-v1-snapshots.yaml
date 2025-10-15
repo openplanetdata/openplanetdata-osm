@@ -5,9 +5,7 @@ on:
   workflow_run:
     workflows: ["Build & Publish GeoDesk v2 Snapshots"]
     types: [completed]
-
-env:
-  REMOTE_NAME: openplanetdata-r2
+    branches: [main]
 
 jobs:
   gol:
@@ -19,22 +17,7 @@ jobs:
     steps:
       - name: Set date tag
         id: date
-        run: echo "tag=$(date '+%Y%m%d')" >>"$GITHUB_OUTPUT"
-
-      - name: Install dependencies (skip if already present)
-        shell: bash
-        run: |
-          need_install() { ! command -v "$1" >/dev/null 2>&1; }
-          
-          pkgs=()
-          need_install unzip && pkgs+=(unzip)
-          need_install jq && pkgs+=(jq)
-          
-          if ((${#pkgs[@]})); then
-            sudo dnf -y install "${pkgs[@]}"
-          else
-            echo "All required packages already present."
-          fi
+        uses: openplanetdata/actions/set-date-tag@main
 
       - name: Set up JDK
         uses: actions/setup-java@v5
@@ -42,74 +25,66 @@ jobs:
           distribution: zulu
           java-version: 21
 
-      - name: Install latest gol 1.x
-        run: |
-          set -euo pipefail
-          
-          # download latest 1.x release ZIP
-          tmp=$(mktemp -d)
-          releases=$(curl -sSL 'https://api.github.com/repos/clarisma/gol-tool/releases?per_page=100')
-          url=$(jq -r '[.[]
-              | select(.draft==false and .prerelease==false and (.tag_name|tostring|ltrimstr("v")|startswith("1.")))
-            ][0]
-            .assets[]
-            | select(.name | test("gol-tool-.*\\.zip$"))
-            | .browser_download_url' <<<"$releases" | head -n1)
-          if [[ -z "${url:-}" || "$url" == null ]]; then
-            echo "Failed to locate gol 1.x release asset URL" >&2
-            exit 1
-          fi
-          curl -L "$url" -o "$tmp/gol.zip"
-          
-          # unpack under ~/.local/opt/gol-tool-<ver> and create stable symlinks
-          prefix="$HOME/.local/opt"
-          mkdir -p "$prefix"
-          unzip -q -o "$tmp/gol.zip" -d "$prefix"
-          latest=$(ls -d "$prefix"/gol-tool-* | sort -V | tail -n1)
-          ln -sfn "$latest" "$prefix/gol-tool"
-          
-          # add tiny wrapper to ~/.local/bin and expose PATH to later steps
-          mkdir -p "$HOME/.local/bin"
-          ln -sfn "$prefix/gol-tool/bin/gol" "$HOME/.local/bin/gol"
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-          
-          gol --version
-
-      - name: Install rclone (skip if already present)
-        env:
-          RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}
-        run: |
-          mkdir -p ~/.config/rclone
-          printf '%s' "$RCLONE_CONFIG_DATA" > ~/.config/rclone/rclone.conf
-          command -v rclone >/dev/null || curl https://rclone.org/install.sh | sudo bash
+      - name: Install GOL 1.x
+        uses: openplanetdata/actions/install-gol@main
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          version: 1
 
       - name: Download latest published PBF
-        run: |
-          time rclone copy \
-            --http-url https://download.openplanetdata.com :http:osm/planet/pbf/planet-latest.osm.pbf . \
-            --multi-thread-cutoff 0 \
-            --multi-thread-streams 128 \
-            --multi-thread-chunk-size 512M \
-            --transfers 1 --progress
-          mv planet-latest.osm.pbf "planet-${{ steps.date.outputs.tag }}.osm.pbf"
+        uses: openplanetdata/actions/download@main
+        with:
+          remote_path: osm/planet/pbf/planet-latest.osm.pbf
+
+      - name: Rename downloaded PBF
+        run: mv planet-latest.osm.pbf "planet-${{ steps.date.outputs.tag }}.osm.pbf"
 
       - name: Build GOL variant
         run: |
           g="planet-${{ steps.date.outputs.tag }}.osm.gol"
           p="planet-${{ steps.date.outputs.tag }}.osm.pbf"
-          time gol build --tag-duplicate-nodes=yes "$g" "$p"
-          sha256sum "$g" >"$g.sha256"
-          stat -c '%s %W %Z' "$g" | \
-            awk '{print "{\"created\":"($2==0?$3:$2)",\"size\":"$1"}"}' >"$g.metadata"
 
-      - name: Upload GOL files to R2
+          # Set temp directory to current working directory
+          export TMPDIR="$PWD/.tmp"
+          mkdir -p "$TMPDIR"
+
+          # Set JVM heap size to 50GB for planet file processing
+          export JAVA_TOOL_OPTIONS="-Xmx50g"
+
+          echo "Starting build at $(date -u +%Y-%m-%d_%H:%M:%S)"
+          echo "Using TMPDIR: $TMPDIR"
+          echo "JVM options: $JAVA_TOOL_OPTIONS"
+
+          time gol build --tag-duplicate-nodes=yes "$g" "$p"
+
+          echo "Build finished at $(date -u +%Y-%m-%d_%H:%M:%S)"
+          ls -alh "$g"
+
+      - name: Create metadata
+        id: create_meta
+        uses: openplanetdata/actions/create-metadata@main
+        with:
+          deprecated: true
+          deprecation_reason: Users should switch to GeoDesk v2 and associated files; support for v1 will be removed after 30/09/2026.
+          file: planet-${{ steps.date.outputs.tag }}.osm.gol
+          remote_filename: planet-latest.osm.gol
+          remote_path: /osm/planet/gol
+          remote_version: 1
+          tags: |
+            geodesk
+            gol
+            openstreetmap
+            public
+
+      - name: Upload to R2
+        uses: openplanetdata/actions/upload@main
         env:
           RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}
-        run: |
-          date=${{ steps.date.outputs.tag }}
-          rclone copyto --progress --stats=60s --stats-one-line-date "planet-$date.osm.gol" "$REMOTE_NAME:openplanetdata/osm/planet/gol/v1/planet-latest.osm.gol"
-          rclone copyto "planet-$date.osm.gol.metadata" "$REMOTE_NAME:openplanetdata/osm/planet/gol/v1/planet-latest.osm.gol.metadata"
-          rclone copyto "planet-$date.osm.gol.sha256" "$REMOTE_NAME:openplanetdata/osm/planet/gol/v1/planet-latest.osm.gol.sha256"
+        with:
+          file: planet-${{ steps.date.outputs.tag }}.osm.gol
+          remote_filename: planet-latest.osm.gol
+          remote_path: /osm/planet/gol
+          remote_version: 1
 
       - name: Cleanup downloaded and generated files
         if: always()

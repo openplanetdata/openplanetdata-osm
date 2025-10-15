@@ -4,69 +4,113 @@ on:
   workflow_dispatch:
   workflow_run:
     workflows: [
+      "Build & Publish CRCP Snapshots",
       "Build & Publish Geoparquet Snapshots",
       "Build & Publish GeoDesk v1 Snapshots",
       "Build & Publish GeoDesk v2 Snapshots",
-      "Build & Publish GOL Snapshots",
-      "Build & Publish PBF Snapshots"
+      "Build & Publish PBF Snapshots",
     ]
     types: [completed]
     branches: [main]
 
+permissions:
+  actions: read
+  contents: read
+
 env:
-  METADATA_URLS: |
-    https://download.openplanetdata.com/osm/planet/geoparquet/planet-latest.osm.parquet.metadata
-    https://download.openplanetdata.com/osm/planet/gol/planet-latest.osm.gol.metadata
-    https://download.openplanetdata.com/osm/planet/pbf/planet-latest.osm.pbf.metadata
+  BASE_URL: https://download.openplanetdata.com
   RCLONE_REMOTE: openplanetdata-r2
 
 jobs:
   aggregate:
-    runs-on: ubuntu-latest
+    runs-on: openplanetdata-cortex
 
     steps:
-      - name: Install jq & rclone
+      - name: Install core tools (skip if already present)
+        shell: bash
+        run: |
+          need_install() { ! command -v "$1" >/dev/null 2>&1; }
+          pkgs=()
+          need_install curl && pkgs+=(curl)
+          need_install jq   && pkgs+=(jq)
+
+          if ((${#pkgs[@]})); then
+            sudo dnf -y install "${pkgs[@]}"
+          else
+            echo "All required packages already present."
+          fi
+
+      - name: Install Rclone
+        uses: openplanetdata/actions/install-rclone@main
         env:
           RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y jq
-          mkdir -p ~/.config/rclone
-          printf '%s' "$RCLONE_CONFIG_DATA" > ~/.config/rclone/rclone.conf
-          curl -s https://rclone.org/install.sh | sudo bash
 
-      - name: Download metadata & assemble JSON
+      - name: Fetch and aggregate metadata
         run: |
           set -euo pipefail
           TMPDIR=$(mktemp -d)
+          echo "Working directory: $TMPDIR"
 
-          # Build JSON of the form { "pbf":[...], "gol":[...] }
-          jq -n '{}' > "$TMPDIR/out.json"
+          # Initialize empty array
+          jq -n '[]' > "$TMPDIR/out.json"
 
-          while read -r url; do
-            [ -z "$url" ] && continue
-            curl -sSL "$url" -o "$TMPDIR/file.meta"
+          # List of metadata file URLs to aggregate
+          # Format: {remote_path}/v{remote_version}/{remote_filename}.metadata
+          metadata_paths=(
+            "osm/cities/geoparquet/v1/cities-latest.osm.parquet.metadata"
+            "osm/countries/geoparquet/v1/countries-latest.osm.parquet.metadata"
+            "osm/planet/geoparquet/v1/planet-latest.osm.parquet.metadata"
+            "osm/planet/gol/v1/planet-latest.osm.gol.metadata"
+            "osm/planet/gol/v2/planet-latest.osm.gol.metadata"
+            "osm/planet/pbf/v1/planet-latest.osm.pbf.metadata"
+            "osm/postalcodes/geoparquet/v1/postalcodes-latest.osm.parquet.metadata"
+            "osm/regions/geoparquet/v1/regions-latest.osm.parquet.metadata"
+          )
 
-            # extract type (pbf / gol / …) & base path (= url without .metadata)
-            type=${url%.*}      # trim trailing ".metadata"
-            type=${type##*.}    # take text after last dot
-            path=${url%.metadata}
+          # Fetch and aggregate each metadata file
+          for relpath in "${metadata_paths[@]}"; do
+            metadata_url="$BASE_URL/$relpath"
 
-            # merge into output
-            jq --argjson meta "$(cat "$TMPDIR/file.meta")" \
-               --arg path "$path" \
-               --arg type "$type" \
-               '
-               .[$type] = (.[$type] // []) + [ $meta + {url:$path} ]
-               ' "$TMPDIR/out.json" > "$TMPDIR/tmp" && mv "$TMPDIR/tmp" "$TMPDIR/out.json"
-          done <<<"$METADATA_URLS"
+            echo "::group::Fetching: $relpath"
+            echo "URL: $metadata_url"
 
-          mv "$TMPDIR/out.json" metadata.json
-          cat metadata.json
+            if curl -sf "$metadata_url" > "$TMPDIR/file.meta"; then
+              echo "✓ Successfully fetched"
+
+              # Extract format from remote_filename
+              remote_filename=$(jq -r '.remote_filename // empty' "$TMPDIR/file.meta")
+              if [ -n "$remote_filename" ]; then
+                # Extract file extension as format
+                format="${remote_filename##*.}"
+              else
+                format="unknown"
+              fi
+
+              # Add format field and append to array
+              jq --argjson meta "$(cat "$TMPDIR/file.meta")" \
+                 --arg format "$format" \
+                 '. + [$meta + {format: $format}]' \
+                 "$TMPDIR/out.json" > "$TMPDIR/tmp" && mv "$TMPDIR/tmp" "$TMPDIR/out.json"
+
+              echo "✓ Added to aggregated metadata (format: $format)"
+            else
+              echo "⚠️  Failed to fetch (may not exist yet)"
+            fi
+
+            echo "::endgroup::"
+          done
+
+          # Sort array by format (asc) then by remote_version (asc), and sort keys in each object
+          jq 'sort_by(.format, (.remote_version | tonumber)) | map(. | to_entries | sort_by(.key) | from_entries)' "$TMPDIR/out.json" > "$TMPDIR/sorted.json"
+          mv "$TMPDIR/sorted.json" metadata.json
+
+          echo "::group::Final aggregated metadata"
+          jq . metadata.json
+          echo "::endgroup::"
 
       - name: Upload to R2
         run: |
-          rclone copyto metadata.json "$RCLONE_REMOTE:openplanetdata/osm/metadata.json"
+          rclone copyto metadata.json "$RCLONE_REMOTE:openplanetdata/osm/planet.metadata"
 
       - name: Cleanup downloaded and generated files
         if: always()

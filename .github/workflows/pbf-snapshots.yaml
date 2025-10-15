@@ -5,8 +5,8 @@ on:
     - cron: '0 1 * * *'
   workflow_dispatch:
 
-env:
-  REMOTE_NAME: openplanetdata-r2
+permissions:
+  contents: read
 
 jobs:
   pbf:
@@ -18,16 +18,18 @@ jobs:
     steps:
       - name: Set date tag
         id: date
-        run: echo "tag=$(date '+%Y%m%d')" >>"$GITHUB_OUTPUT"
+        uses: openplanetdata/actions/set-date-tag@main
 
       - name: Install core tools (skip if already present)
         shell: bash
         run: |
+          echo "test"
+          echo "${{ steps.date.outputs.tag }}"
           need_install() { ! command -v "$1" >/dev/null 2>&1; }
           pkgs=()
           need_install aria2c    && pkgs+=(aria2)
+          need_install jq        && pkgs+=(jq)
           need_install osmium    && pkgs+=(osmium-tool)
-          need_install osmupdate && pkgs+=(osmctools)
           need_install unzip     && pkgs+=(unzip)
           
           if ((${#pkgs[@]})); then
@@ -35,40 +37,123 @@ jobs:
           else
             echo "All required packages already present."
           fi
-      - name: Install rclone (skip if already present)
+      - name: Install PyOsmium replication tools
+        run: |
+          pip install osmium
+          pyosmium-up-to-date --version
+
+      - name: Install Rclone
+        uses: openplanetdata/actions/install-rclone@main
         env:
           RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}
-        run: |
-          if ! command -v rclone >/dev/null 2>&1; then
-            curl https://rclone.org/install.sh | sudo bash
-          fi
-          mkdir -p ~/.config/rclone
-          printf '%s' "$RCLONE_CONFIG_DATA" > ~/.config/rclone/rclone.conf
-          rclone --version
 
       - name: Download latest OSM planet
         run: |
-          aria2c --seed-time=0 \
+          aria2c \
+            --bt-max-peers=500 \
+            --bt-request-peer-speed-limit=0 \
+            --bt-save-metadata=false \
+            --continue=true \
+            --disk-cache=0 \
+            --enable-dht=true \
+            --enable-peer-exchange=true \
+            --file-allocation=falloc \
+            --max-connection-per-server=16 \
+            --max-download-limit=0 \
+            --max-overall-download-limit=0 \
+            --min-split-size=10M \
+            --seed-time=0 \
+            --split=128 \
+            --summary-interval=10 \
             https://planet.openstreetmap.org/pbf/planet-latest.osm.pbf.torrent \
             --index-out=1=planet-latest.osm.pbf
+          ls -alh
 
       - name: Generate new PBF version with latest changes
         run: |
+          set +e  # Don't exit on error, we handle it manually
           f="planet-${{ steps.date.outputs.tag }}.osm.pbf"
-          time osmupdate planet-latest.osm.pbf "$f" --hour --verbose
-          rm planet-latest.osm.pbf
-          sha256sum "$f" >"$f.sha256"
-          stat -c '%s %W %Z' "$f" | \
-            awk '{print "{\"created\":"($2==0?$3:$2)",\"size\":"$1"}"}' >"$f.metadata"
+          state_dir="$(mktemp -d)"
+          trap 'rm -rf "$state_dir"' EXIT
+          cp planet-latest.osm.pbf "$f"
+          status=1
+          iteration=0
 
-      - name: Upload PBF files to R2
+          # Main update loop
+          while [ "$status" -eq 1 ]; do
+            iteration=$((iteration + 1))
+            echo "=== Update iteration $iteration ==="
+            pyosmium-up-to-date \
+              -vv \
+              --server https://planet.openstreetmap.org/replication/hour \
+              --size 2048 \
+              "$f" || status=$?
+            status=$?
+            echo "Exit status: $status"
+            if [ "$status" -gt 1 ]; then
+              echo "Error: pyosmium-up-to-date failed with status $status"
+              exit "$status"
+            elif [ "$status" -eq 1 ]; then
+              echo "More updates available, continuing..."
+            else
+              echo "Update complete!"
+            fi
+          done
+
+          # Grace period: run some more times to catch any data that appeared during processing
+          echo ""
+          echo "=== Grace period: Running additional updates to ensure we're fully caught up ==="
+          for grace in 1 2 3; do
+            echo "--- Grace update attempt $grace ---"
+            pyosmium-up-to-date \
+              -vv \
+              --server https://planet.openstreetmap.org/replication/hour \
+              --size 2048 \
+              "$f" || grace_status=$?
+            grace_status=$?
+            echo "Grace attempt $grace exit status: $grace_status"
+            if [ "$grace_status" -gt 1 ]; then
+              echo "Error during grace period update"
+              exit "$grace_status"
+            elif [ "$grace_status" -eq 1 ]; then
+              echo "Warning: More updates found during grace period!"
+            else
+              echo "Grace attempt $grace: No additional updates needed"
+              break
+            fi
+          done
+
+          # Verification: Extract and display final sequence number
+          echo ""
+          echo "=== Final verification ==="
+          osmium fileinfo -e "$f" || true
+
+          rm -f *.torrent
+          rm -f planet-latest.osm.pbf
+          ls -alh
+
+      - name: Create metadata
+        id: create-metadata
+        uses: openplanetdata/actions/create-metadata@main
+        with:
+          file: planet-${{ steps.date.outputs.tag }}.osm.pbf
+          remote_filename: planet-latest.osm.pbf
+          remote_path: /osm/planet/pbf
+          remote_version: 1
+          tags: |
+            openstreetmap
+            pbf
+            public
+
+      - name: Upload to R2
+        uses: openplanetdata/actions/upload@main
         env:
           RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}
-        run: |
-          date=${{ steps.date.outputs.tag }}
-          rclone copyto --progress --stats=60s --stats-one-line-date "planet-$date.osm.pbf" "$REMOTE_NAME:openplanetdata/osm/planet/pbf/planet-latest.osm.pbf"
-          rclone copyto "planet-$date.osm.pbf.metadata" "$REMOTE_NAME:openplanetdata/osm/planet/pbf/planet-latest.osm.pbf.metadata"
-          rclone copyto "planet-$date.osm.pbf.sha256" "$REMOTE_NAME:openplanetdata/osm/planet/pbf/planet-latest.osm.pbf.sha256"
+        with:
+          file: planet-${{ steps.date.outputs.tag }}.osm.pbf
+          remote_filename: planet-latest.osm.pbf
+          remote_path: /osm/planet/pbf
+          remote_version: 1
 
       - name: Cleanup downloaded and generated files
         if: always()
