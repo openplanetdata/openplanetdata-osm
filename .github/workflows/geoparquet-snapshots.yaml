@@ -108,10 +108,20 @@ jobs:
           find "$OUT_DIR" -print | sort
           echo "::endgroup::"
 
+          # Configure DuckDB for low-memory environment with disk spilling
+          # Set memory limit to 48GB (leaving ~16GB for OS and other processes)
+          # Use workspace directory for temp files (not /tmp which may be tmpfs/RAM)
+          DUCKDB_TEMP_DIR="${PWD}/.duckdb-temp"
+          mkdir -p "$DUCKDB_TEMP_DIR"
+
           ./duckdb -c "
               INSTALL 'spatial'; LOAD 'spatial';
+              SET max_temp_directory_size='500GB';
+              SET memory_limit='54GB';
+              SET temp_directory='${DUCKDB_TEMP_DIR}';
+
               COPY (
-                  SELECT 
+                  SELECT
                     osm_type::ENUM ('node', 'way', 'relation') AS osm_type,
                     osm_id,
                     tags,
@@ -122,10 +132,13 @@ jobs:
               ) TO 'planet-${TAG}.osm.parquet' (
                   FORMAT PARQUET,
                   CODEC 'zstd',
-                  COMPRESSION_LEVEL 12,
-                  PARQUET_VERSION v2
+                  COMPRESSION_LEVEL 3,
+                  PARQUET_VERSION v2,
               );
           "
+
+          # Cleanup temp directory
+          rm -rf "$DUCKDB_TEMP_DIR"
 
       - name: Create metadata
         id: create_meta
@@ -157,5 +170,6 @@ jobs:
           rm -f planet-*.osm.pbf planet-*.osm.parquet planet-*.osm.parquet.{sha256,metadata}
           rm -rf ohsome-*
           rm -rf ohsome-planet
+          rm -rf .duckdb-temp
           find . -name "*.jar" -delete
           find /tmp -name "tmp.*" -user "$USER" -delete 2>/dev/null || true
