@@ -53,6 +53,7 @@ jobs:
           case "${{ runner.arch }}" in
             X64)   system_config="linux-amd64" ;;
             ARM64) system_config="linux-arm64" ;;
+            *) echo "Unsupported architecture: ${{ runner.arch }}"; exit 1 ;;
           esac
           wget https://github.com/duckdb/duckdb/releases/download/${{ steps.get_duckdb_tag.outputs.tag }}/duckdb_cli-$system_config.zip
           unzip -o duckdb_cli-$system_config.zip
@@ -109,7 +110,7 @@ jobs:
           echo "::endgroup::"
 
           # Configure DuckDB for low-memory environment with disk spilling
-          # Set memory limit to 48GB (leaving ~16GB for OS and other processes)
+          # Set memory limit to 54GB (leaving ~10GB for OS and other processes)
           # Use workspace directory for temp files (not /tmp which may be tmpfs/RAM)
           DUCKDB_TEMP_DIR="${PWD}/.duckdb-temp"
           mkdir -p "$DUCKDB_TEMP_DIR"
@@ -126,14 +127,14 @@ jobs:
                     osm_id,
                     tags,
                     bbox,
-                    ST_GeomFromWKB(geometry) as geometry,
+                    ST_GeomFromWKB(geometry) as geometry
                   FROM '${OUT_DIR}/contributions/latest/*.parquet'
                   ORDER BY bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax
               ) TO 'planet-${TAG}.osm.parquet' (
                   FORMAT PARQUET,
                   CODEC 'zstd',
                   COMPRESSION_LEVEL 3,
-                  PARQUET_VERSION v2,
+                  PARQUET_VERSION v2
               );
           "
 
