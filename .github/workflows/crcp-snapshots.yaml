@@ -31,10 +31,10 @@ jobs:
 
       - name: Extract CRCP features
         run: |
-          time gol query planet-latest.osm.gol "a['ISO3166-1:alpha2']" -t=ISO3166-1:alpha2 -f=geojson > countries.geojson
-          time gol query planet-latest.osm.gol "a['ISO3166-2']" -t=ISO3166-2 -f=geojson > regions.geojson
-          time gol query planet-latest.osm.gol "n['place'='city', 'town', 'village'][population>10]" -t=lat,lon,name,name:en -f=geojson > cities.geojson
-          time gol query planet-latest.osm.gol "n[addr:postcode]" -t=lat,lon,addr:postcode -f=geojson > postalcodes.geojson
+          time gol query planet-latest.osm.gol "a['ISO3166-1:alpha2']" --keys=ISO3166-1:alpha2 -f=geojson > countries.geojson
+          time gol query planet-latest.osm.gol "a['ISO3166-2']" --keys=ISO3166-2 -f=geojson > regions.geojson
+          time gol query planet-latest.osm.gol "n['place'='city', 'town', 'village'][population>10]" --keys=lat,lon,name,name:en -f=geojson > cities.geojson
+          time gol query planet-latest.osm.gol "n[addr:postcode]" --keys=lat,lon,addr:postcode -f=geojson > postalcodes.geojson
 
       - name: Convert GeoJSON → GeoParquet
         run: |
