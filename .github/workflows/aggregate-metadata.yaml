@@ -60,6 +60,7 @@ jobs:
             "osm/cities/geoparquet/v1/cities-latest.osm.parquet.metadata"
             "osm/countries/geoparquet/v1/countries-latest.osm.parquet.metadata"
             "osm/planet/geoparquet/v1/planet-latest.osm.parquet.metadata"
+            "osm/planet/gob/v2/planet-latest.osm.gob.metadata"
             "osm/planet/gol/v1/planet-latest.osm.gol.metadata"
             "osm/planet/gol/v2/planet-latest.osm.gol.metadata"
             "osm/planet/pbf/v1/planet-latest.osm.pbf.metadata"
