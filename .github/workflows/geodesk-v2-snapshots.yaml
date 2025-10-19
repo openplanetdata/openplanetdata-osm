@@ -8,7 +8,7 @@ on:
     branches: [main]
 
 jobs:
-  gol:
+  build-gol-gob:
     runs-on: openplanetdata-cortex
 
     outputs:
