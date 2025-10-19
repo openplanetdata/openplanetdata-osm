@@ -69,7 +69,7 @@ jobs:
       - name: Build GOB
         run: |
           gol="planet-${{ steps.date.outputs.tag }}.osm.gol"
-          gob="planet-${{ steps.date.outputs.tag }}.pbf.gob"
+          gob="planet-${{ steps.date.outputs.tag }}.osm.gob"
           time gol save "$gol" "$gob"
           ls -alh
 
@@ -87,8 +87,8 @@ jobs:
         id: create_meta_gob
         uses: openplanetdata/actions/create-metadata@main
         with:
-          file: planet-${{ steps.date.outputs.tag }}.pbf.gob
-          remote_filename: planet-latest.pbf.gob
+          file: planet-${{ steps.date.outputs.tag }}.osm.gob
+          remote_filename: planet-latest.osm.gob
           remote_path: /osm/planet/gob
           remote_version: 2
           tags: |
@@ -103,8 +103,8 @@ jobs:
         env:
           RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}
         with:
-          file: planet-${{ steps.date.outputs.tag }}.pbf.gob
-          remote_filename: planet-latest.pbf.gob
+          file: planet-${{ steps.date.outputs.tag }}.osm.gob
+          remote_filename: planet-latest.osm.gob
           remote_path: /osm/planet/gob
           remote_version: 2
 
