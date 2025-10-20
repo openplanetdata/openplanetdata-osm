@@ -3,7 +3,7 @@ name: Build & Publish Geoparquet Snapshots
 on:
   workflow_dispatch:
   workflow_run:
-    workflows: ["Build & Publish CRCP Snapshots"]
+    workflows: ["Build & Publish CRCP Snapshots", "Build & Publish GeoDesk v1 Snapshots"]
     types: [completed]
     branches: [main]
 
@@ -13,7 +13,7 @@ env:
 jobs:
   geoparquet:
     runs-on: openplanetdata-cortex
-    timeout-minutes: 600
+    timeout-minutes: 300
 
     outputs:
       tag: ${{ steps.date.outputs.tag }}
@@ -40,7 +40,7 @@ jobs:
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 25
 
       - name: Get latest DuckDB release tag
         id: get_duckdb_tag
