@@ -47,7 +47,7 @@ jobs:
           echo "Starting build at $(date -u +%Y-%m-%d_%H:%M:%S)"
           echo "Using TMPDIR: $TMPDIR"
 
-          time gol build --yes "$g" "$p"
+          time gol build --updatable --yes "$g" "$p"
   
           echo "Build finished at $(date -u +%Y-%m-%d_%H:%M:%S)"
           ls -alh "$g"
