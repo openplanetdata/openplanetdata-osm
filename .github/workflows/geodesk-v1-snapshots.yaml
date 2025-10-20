@@ -23,7 +23,7 @@ jobs:
         uses: actions/setup-java@v5
         with:
           distribution: zulu
-          java-version: 21
+          java-version: 25
 
       - name: Install GOL 1.x
         uses: openplanetdata/actions/install-gol@main
