@@ -129,7 +129,6 @@ jobs:
                     bbox,
                     ST_GeomFromWKB(geometry) as geometry
                   FROM '${OUT_DIR}/contributions/latest/*.parquet'
-                  ORDER BY bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax
               ) TO 'planet-${TAG}.osm.parquet' (
                   FORMAT PARQUET,
                   CODEC 'zstd',
