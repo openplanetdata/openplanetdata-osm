@@ -1,0 +1,26 @@
+name: Country Boundary for Algeria (DZ)
+
+on:
+  schedule:
+    - cron: '35 2 7 * *'  # Monthly on day 7 at 02:35 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-dz:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: dz
+      entity_name: Algeria
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="DZ"]'
+      remote_path: /osm/boundaries/countries/dz
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        algeria
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

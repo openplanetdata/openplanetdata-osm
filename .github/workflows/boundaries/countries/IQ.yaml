@@ -1,0 +1,26 @@
+name: Country Boundary for Iraq (IQ)
+
+on:
+  schedule:
+    - cron: '35 2 12 * *'  # Monthly on day 12 at 02:35 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-iq:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: iq
+      entity_name: Iraq
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="IQ"]'
+      remote_path: /osm/boundaries/countries/iq
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        iraq
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

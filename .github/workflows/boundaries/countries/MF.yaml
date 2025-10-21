@@ -1,0 +1,26 @@
+name: Country Boundary for Saint Martin (MF)
+
+on:
+  schedule:
+    - cron: '25 2 16 * *'  # Monthly on day 16 at 02:25 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-mf:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: mf
+      entity_name: Saint Martin
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="MF"]'
+      remote_path: /osm/boundaries/countries/mf
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        saint-martin
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

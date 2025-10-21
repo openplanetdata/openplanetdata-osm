@@ -1,0 +1,26 @@
+name: Country Boundary for Slovakia (SK)
+
+on:
+  schedule:
+    - cron: '15 2 23 * *'  # Monthly on day 23 at 02:15 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-sk:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: sk
+      entity_name: Slovakia
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="SK"]'
+      remote_path: /osm/boundaries/countries/sk
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        slovakia
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

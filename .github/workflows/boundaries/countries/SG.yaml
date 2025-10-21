@@ -1,0 +1,26 @@
+name: Country Boundary for Singapore (SG)
+
+on:
+  schedule:
+    - cron: '40 2 22 * *'  # Monthly on day 22 at 02:40 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-sg:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: sg
+      entity_name: Singapore
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="SG"]'
+      remote_path: /osm/boundaries/countries/sg
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        singapore
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

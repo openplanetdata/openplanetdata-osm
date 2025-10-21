@@ -1,0 +1,26 @@
+name: Country Boundary for Turks and Caicos Islands (TC)
+
+on:
+  schedule:
+    - cron: '30 2 24 * *'  # Monthly on day 24 at 02:30 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-tc:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: tc
+      entity_name: Turks and Caicos Islands
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="TC"]'
+      remote_path: /osm/boundaries/countries/tc
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        turks-and-caicos-islands
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

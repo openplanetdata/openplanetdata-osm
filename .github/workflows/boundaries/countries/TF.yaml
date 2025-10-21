@@ -1,0 +1,26 @@
+name: Country Boundary for French Southern Territories (TF)
+
+on:
+  schedule:
+    - cron: '40 2 24 * *'  # Monthly on day 24 at 02:40 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-tf:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: tf
+      entity_name: French Southern Territories
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="TF"]'
+      remote_path: /osm/boundaries/countries/tf
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        french-southern-territories
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

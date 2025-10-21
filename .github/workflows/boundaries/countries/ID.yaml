@@ -1,0 +1,26 @@
+name: Country Boundary for Indonesia (ID)
+
+on:
+  schedule:
+    - cron: '5 2 12 * *'  # Monthly on day 12 at 02:05 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-id:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: id
+      entity_name: Indonesia
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="ID"]'
+      remote_path: /osm/boundaries/countries/id
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        indonesia
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

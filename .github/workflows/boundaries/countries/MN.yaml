@@ -1,0 +1,26 @@
+name: Country Boundary for Mongolia (MN)
+
+on:
+  schedule:
+    - cron: '10 2 17 * *'  # Monthly on day 17 at 02:10 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-mn:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: mn
+      entity_name: Mongolia
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="MN"]'
+      remote_path: /osm/boundaries/countries/mn
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        mongolia
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

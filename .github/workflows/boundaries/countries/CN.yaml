@@ -1,0 +1,26 @@
+name: Country Boundary for China (CN)
+
+on:
+  schedule:
+    - cron: '10 2 6 * *'  # Monthly on day 6 at 02:10 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-cn:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: cn
+      entity_name: China
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="CN"]'
+      remote_path: /osm/boundaries/countries/cn
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        china
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

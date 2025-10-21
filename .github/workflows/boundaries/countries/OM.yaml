@@ -1,0 +1,26 @@
+name: Country Boundary for Oman (OM)
+
+on:
+  schedule:
+    - cron: '0 2 20 * *'  # Monthly on day 20 at 02:00 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-om:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: om
+      entity_name: Oman
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="OM"]'
+      remote_path: /osm/boundaries/countries/om
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        oman
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

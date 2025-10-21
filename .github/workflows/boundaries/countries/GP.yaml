@@ -1,0 +1,26 @@
+name: Country Boundary for Guadeloupe (GP)
+
+on:
+  schedule:
+    - cron: '25 2 10 * *'  # Monthly on day 10 at 02:25 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-gp:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: gp
+      entity_name: Guadeloupe
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="GP"]'
+      remote_path: /osm/boundaries/countries/gp
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        guadeloupe
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

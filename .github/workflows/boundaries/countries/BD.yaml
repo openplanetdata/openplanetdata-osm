@@ -1,0 +1,26 @@
+name: Country Boundary for Bangladesh (BD)
+
+on:
+  schedule:
+    - cron: '0 2 3 * *'  # Monthly on day 3 at 02:00 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-bd:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: bd
+      entity_name: Bangladesh
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="BD"]'
+      remote_path: /osm/boundaries/countries/bd
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        bangladesh
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

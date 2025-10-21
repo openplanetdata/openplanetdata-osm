@@ -1,0 +1,26 @@
+name: Country Boundary for Aruba (AW)
+
+on:
+  schedule:
+    - cron: '20 2 2 * *'  # Monthly on day 2 at 02:20 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-aw:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: aw
+      entity_name: Aruba
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="AW"]'
+      remote_path: /osm/boundaries/countries/aw
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        aruba
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

@@ -1,0 +1,26 @@
+name: Country Boundary for Serbia (RS)
+
+on:
+  schedule:
+    - cron: '0 2 22 * *'  # Monthly on day 22 at 02:00 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-rs:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: rs
+      entity_name: Serbia
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="RS"]'
+      remote_path: /osm/boundaries/countries/rs
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        serbia
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

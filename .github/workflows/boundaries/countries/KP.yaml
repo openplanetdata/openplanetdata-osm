@@ -1,0 +1,26 @@
+name: Country Boundary for North Korea (KP)
+
+on:
+  schedule:
+    - cron: '15 2 14 * *'  # Monthly on day 14 at 02:15 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-kp:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: kp
+      entity_name: North Korea
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="KP"]'
+      remote_path: /osm/boundaries/countries/kp
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        north-korea
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

@@ -1,0 +1,26 @@
+name: Country Boundary for Andorra (AD)
+
+on:
+  schedule:
+    - cron: '0 2 1 * *'  # Monthly on day 1 at 02:00 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-ad:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: ad
+      entity_name: Andorra
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="AD"]'
+      remote_path: /osm/boundaries/countries/ad
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        andorra
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

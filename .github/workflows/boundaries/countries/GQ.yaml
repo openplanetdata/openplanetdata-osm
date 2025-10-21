@@ -1,0 +1,26 @@
+name: Country Boundary for Equatorial Guinea (GQ)
+
+on:
+  schedule:
+    - cron: '30 2 10 * *'  # Monthly on day 10 at 02:30 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-gq:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: gq
+      entity_name: Equatorial Guinea
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="GQ"]'
+      remote_path: /osm/boundaries/countries/gq
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        equatorial-guinea
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

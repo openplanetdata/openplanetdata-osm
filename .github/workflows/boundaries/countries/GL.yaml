@@ -1,0 +1,26 @@
+name: Country Boundary for Greenland (GL)
+
+on:
+  schedule:
+    - cron: '10 2 10 * *'  # Monthly on day 10 at 02:10 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-gl:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: gl
+      entity_name: Greenland
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="GL"]'
+      remote_path: /osm/boundaries/countries/gl
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        greenland
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

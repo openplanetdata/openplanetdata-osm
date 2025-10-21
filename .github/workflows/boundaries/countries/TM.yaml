@@ -1,0 +1,26 @@
+name: Country Boundary for Turkmenistan (TM)
+
+on:
+  schedule:
+    - cron: '25 2 25 * *'  # Monthly on day 25 at 02:25 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-tm:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: tm
+      entity_name: Turkmenistan
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="TM"]'
+      remote_path: /osm/boundaries/countries/tm
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        turkmenistan
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

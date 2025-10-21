@@ -1,0 +1,26 @@
+name: Country Boundary for Cameroon (CM)
+
+on:
+  schedule:
+    - cron: '5 2 6 * *'  # Monthly on day 6 at 02:05 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-cm:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: cm
+      entity_name: Cameroon
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="CM"]'
+      remote_path: /osm/boundaries/countries/cm
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        cameroon
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

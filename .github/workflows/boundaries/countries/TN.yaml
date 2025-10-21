@@ -1,0 +1,26 @@
+name: Country Boundary for Tunisia (TN)
+
+on:
+  schedule:
+    - cron: '30 2 25 * *'  # Monthly on day 25 at 02:30 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-tn:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: tn
+      entity_name: Tunisia
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="TN"]'
+      remote_path: /osm/boundaries/countries/tn
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        tunisia
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

@@ -1,0 +1,26 @@
+name: Country Boundary for Åland Islands (AX)
+
+on:
+  schedule:
+    - cron: '25 2 2 * *'  # Monthly on day 2 at 02:25 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-ax:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: ax
+      entity_name: Åland Islands
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="AX"]'
+      remote_path: /osm/boundaries/countries/ax
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        åland-islands
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

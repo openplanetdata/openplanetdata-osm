@@ -1,0 +1,26 @@
+name: Country Boundary for Kenya (KE)
+
+on:
+  schedule:
+    - cron: '30 2 13 * *'  # Monthly on day 13 at 02:30 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-ke:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: ke
+      entity_name: Kenya
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="KE"]'
+      remote_path: /osm/boundaries/countries/ke
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        kenya
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

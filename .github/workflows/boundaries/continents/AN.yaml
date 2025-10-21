@@ -1,0 +1,26 @@
+name: Continent Boundary for Antarctica (AN)
+
+on:
+  schedule:
+    - cron: '10 3 2 * *'  # Monthly on day 2 at 03:10 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-continent-an:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: an
+      entity_name: Antarctica
+      entity_type: continent
+      osm_query: 'a[place=continent]["name:en"="Antarctica"]'
+      remote_path: /osm/boundaries/continents/an
+      remote_version: '1'
+      tags: |
+        boundary
+        continent
+        antarctica
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

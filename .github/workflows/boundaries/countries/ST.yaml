@@ -1,0 +1,26 @@
+name: Country Boundary for Sao Tome and Principe (ST)
+
+on:
+  schedule:
+    - cron: '5 2 24 * *'  # Monthly on day 24 at 02:05 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-st:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: st
+      entity_name: Sao Tome and Principe
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="ST"]'
+      remote_path: /osm/boundaries/countries/st
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        sao-tome-and-principe
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

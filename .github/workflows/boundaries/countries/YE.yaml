@@ -1,0 +1,26 @@
+name: Country Boundary for Yemen (YE)
+
+on:
+  schedule:
+    - cron: '5 2 28 * *'  # Monthly on day 28 at 02:05 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-ye:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: ye
+      entity_name: Yemen
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="YE"]'
+      remote_path: /osm/boundaries/countries/ye
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        yemen
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

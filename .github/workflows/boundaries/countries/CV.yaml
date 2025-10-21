@@ -1,0 +1,26 @@
+name: Country Boundary for Cabo Verde (CV)
+
+on:
+  schedule:
+    - cron: '30 2 6 * *'  # Monthly on day 6 at 02:30 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-cv:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: cv
+      entity_name: Cabo Verde
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="CV"]'
+      remote_path: /osm/boundaries/countries/cv
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        cabo-verde
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

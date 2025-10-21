@@ -1,0 +1,26 @@
+name: Country Boundary for United States Minor Outlying Islands (UM)
+
+on:
+  schedule:
+    - cron: '30 2 26 * *'  # Monthly on day 26 at 02:30 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-um:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: um
+      entity_name: United States Minor Outlying Islands
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="UM"]'
+      remote_path: /osm/boundaries/countries/um
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        united-states-minor-outlying-islands
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

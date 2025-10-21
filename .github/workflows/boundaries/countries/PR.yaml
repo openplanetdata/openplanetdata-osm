@@ -1,0 +1,26 @@
+name: Country Boundary for Puerto Rico (PR)
+
+on:
+  schedule:
+    - cron: '5 2 21 * *'  # Monthly on day 21 at 02:05 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-pr:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: pr
+      entity_name: Puerto Rico
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="PR"]'
+      remote_path: /osm/boundaries/countries/pr
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        puerto-rico
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

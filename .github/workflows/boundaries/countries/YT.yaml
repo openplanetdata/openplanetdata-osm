@@ -1,0 +1,26 @@
+name: Country Boundary for Mayotte (YT)
+
+on:
+  schedule:
+    - cron: '10 2 28 * *'  # Monthly on day 28 at 02:10 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-yt:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: yt
+      entity_name: Mayotte
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="YT"]'
+      remote_path: /osm/boundaries/countries/yt
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        mayotte
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

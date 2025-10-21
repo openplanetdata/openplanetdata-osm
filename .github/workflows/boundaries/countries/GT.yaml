@@ -1,0 +1,26 @@
+name: Country Boundary for Guatemala (GT)
+
+on:
+  schedule:
+    - cron: '0 2 11 * *'  # Monthly on day 11 at 02:00 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-gt:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: gt
+      entity_name: Guatemala
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="GT"]'
+      remote_path: /osm/boundaries/countries/gt
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        guatemala
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

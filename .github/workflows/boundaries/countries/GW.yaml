@@ -1,0 +1,26 @@
+name: Country Boundary for Guinea-Bissau (GW)
+
+on:
+  schedule:
+    - cron: '10 2 11 * *'  # Monthly on day 11 at 02:10 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-gw:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: gw
+      entity_name: Guinea-Bissau
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="GW"]'
+      remote_path: /osm/boundaries/countries/gw
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        guinea-bissau
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

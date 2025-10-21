@@ -1,0 +1,26 @@
+name: Country Boundary for Heard Island and McDonald Islands (HM)
+
+on:
+  schedule:
+    - cron: '25 2 11 * *'  # Monthly on day 11 at 02:25 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-hm:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: hm
+      entity_name: Heard Island and McDonald Islands
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="HM"]'
+      remote_path: /osm/boundaries/countries/hm
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        heard-island-and-mcdonald-islands
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

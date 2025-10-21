@@ -1,0 +1,26 @@
+name: Country Boundary for Albania (AL)
+
+on:
+  schedule:
+    - cron: '25 2 1 * *'  # Monthly on day 1 at 02:25 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-al:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: al
+      entity_name: Albania
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="AL"]'
+      remote_path: /osm/boundaries/countries/al
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        albania
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

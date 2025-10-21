@@ -1,0 +1,26 @@
+name: Country Boundary for Jordan (JO)
+
+on:
+  schedule:
+    - cron: '20 2 13 * *'  # Monthly on day 13 at 02:20 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-jo:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: jo
+      entity_name: Jordan
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="JO"]'
+      remote_path: /osm/boundaries/countries/jo
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        jordan
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

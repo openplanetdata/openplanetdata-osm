@@ -1,0 +1,26 @@
+name: Country Boundary for Armenia (AM)
+
+on:
+  schedule:
+    - cron: '30 2 1 * *'  # Monthly on day 1 at 02:30 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-am:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: am
+      entity_name: Armenia
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="AM"]'
+      remote_path: /osm/boundaries/countries/am
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        armenia
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

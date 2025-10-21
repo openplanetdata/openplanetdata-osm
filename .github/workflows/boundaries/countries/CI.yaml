@@ -1,0 +1,26 @@
+name: Country Boundary for Côte d'Ivoire (CI)
+
+on:
+  schedule:
+    - cron: '35 2 5 * *'  # Monthly on day 5 at 02:35 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-ci:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: ci
+      entity_name: Côte d'Ivoire
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="CI"]'
+      remote_path: /osm/boundaries/countries/ci
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        côte-d'ivoire
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

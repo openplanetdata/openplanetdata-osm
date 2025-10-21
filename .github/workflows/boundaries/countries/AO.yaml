@@ -1,0 +1,26 @@
+name: Country Boundary for Angola (AO)
+
+on:
+  schedule:
+    - cron: '35 2 1 * *'  # Monthly on day 1 at 02:35 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-ao:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: ao
+      entity_name: Angola
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="AO"]'
+      remote_path: /osm/boundaries/countries/ao
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        angola
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

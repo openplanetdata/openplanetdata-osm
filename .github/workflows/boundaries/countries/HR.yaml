@@ -1,0 +1,26 @@
+name: Country Boundary for Croatia (HR)
+
+on:
+  schedule:
+    - cron: '35 2 11 * *'  # Monthly on day 11 at 02:35 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-hr:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: hr
+      entity_name: Croatia
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="HR"]'
+      remote_path: /osm/boundaries/countries/hr
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        croatia
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

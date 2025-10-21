@@ -1,0 +1,26 @@
+name: Country Boundary for Kiribati (KI)
+
+on:
+  schedule:
+    - cron: '0 2 14 * *'  # Monthly on day 14 at 02:00 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-ki:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: ki
+      entity_name: Kiribati
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="KI"]'
+      remote_path: /osm/boundaries/countries/ki
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        kiribati
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

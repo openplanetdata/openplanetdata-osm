@@ -1,0 +1,26 @@
+name: Country Boundary for Guinea (GN)
+
+on:
+  schedule:
+    - cron: '20 2 10 * *'  # Monthly on day 10 at 02:20 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-gn:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: gn
+      entity_name: Guinea
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="GN"]'
+      remote_path: /osm/boundaries/countries/gn
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        guinea
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

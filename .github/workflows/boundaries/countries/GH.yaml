@@ -1,0 +1,26 @@
+name: Country Boundary for Ghana (GH)
+
+on:
+  schedule:
+    - cron: '0 2 10 * *'  # Monthly on day 10 at 02:00 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-gh:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: gh
+      entity_name: Ghana
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="GH"]'
+      remote_path: /osm/boundaries/countries/gh
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        ghana
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

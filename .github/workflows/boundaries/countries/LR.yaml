@@ -1,0 +1,26 @@
+name: Country Boundary for Liberia (LR)
+
+on:
+  schedule:
+    - cron: '20 2 15 * *'  # Monthly on day 15 at 02:20 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-lr:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: lr
+      entity_name: Liberia
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="LR"]'
+      remote_path: /osm/boundaries/countries/lr
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        liberia
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

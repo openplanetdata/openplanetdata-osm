@@ -1,0 +1,26 @@
+name: Country Boundary for Nigeria (NG)
+
+on:
+  schedule:
+    - cron: '5 2 19 * *'  # Monthly on day 19 at 02:05 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-ng:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: ng
+      entity_name: Nigeria
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="NG"]'
+      remote_path: /osm/boundaries/countries/ng
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        nigeria
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

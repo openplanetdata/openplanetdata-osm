@@ -1,0 +1,26 @@
+name: Country Boundary for Mexico (MX)
+
+on:
+  schedule:
+    - cron: '15 2 18 * *'  # Monthly on day 18 at 02:15 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-mx:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: mx
+      entity_name: Mexico
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="MX"]'
+      remote_path: /osm/boundaries/countries/mx
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        mexico
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

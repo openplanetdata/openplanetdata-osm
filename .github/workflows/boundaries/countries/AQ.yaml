@@ -1,0 +1,26 @@
+name: Country Boundary for Antarctica (AQ)
+
+on:
+  schedule:
+    - cron: '40 2 1 * *'  # Monthly on day 1 at 02:40 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-aq:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: aq
+      entity_name: Antarctica
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="AQ"]'
+      remote_path: /osm/boundaries/countries/aq
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        antarctica
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

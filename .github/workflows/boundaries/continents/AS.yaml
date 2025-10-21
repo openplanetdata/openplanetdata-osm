@@ -1,0 +1,26 @@
+name: Continent Boundary for Asia (AS)
+
+on:
+  schedule:
+    - cron: '20 3 3 * *'  # Monthly on day 3 at 03:20 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-continent-as:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: as
+      entity_name: Asia
+      entity_type: continent
+      osm_query: 'a[place=continent]["name:en"="Asia"]'
+      remote_path: /osm/boundaries/continents/as
+      remote_version: '1'
+      tags: |
+        boundary
+        continent
+        asia
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

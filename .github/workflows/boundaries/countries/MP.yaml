@@ -1,0 +1,26 @@
+name: Country Boundary for Northern Mariana Islands (MP)
+
+on:
+  schedule:
+    - cron: '20 2 17 * *'  # Monthly on day 17 at 02:20 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-mp:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: mp
+      entity_name: Northern Mariana Islands
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="MP"]'
+      remote_path: /osm/boundaries/countries/mp
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        northern-mariana-islands
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

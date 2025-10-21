@@ -1,0 +1,26 @@
+name: Country Boundary for Afghanistan (AF)
+
+on:
+  schedule:
+    - cron: '10 2 1 * *'  # Monthly on day 1 at 02:10 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-af:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: af
+      entity_name: Afghanistan
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="AF"]'
+      remote_path: /osm/boundaries/countries/af
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        afghanistan
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

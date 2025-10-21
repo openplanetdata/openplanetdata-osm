@@ -1,0 +1,26 @@
+name: Country Boundary for Tajikistan (TJ)
+
+on:
+  schedule:
+    - cron: '10 2 25 * *'  # Monthly on day 25 at 02:10 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-tj:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: tj
+      entity_name: Tajikistan
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="TJ"]'
+      remote_path: /osm/boundaries/countries/tj
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        tajikistan
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

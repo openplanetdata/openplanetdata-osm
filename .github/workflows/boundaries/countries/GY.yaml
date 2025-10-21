@@ -1,0 +1,26 @@
+name: Country Boundary for Guyana (GY)
+
+on:
+  schedule:
+    - cron: '15 2 11 * *'  # Monthly on day 11 at 02:15 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-gy:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: gy
+      entity_name: Guyana
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="GY"]'
+      remote_path: /osm/boundaries/countries/gy
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        guyana
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

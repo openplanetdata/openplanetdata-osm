@@ -1,0 +1,26 @@
+name: Country Boundary for Eritrea (ER)
+
+on:
+  schedule:
+    - cron: '15 2 8 * *'  # Monthly on day 8 at 02:15 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-er:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: er
+      entity_name: Eritrea
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="ER"]'
+      remote_path: /osm/boundaries/countries/er
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        eritrea
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

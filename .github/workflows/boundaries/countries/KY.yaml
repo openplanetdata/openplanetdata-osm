@@ -1,0 +1,26 @@
+name: Country Boundary for Cayman Islands (KY)
+
+on:
+  schedule:
+    - cron: '30 2 14 * *'  # Monthly on day 14 at 02:30 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-ky:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: ky
+      entity_name: Cayman Islands
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="KY"]'
+      remote_path: /osm/boundaries/countries/ky
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        cayman-islands
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

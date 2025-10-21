@@ -1,0 +1,26 @@
+name: Country Boundary for Malawi (MW)
+
+on:
+  schedule:
+    - cron: '10 2 18 * *'  # Monthly on day 18 at 02:10 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-mw:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: mw
+      entity_name: Malawi
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="MW"]'
+      remote_path: /osm/boundaries/countries/mw
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        malawi
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

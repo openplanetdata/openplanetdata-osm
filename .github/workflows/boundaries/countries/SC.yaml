@@ -1,0 +1,26 @@
+name: Country Boundary for Seychelles (SC)
+
+on:
+  schedule:
+    - cron: '25 2 22 * *'  # Monthly on day 22 at 02:25 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-sc:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: sc
+      entity_name: Seychelles
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="SC"]'
+      remote_path: /osm/boundaries/countries/sc
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        seychelles
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

@@ -1,0 +1,26 @@
+name: Country Boundary for Australia (AU)
+
+on:
+  schedule:
+    - cron: '15 2 2 * *'  # Monthly on day 2 at 02:15 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-au:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: au
+      entity_name: Australia
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="AU"]'
+      remote_path: /osm/boundaries/countries/au
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        australia
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

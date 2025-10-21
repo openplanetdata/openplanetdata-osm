@@ -1,0 +1,26 @@
+name: Country Boundary for Pitcairn (PN)
+
+on:
+  schedule:
+    - cron: '0 2 21 * *'  # Monthly on day 21 at 02:00 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-pn:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: pn
+      entity_name: Pitcairn
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="PN"]'
+      remote_path: /osm/boundaries/countries/pn
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        pitcairn
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

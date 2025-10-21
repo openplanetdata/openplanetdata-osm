@@ -1,0 +1,26 @@
+name: Country Boundary for Uruguay (UY)
+
+on:
+  schedule:
+    - cron: '40 2 26 * *'  # Monthly on day 26 at 02:40 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-uy:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: uy
+      entity_name: Uruguay
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="UY"]'
+      remote_path: /osm/boundaries/countries/uy
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        uruguay
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

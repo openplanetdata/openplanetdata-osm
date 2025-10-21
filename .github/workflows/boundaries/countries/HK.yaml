@@ -1,0 +1,26 @@
+name: Country Boundary for Hong Kong (HK)
+
+on:
+  schedule:
+    - cron: '20 2 11 * *'  # Monthly on day 11 at 02:20 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-hk:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: hk
+      entity_name: Hong Kong
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="HK"]'
+      remote_path: /osm/boundaries/countries/hk
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        hong-kong
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

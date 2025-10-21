@@ -1,0 +1,26 @@
+name: Country Boundary for Bhutan (BT)
+
+on:
+  schedule:
+    - cron: '25 2 4 * *'  # Monthly on day 4 at 02:25 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-bt:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: bt
+      entity_name: Bhutan
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="BT"]'
+      remote_path: /osm/boundaries/countries/bt
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        bhutan
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

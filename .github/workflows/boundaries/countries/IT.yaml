@@ -1,0 +1,26 @@
+name: Country Boundary for Italy (IT)
+
+on:
+  schedule:
+    - cron: '5 2 13 * *'  # Monthly on day 13 at 02:05 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-it:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: it
+      entity_name: Italy
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="IT"]'
+      remote_path: /osm/boundaries/countries/it
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        italy
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

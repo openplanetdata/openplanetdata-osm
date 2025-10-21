@@ -1,0 +1,26 @@
+name: Country Boundary for Tuvalu (TV)
+
+on:
+  schedule:
+    - cron: '5 2 26 * *'  # Monthly on day 26 at 02:05 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-tv:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: tv
+      entity_name: Tuvalu
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="TV"]'
+      remote_path: /osm/boundaries/countries/tv
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        tuvalu
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

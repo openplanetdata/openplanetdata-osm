@@ -1,0 +1,26 @@
+name: Country Boundary for Norway (NO)
+
+on:
+  schedule:
+    - cron: '20 2 19 * *'  # Monthly on day 19 at 02:20 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-no:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: no
+      entity_name: Norway
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="NO"]'
+      remote_path: /osm/boundaries/countries/no
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        norway
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

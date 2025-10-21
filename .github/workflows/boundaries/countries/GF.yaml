@@ -1,0 +1,26 @@
+name: Country Boundary for French Guiana (GF)
+
+on:
+  schedule:
+    - cron: '35 2 9 * *'  # Monthly on day 9 at 02:35 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-gf:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: gf
+      entity_name: French Guiana
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="GF"]'
+      remote_path: /osm/boundaries/countries/gf
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        french-guiana
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

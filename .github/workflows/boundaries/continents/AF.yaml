@@ -1,0 +1,26 @@
+name: Continent Boundary for Africa (AF)
+
+on:
+  schedule:
+    - cron: '0 3 1 * *'  # Monthly on day 1 at 03:00 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-continent-af:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: af
+      entity_name: Africa
+      entity_type: continent
+      osm_query: 'a[place=continent]["name:en"="Africa"]'
+      remote_path: /osm/boundaries/continents/af
+      remote_version: '1'
+      tags: |
+        boundary
+        continent
+        africa
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

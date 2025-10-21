@@ -1,0 +1,26 @@
+name: Country Boundary for Burkina Faso (BF)
+
+on:
+  schedule:
+    - cron: '10 2 3 * *'  # Monthly on day 3 at 02:10 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-bf:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: bf
+      entity_name: Burkina Faso
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="BF"]'
+      remote_path: /osm/boundaries/countries/bf
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        burkina-faso
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

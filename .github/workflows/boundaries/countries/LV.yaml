@@ -1,0 +1,26 @@
+name: Country Boundary for Latvia (LV)
+
+on:
+  schedule:
+    - cron: '40 2 15 * *'  # Monthly on day 15 at 02:40 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-lv:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: lv
+      entity_name: Latvia
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="LV"]'
+      remote_path: /osm/boundaries/countries/lv
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        latvia
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

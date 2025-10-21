@@ -1,0 +1,26 @@
+name: Country Boundary for South Georgia and the South Sandwich Islands (GS)
+
+on:
+  schedule:
+    - cron: '40 2 10 * *'  # Monthly on day 10 at 02:40 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-gs:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: gs
+      entity_name: South Georgia and the South Sandwich Islands
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="GS"]'
+      remote_path: /osm/boundaries/countries/gs
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        south-georgia-and-the-south-sandwich-islands
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

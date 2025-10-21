@@ -1,0 +1,26 @@
+name: Country Boundary for Vanuatu (VU)
+
+on:
+  schedule:
+    - cron: '35 2 27 * *'  # Monthly on day 27 at 02:35 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-vu:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: vu
+      entity_name: Vanuatu
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="VU"]'
+      remote_path: /osm/boundaries/countries/vu
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        vanuatu
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

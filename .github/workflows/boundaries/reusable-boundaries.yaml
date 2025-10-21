@@ -134,13 +134,12 @@ jobs:
       - name: Download planet GOL
         uses: openplanetdata/actions/download@main
         with:
-          remote_path: osm/planet/gol/planet-latest.osm.gol
-          remote_version: 2
+          remote_path: /osm/planet/gol/v2/planet-latest.osm.gol
 
       - name: Download coastline GPKG
         uses: openplanetdata/actions/download@main
         with:
-          remote_path: osm/planet/coastline/planet-coastline-latest.osm.gpkg
+          remote_path: /osm/planet/coastline/v1/planet-coastline-latest.osm.gpkg
 
       - name: Rename downloaded files
         run: |

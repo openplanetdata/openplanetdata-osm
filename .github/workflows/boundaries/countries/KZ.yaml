@@ -1,0 +1,26 @@
+name: Country Boundary for Kazakhstan (KZ)
+
+on:
+  schedule:
+    - cron: '35 2 14 * *'  # Monthly on day 14 at 02:35 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-kz:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: kz
+      entity_name: Kazakhstan
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="KZ"]'
+      remote_path: /osm/boundaries/countries/kz
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        kazakhstan
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

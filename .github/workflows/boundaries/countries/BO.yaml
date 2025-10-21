@@ -1,0 +1,26 @@
+name: Country Boundary for Bolivia (BO)
+
+on:
+  schedule:
+    - cron: '5 2 4 * *'  # Monthly on day 4 at 02:05 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-bo:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: bo
+      entity_name: Bolivia
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="BO"]'
+      remote_path: /osm/boundaries/countries/bo
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        bolivia
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

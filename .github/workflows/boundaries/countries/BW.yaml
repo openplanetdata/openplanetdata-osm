@@ -1,0 +1,26 @@
+name: Country Boundary for Botswana (BW)
+
+on:
+  schedule:
+    - cron: '35 2 4 * *'  # Monthly on day 4 at 02:35 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-bw:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: bw
+      entity_name: Botswana
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="BW"]'
+      remote_path: /osm/boundaries/countries/bw
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        botswana
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

@@ -1,0 +1,26 @@
+name: Country Boundary for North Macedonia (MK)
+
+on:
+  schedule:
+    - cron: '40 2 16 * *'  # Monthly on day 16 at 02:40 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-mk:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: mk
+      entity_name: North Macedonia
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="MK"]'
+      remote_path: /osm/boundaries/countries/mk
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        north-macedonia
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

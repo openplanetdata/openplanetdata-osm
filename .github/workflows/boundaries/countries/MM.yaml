@@ -1,0 +1,26 @@
+name: Country Boundary for Myanmar (MM)
+
+on:
+  schedule:
+    - cron: '5 2 17 * *'  # Monthly on day 17 at 02:05 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-mm:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: mm
+      entity_name: Myanmar
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="MM"]'
+      remote_path: /osm/boundaries/countries/mm
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        myanmar
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

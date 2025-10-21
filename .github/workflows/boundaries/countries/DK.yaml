@@ -1,0 +1,26 @@
+name: Country Boundary for Denmark (DK)
+
+on:
+  schedule:
+    - cron: '20 2 7 * *'  # Monthly on day 7 at 02:20 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-dk:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: dk
+      entity_name: Denmark
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="DK"]'
+      remote_path: /osm/boundaries/countries/dk
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        denmark
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

@@ -1,0 +1,26 @@
+name: Country Boundary for Belgium (BE)
+
+on:
+  schedule:
+    - cron: '5 2 3 * *'  # Monthly on day 3 at 02:05 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-be:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: be
+      entity_name: Belgium
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="BE"]'
+      remote_path: /osm/boundaries/countries/be
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        belgium
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

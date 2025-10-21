@@ -1,0 +1,26 @@
+name: Country Boundary for Lesotho (LS)
+
+on:
+  schedule:
+    - cron: '25 2 15 * *'  # Monthly on day 15 at 02:25 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-ls:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: ls
+      entity_name: Lesotho
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="LS"]'
+      remote_path: /osm/boundaries/countries/ls
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        lesotho
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

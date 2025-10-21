@@ -1,0 +1,26 @@
+name: Country Boundary for Estonia (EE)
+
+on:
+  schedule:
+    - cron: '0 2 8 * *'  # Monthly on day 8 at 02:00 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-ee:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: ee
+      entity_name: Estonia
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="EE"]'
+      remote_path: /osm/boundaries/countries/ee
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        estonia
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

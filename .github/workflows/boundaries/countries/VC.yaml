@@ -1,0 +1,26 @@
+name: Country Boundary for Saint Vincent and the Grenadines (VC)
+
+on:
+  schedule:
+    - cron: '10 2 27 * *'  # Monthly on day 27 at 02:10 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-vc:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: vc
+      entity_name: Saint Vincent and the Grenadines
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="VC"]'
+      remote_path: /osm/boundaries/countries/vc
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        saint-vincent-and-the-grenadines
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

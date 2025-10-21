@@ -1,0 +1,26 @@
+name: Country Boundary for Argentina (AR)
+
+on:
+  schedule:
+    - cron: '0 2 2 * *'  # Monthly on day 2 at 02:00 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-ar:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: ar
+      entity_name: Argentina
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="AR"]'
+      remote_path: /osm/boundaries/countries/ar
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        argentina
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

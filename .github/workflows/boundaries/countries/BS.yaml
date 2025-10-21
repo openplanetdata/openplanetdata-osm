@@ -1,0 +1,26 @@
+name: Country Boundary for Bahamas (BS)
+
+on:
+  schedule:
+    - cron: '20 2 4 * *'  # Monthly on day 4 at 02:20 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-bs:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: bs
+      entity_name: Bahamas
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="BS"]'
+      remote_path: /osm/boundaries/countries/bs
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        bahamas
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

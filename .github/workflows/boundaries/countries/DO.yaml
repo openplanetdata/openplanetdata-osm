@@ -1,0 +1,26 @@
+name: Country Boundary for Dominican Republic (DO)
+
+on:
+  schedule:
+    - cron: '30 2 7 * *'  # Monthly on day 7 at 02:30 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-do:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: do
+      entity_name: Dominican Republic
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="DO"]'
+      remote_path: /osm/boundaries/countries/do
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        dominican-republic
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

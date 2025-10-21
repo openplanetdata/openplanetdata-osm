@@ -1,0 +1,26 @@
+name: Country Boundary for Egypt (EG)
+
+on:
+  schedule:
+    - cron: '5 2 8 * *'  # Monthly on day 8 at 02:05 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-eg:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: eg
+      entity_name: Egypt
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="EG"]'
+      remote_path: /osm/boundaries/countries/eg
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        egypt
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

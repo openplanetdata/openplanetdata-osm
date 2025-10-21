@@ -1,0 +1,26 @@
+name: Country Boundary for Syrian Arab Republic (SY)
+
+on:
+  schedule:
+    - cron: '20 2 24 * *'  # Monthly on day 24 at 02:20 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-sy:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: sy
+      entity_name: Syrian Arab Republic
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="SY"]'
+      remote_path: /osm/boundaries/countries/sy
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        syrian-arab-republic
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

@@ -1,0 +1,26 @@
+name: Country Boundary for Fiji (FJ)
+
+on:
+  schedule:
+    - cron: '35 2 8 * *'  # Monthly on day 8 at 02:35 UTC
+  workflow_dispatch:
+
+jobs:
+  boundary-country-fj:
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: fj
+      entity_name: Fiji
+      entity_type: country
+      osm_query: 'a["ISO3166-1:alpha2"="FJ"]'
+      remote_path: /osm/boundaries/countries/fj
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        fiji
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}
