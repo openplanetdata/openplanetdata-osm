@@ -275,10 +275,16 @@ jobs:
             rm -rf "$TMPDIR"
             exit 5
           fi
-          echo "  ✓ Computed area"
+
+          # Extract and display computed area
+          COMPUTED_AREA=$(jq -r '.features[0].properties.area // "N/A"' "$TMPDIR/${ENTITY_CODE}_closed.geojson" 2>/dev/null || echo "N/A")
+          if [ "$COMPUTED_AREA" != "N/A" ] && [ "$COMPUTED_AREA" != "null" ]; then
+            echo "  ✓ Computed area: ${COMPUTED_AREA} km²"
+          else
+            echo "  ✓ Area computation completed"
+          fi
 
           mv -f "$TMPDIR/${ENTITY_CODE}_closed.geojson" "$OUTPUT_DIR/${ENTITY_CODE}.geojson"
-          echo "  ✓ Dissolved geometry with metadata and area in km²"
 
           # Step 7: Validate the output has features
           echo "→ Step 7/7: Validating output..."
