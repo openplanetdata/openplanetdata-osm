@@ -1,13 +1,13 @@
-name: Extract Continent Boundaries
+name: Country Boundary
 
 on:
   workflow_dispatch:
     inputs:
-      continent_codes:
-        description: 'Comma-separated list of continent codes to process (e.g. AF, AN, AS, EU, NA, OC, SA)'
+      country_codes:
+        description: 'Comma-separated list of country codes to process (e.g. FR, DE, US)'
         required: true
         type: string
-        default: 'EU'
+        default: 'FR'
 
 jobs:
   prepare:
@@ -21,10 +21,10 @@ jobs:
       - name: Set up matrix
         id: set-matrix
         run: |
-          # Parse the input continent codes and create matrix with metadata
-          CODES='${{ inputs.continent_codes }}'
+          # Parse the input country codes and create matrix with metadata
+          CODES='${{ inputs.country_codes }}'
 
-          # Load continent metadata
+          # Load country metadata
           MATRIX_JSON=$(python3 -c "
           import json
           import sys
@@ -32,23 +32,23 @@ jobs:
           # Parse comma-separated codes and clean whitespace
           codes = [c.strip().lower() for c in '$CODES'.split(',') if c.strip()]
 
-          # Load continent data
-          with open('.github/data/continents.json', 'r') as f:
-              continents = json.load(f)
+          # Load country data
+          with open('.github/data/countries.json', 'r') as f:
+              countries = json.load(f)
 
           # Build matrix
           matrix = []
           for code in codes:
-              if code in continents:
-                  continent = continents[code]
+              if code in countries:
+                  country = countries[code]
                   matrix.append({
                       'code': code,
-                      'name': continent['name'],
-                      'osm_query': continent['osm_query'],
-                      'tag_name': continent['tag_name']
+                      'name': country['name'],
+                      'osm_query': country['osm_query'],
+                      'tag_name': country['tag_name']
                   })
               else:
-                  print(f'Warning: Unknown continent code: {code}', file=sys.stderr)
+                  print(f'Warning: Unknown country code: {code}', file=sys.stderr)
 
           print(json.dumps({'include': matrix}))
           ")
@@ -61,20 +61,20 @@ jobs:
     if: needs.prepare.outputs.matrix != '{"include":[]}'
     strategy:
       fail-fast: false
-      max-parallel: 3
+      max-parallel: 5
       matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
 
     uses: ./.github/workflows/reusable-boundaries.yaml
     with:
       entity_code: ${{ matrix.code }}
       entity_name: ${{ matrix.name }}
-      entity_type: continent
+      entity_type: country
       osm_query: ${{ matrix.osm_query }}
-      remote_path: /osm/boundaries/continents/${{ matrix.code }}
+      remote_path: /osm/boundaries/countries/${{ matrix.code }}
       remote_version: '1'
       tags: |
         boundary
-        continent
+        country
         ${{ matrix.tag_name }}
         geojson
         openstreetmap
