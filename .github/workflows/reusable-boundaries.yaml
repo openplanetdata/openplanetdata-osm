@@ -165,6 +165,7 @@ jobs:
           PLANET_PBF="planet-${TAG}.osm.pbf"
           COASTLINE_DB="coastline.gpkg"
           OUTPUT_DIR="boundaries/${ENTITY_TYPE}s"
+          OUTPUT_FILE="${ENTITY_CODE}.boundary.geojson"
           TMPDIR="boundaries/tmp/${ENTITY_CODE}"
           LOGFILE="boundaries/logs/${ENTITY_CODE}.log"
 
@@ -233,7 +234,7 @@ jobs:
 
           # Step 5: Clip global land polygons with the boundary
           echo "→ Step 5/7: Clipping coastline data with boundary..."
-          if ! ogr2ogr -f GeoJSON "$OUTPUT_DIR/${ENTITY_CODE}.geojson" "$COASTLINE_DB" land_polygons \
+          if ! ogr2ogr -f GeoJSON "$OUTPUT_DIR/$OUTPUT_FILE" "$COASTLINE_DB" land_polygons \
             -clipsrc "$TMPDIR/${ENTITY_CODE}_boundary.gpkg" -q; then
             echo "❌ Failed to clip coastline" >&2
             echo "success=false" >> $GITHUB_OUTPUT
@@ -245,7 +246,7 @@ jobs:
 
           # Step 6: Dissolve multiparts into a single geometry with metadata
           echo "→ Step 6/7: Dissolving multiparts and adding metadata..."
-          if ! ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_dissolved.geojson" "$OUTPUT_DIR/${ENTITY_CODE}.geojson" -dialect sqlite \
+          if ! ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_dissolved.geojson" "$OUTPUT_DIR/$OUTPUT_FILE" -dialect sqlite \
             -sql "SELECT \
               ST_CollectionExtract(ST_UnaryUnion(ST_Collect(geometry)), 3) AS geometry, \
               '$NAME_EN' AS \"name:en\", \
@@ -284,11 +285,11 @@ jobs:
             echo "  ✓ Area computation completed"
           fi
 
-          mv -f "$TMPDIR/${ENTITY_CODE}_closed.geojson" "$OUTPUT_DIR/${ENTITY_CODE}.geojson"
+          mv -f "$TMPDIR/${ENTITY_CODE}_closed.geojson" "$OUTPUT_DIR/$OUTPUT_FILE"
 
           # Step 7: Validate the output has features
           echo "→ Step 7/7: Validating output..."
-          if [ ! -f "$OUTPUT_DIR/${ENTITY_CODE}.geojson" ]; then
+          if [ ! -f "$OUTPUT_DIR/$OUTPUT_FILE" ]; then
             echo "❌ Output file not created" >&2
             echo "success=false" >> $GITHUB_OUTPUT
             echo "failure_reason=Output file not created" >> $GITHUB_OUTPUT
@@ -297,18 +298,18 @@ jobs:
           fi
 
           # Check if the GeoJSON has features (use stat -f on BSD/macOS, -c on Linux)
-          FEATURE_COUNT=$(jq '.features | length' "$OUTPUT_DIR/${ENTITY_CODE}.geojson" 2>/dev/null || echo "0")
+          FEATURE_COUNT=$(jq '.features | length' "$OUTPUT_DIR/$OUTPUT_FILE" 2>/dev/null || echo "0")
 
           if [ "$FEATURE_COUNT" -eq 0 ]; then
             echo "⚠️ WARNING: No features found in output - this may be a data issue" >&2
             if command -v stat &>/dev/null; then
               # Try Linux stat first, fallback to BSD stat
-              FILE_SIZE=$(stat -c%s "$OUTPUT_DIR/${ENTITY_CODE}.geojson" 2>/dev/null || stat -f%z "$OUTPUT_DIR/${ENTITY_CODE}.geojson" 2>/dev/null || echo "unknown")
+              FILE_SIZE=$(stat -c%s "$OUTPUT_DIR/$OUTPUT_FILE" 2>/dev/null || stat -f%z "$OUTPUT_DIR/$OUTPUT_FILE" 2>/dev/null || echo "unknown")
               echo "  File size: ${FILE_SIZE} bytes"
             fi
             echo "success=false" >> $GITHUB_OUTPUT
             echo "failure_reason=No features in output" >> $GITHUB_OUTPUT
-            rm -f "$OUTPUT_DIR/${ENTITY_CODE}.geojson"
+            rm -f "$OUTPUT_DIR/$OUTPUT_FILE"
             rm -rf "$TMPDIR"
             exit 7
           fi
@@ -316,7 +317,7 @@ jobs:
           echo "  ✓ Output validated: $FEATURE_COUNT feature(s)"
 
           # Extract and display area
-          AREA_KM2=$(jq -r '.features[0].properties.area // "N/A"' "$OUTPUT_DIR/${ENTITY_CODE}.geojson" 2>/dev/null || echo "N/A")
+          AREA_KM2=$(jq -r '.features[0].properties.area // "N/A"' "$OUTPUT_DIR/$OUTPUT_FILE" 2>/dev/null || echo "N/A")
           if [ "$AREA_KM2" != "N/A" ] && [ "$AREA_KM2" != "null" ]; then
             echo "  ✓ Computed area: ${AREA_KM2} km²"
           fi
@@ -326,10 +327,10 @@ jobs:
 
           # Set outputs
           echo "success=true" >> $GITHUB_OUTPUT
-          echo "output_file=$OUTPUT_DIR/${ENTITY_CODE}.geojson" >> $GITHUB_OUTPUT
+          echo "output_file=$OUTPUT_DIR/$OUTPUT_FILE" >> $GITHUB_OUTPUT
           echo "feature_count=$FEATURE_COUNT" >> $GITHUB_OUTPUT
 
-          echo "✅ ${ENTITY_CODE}.geojson created successfully with $FEATURE_COUNT feature(s)"
+          echo "✅ $OUTPUT_FILE created successfully with $FEATURE_COUNT feature(s)"
           if [ "$AREA_KM2" != "N/A" ] && [ "$AREA_KM2" != "null" ]; then
             echo "   Area: ${AREA_KM2} km²"
           fi
@@ -340,7 +341,7 @@ jobs:
         uses: openplanetdata/actions/create-metadata@main
         with:
           file: ${{ steps.extract.outputs.output_file }}
-          remote_filename: ${{ inputs.entity_code }}.geojson
+          remote_filename: ${{ inputs.entity_code }}.boundary.geojson
           remote_path: ${{ inputs.remote_path }}
           remote_version: ${{ inputs.remote_version }}
           tags: ${{ inputs.tags }}
@@ -352,7 +353,7 @@ jobs:
           RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}
         with:
           file: ${{ steps.extract.outputs.output_file }}
-          remote_filename: ${{ inputs.entity_code }}.geojson
+          remote_filename: ${{ inputs.entity_code }}.boundary.geojson
           remote_path: ${{ inputs.remote_path }}
           remote_version: ${{ inputs.remote_version }}
 
@@ -360,5 +361,5 @@ jobs:
         if: always()
         run: |
           rm -f planet-*.osm.pbf planet-*.osm.gol coastline.gpkg
-          rm -f boundaries/${{ inputs.entity_type }}s/*.geojson.{sha256,metadata}
+          rm -f boundaries/${{ inputs.entity_type }}s/*.boundary.geojson.{sha256,metadata}
           rm -rf boundaries/tmp boundaries/logs
