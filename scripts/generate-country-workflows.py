@@ -32,7 +32,7 @@ jobs:
       entity_name: {name_short}
       entity_type: country
       osm_query: 'a["ISO3166-1:alpha2"="{iso}"]'
-      remote_path: /osm/boundaries/countries
+      remote_path: /osm/boundaries/countries/{iso_lower}
       remote_version: '1'
       tags: |
         boundary
