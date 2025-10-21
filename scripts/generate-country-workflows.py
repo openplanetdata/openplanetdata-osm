@@ -17,7 +17,7 @@ from urllib.request import urlopen
 # Configuration
 ISO_CSV_URL = "https://raw.githubusercontent.com/ipregistry/iso3166/refs/heads/main/countries.csv"
 WORKFLOWS_DIR = Path(__file__).parent.parent / ".github/workflows/boundaries/countries"
-TEMPLATE = """name: Boundary - {name_long} ({iso})
+TEMPLATE = """name: Country Boundary for {name_short} ({iso})
 
 on:
   schedule:
