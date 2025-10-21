@@ -251,7 +251,7 @@ jobs:
               ST_CollectionExtract(ST_UnaryUnion(ST_Collect(geometry)), 3) AS geometry, \
               '$NAME_EN' AS \"name:en\", \
               '$ENTITY_CODE' AS \"code\", \
-              ROUND(ST_Area(ST_Transform(ST_CollectionExtract(ST_UnaryUnion(ST_Collect(geometry)), 3), 'EPSG:4326', 'ESRI:54009')) / 1000000.0, 2) AS \"area_km2\" \
+              ROUND(ST_Area(ST_Transform(ST_CollectionExtract(ST_UnaryUnion(ST_Collect(geometry)), 3), 'EPSG:4326', 'ESRI:54009')) / 1000000.0, 2) AS \"area\" \
             FROM land_polygons" -q; then
             echo "❌ Failed to dissolve geometry and compute area" >&2
             echo "success=false" >> $GITHUB_OUTPUT
@@ -293,7 +293,7 @@ jobs:
           echo "  ✓ Output validated: $FEATURE_COUNT feature(s)"
 
           # Extract and display area
-          AREA_KM2=$(jq -r '.features[0].properties.area_km2 // "N/A"' "$OUTPUT_DIR/${ENTITY_CODE}.geojson" 2>/dev/null || echo "N/A")
+          AREA_KM2=$(jq -r '.features[0].properties.area // "N/A"' "$OUTPUT_DIR/${ENTITY_CODE}.geojson" 2>/dev/null || echo "N/A")
           if [ "$AREA_KM2" != "N/A" ] && [ "$AREA_KM2" != "null" ]; then
             echo "  ✓ Computed area: ${AREA_KM2} km²"
           fi
