@@ -22,7 +22,7 @@ TEMPLATE = """name: Country Boundary for {name_short} ({iso})
 on:
   schedule:
     - cron: '{cron}'  # {schedule_description}
-  workflow_dispatch:  # Enables manual triggering from GitHub UI
+  workflow_dispatch:
 
 jobs:
   extract-{iso_lower}:
