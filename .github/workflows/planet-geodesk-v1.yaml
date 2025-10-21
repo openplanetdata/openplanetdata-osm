@@ -1,4 +1,4 @@
-name: Build & Publish GeoDesk v1 Snapshots
+name: Planet GeoDesk v1
 
 on:
   workflow_dispatch:
