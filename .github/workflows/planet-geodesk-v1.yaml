@@ -3,7 +3,7 @@ name: Planet GeoDesk v1
 on:
   workflow_dispatch:
   workflow_run:
-    workflows: ["Build & Publish GeoDesk v2 Snapshots"]
+    workflows: ["Planet GeoDesk v2"]
     types: [completed]
     branches: [main]
 
