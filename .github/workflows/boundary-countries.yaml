@@ -4,10 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       country_codes:
-        description: 'JSON array of country codes to process (e.g. ["fr", "de", "us"])'
+        description: 'Comma-separated list of country codes to process (e.g. fr, de, us)'
         required: true
         type: string
-        default: '["fr"]'
+        default: 'fr'
 
 jobs:
   prepare:
@@ -29,7 +29,8 @@ jobs:
           import json
           import sys
 
-          codes = json.loads('$CODES')
+          # Parse comma-separated codes and clean whitespace
+          codes = [c.strip().lower() for c in '$CODES'.split(',') if c.strip()]
 
           # Load country data
           with open('.github/data/countries.json', 'r') as f:
@@ -38,11 +39,10 @@ jobs:
           # Build matrix
           matrix = []
           for code in codes:
-              code_lower = code.lower()
-              if code_lower in countries:
-                  country = countries[code_lower]
+              if code in countries:
+                  country = countries[code]
                   matrix.append({
-                      'code': code_lower,
+                      'code': code,
                       'name': country['name'],
                       'osm_query': country['osm_query'],
                       'tag_name': country['tag_name']
