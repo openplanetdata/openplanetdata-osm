@@ -1,0 +1,341 @@
+name: Extract Boundary (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      entity_code:
+        description: 'Code for the entity (e.g., FR for France, africa for Africa)'
+        required: true
+        type: string
+      entity_name:
+        description: 'Human-readable name of the entity'
+        required: true
+        type: string
+      entity_type:
+        description: 'Type of entity (country, continent, region, etc.)'
+        required: true
+        type: string
+      osm_query:
+        description: 'OSM query to find the boundary relation (e.g., a["ISO3166-1:alpha2"="FR"])'
+        required: true
+        type: string
+      remote_path:
+        description: 'Remote path for upload (e.g., /osm/boundaries/countries)'
+        required: true
+        type: string
+      remote_version:
+        description: 'Remote version number'
+        required: false
+        type: string
+        default: '1'
+      tags:
+        description: 'Newline-separated tags for metadata'
+        required: false
+        type: string
+        default: |
+          boundary
+          openstreetmap
+          public
+
+    outputs:
+      failure_reason:
+        description: 'Reason for failure if extraction failed'
+        value: ${{ jobs.extract.outputs.failure_reason }}
+      feature_count:
+        description: 'Number of features in the output'
+        value: ${{ jobs.extract.outputs.feature_count }}
+      output_file:
+        description: 'Path to the generated GeoJSON file'
+        value: ${{ jobs.extract.outputs.output_file }}
+      success:
+        description: 'Whether the extraction succeeded (true/false)'
+        value: ${{ jobs.extract.outputs.success }}
+
+    secrets:
+      RCLONE_CONFIG_DATA:
+        description: 'Rclone configuration for R2 access'
+        required: true
+
+jobs:
+  extract:
+    runs-on: openplanetdata-cortex
+    timeout-minutes: 60
+
+    outputs:
+      failure_reason: ${{ steps.extract.outputs.failure_reason }}
+      feature_count: ${{ steps.extract.outputs.feature_count }}
+      output_file: ${{ steps.extract.outputs.output_file }}
+      success: ${{ steps.extract.outputs.success }}
+
+    steps:
+      - name: Set date tag
+        id: date
+        uses: openplanetdata/actions/set-date-tag@main
+
+      - name: Install system dependencies
+        shell: bash
+        run: |
+          need_install() { ! command -v "$1" &>/dev/null; }
+
+          # Detect OS and package manager
+          if command -v apt-get &>/dev/null; then
+            # Ubuntu/Debian
+            PKG_MANAGER="apt-get"
+            PKGS=()
+
+            need_install osmium && PKGS+=(osmium-tool)
+            need_install ogr2ogr && PKGS+=(gdal-bin)
+            need_install ogrinfo && PKGS+=(gdal-bin)
+            need_install jq && PKGS+=(jq)
+
+            if [ ${#PKGS[@]} -gt 0 ]; then
+              # Remove duplicates
+              PKGS=($(printf '%s\n' "${PKGS[@]}" | sort -u))
+              sudo apt-get update -qq
+              sudo apt-get install -y "${PKGS[@]}"
+            fi
+          elif command -v dnf &>/dev/null; then
+            # Fedora/RHEL/CentOS
+            PKG_MANAGER="dnf"
+            PKGS=()
+
+            need_install osmium && PKGS+=(osmium-tool)
+            need_install ogr2ogr && PKGS+=(gdal)
+            need_install ogrinfo && PKGS+=(gdal)
+            need_install jq && PKGS+=(jq)
+
+            if [ ${#PKGS[@]} -gt 0 ]; then
+              # Remove duplicates
+              PKGS=($(printf '%s\n' "${PKGS[@]}" | sort -u))
+              sudo dnf -y install "${PKGS[@]}"
+            fi
+          else
+            echo "⚠️ Unsupported package manager. Please install manually: osmium-tool, gdal, jq"
+            exit 1
+          fi
+
+          # Verify installations
+          echo "Verifying installations..."
+          command -v osmium && osmium --version
+          command -v ogr2ogr && ogr2ogr --version
+          command -v jq && jq --version
+
+      - name: Install GOL 2.x
+        uses: openplanetdata/actions/install-gol@main
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          version: 2
+
+      - name: Download planet PBF
+        uses: openplanetdata/actions/download@main
+        with:
+          remote_path: osm/planet/pbf/planet-latest.osm.pbf
+
+      - name: Download planet GOL
+        uses: openplanetdata/actions/download@main
+        with:
+          remote_path: osm/planet/gol/planet-latest.osm.gol
+          remote_version: 2
+
+      - name: Download coastline GPKG
+        uses: openplanetdata/actions/download@main
+        with:
+          remote_path: osm/planet/coastline/planet-coastline-latest.osm.gpkg
+
+      - name: Rename downloaded files
+        run: |
+          TAG="${{ steps.date.outputs.tag }}"
+          mv planet-latest.osm.pbf "planet-${TAG}.osm.pbf"
+          mv planet-latest.osm.gol "planet-${TAG}.osm.gol"
+          mv planet-coastline-latest.osm.gpkg "coastline.gpkg"
+          ls -alh
+
+      - name: Extract boundary
+        id: extract
+        shell: bash
+        run: |
+          set +e  # Don't exit on error, we'll handle it
+
+          ENTITY_TYPE="${{ inputs.entity_type }}"
+          ENTITY_CODE="${{ inputs.entity_code }}"
+          ENTITY_NAME="${{ inputs.entity_name }}"
+          OSM_QUERY="${{ inputs.osm_query }}"
+          TAG="${{ steps.date.outputs.tag }}"
+
+          PLANET_GOL="planet-${TAG}.osm.gol"
+          PLANET_PBF="planet-${TAG}.osm.pbf"
+          COASTLINE_DB="coastline.gpkg"
+          OUTPUT_DIR="boundaries/${ENTITY_TYPE}s"
+          TMPDIR="boundaries/tmp/${ENTITY_CODE}"
+          LOGFILE="boundaries/logs/${ENTITY_CODE}.log"
+
+          # Create directories
+          mkdir -p "$OUTPUT_DIR" "$TMPDIR" "boundaries/logs"
+
+          # Redirect output to log
+          exec 1> >(tee -a "$LOGFILE")
+          exec 2>&1
+
+          echo "=========================================="
+          echo "Extracting: $ENTITY_CODE - $ENTITY_NAME"
+          echo "Type: $ENTITY_TYPE"
+          echo "Query: $OSM_QUERY"
+          echo "Started at: $(date -u +%Y-%m-%d_%H:%M:%S)"
+          echo "=========================================="
+
+          # Step 1: Find relation ID using indexed GOL
+          echo "→ Step 1/7: Finding relation ID..."
+          REL_ID=$(gol query "$PLANET_GOL" "$OSM_QUERY" -f list -q | grep -oP '^R\K\d+' || true)
+
+          if [[ -z "$REL_ID" ]]; then
+            echo "❌ No relation found for query: $OSM_QUERY" >&2
+            echo "success=false" >> $GITHUB_OUTPUT
+            echo "failure_reason=No OSM relation found" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          echo "  ✓ Found relation ID: $REL_ID"
+
+          # Step 2: Extract relation and all its member ways/nodes
+          echo "→ Step 2/7: Extracting relation members from PBF..."
+          if ! osmium getid -r "$PLANET_PBF" r"$REL_ID" -o "$TMPDIR/${ENTITY_CODE}_rel.pbf" --overwrite; then
+            echo "❌ Failed to extract relation" >&2
+            echo "success=false" >> $GITHUB_OUTPUT
+            echo "failure_reason=Failed to extract relation from PBF" >> $GITHUB_OUTPUT
+            rm -rf "$TMPDIR"
+            exit 2
+          fi
+          echo "  ✓ Extracted to $TMPDIR/${ENTITY_CODE}_rel.pbf"
+
+          # Step 3: Convert relation to multipolygons
+          echo "→ Step 3/7: Converting to polygons..."
+          if ! ogr2ogr -f GPKG "$TMPDIR/${ENTITY_CODE}_boundary.gpkg" "$TMPDIR/${ENTITY_CODE}_rel.pbf" multipolygons -q; then
+            echo "❌ Failed to convert to polygons" >&2
+            echo "success=false" >> $GITHUB_OUTPUT
+            echo "failure_reason=Failed to convert to polygons" >> $GITHUB_OUTPUT
+            rm -rf "$TMPDIR"
+            exit 3
+          fi
+          echo "  ✓ Converted to polygons"
+
+          # Step 4: Extract entity metadata
+          echo "→ Step 4/7: Extracting metadata..."
+          COUNTRY_DATA=$(ogrinfo "$TMPDIR/${ENTITY_CODE}_boundary.gpkg" multipolygons -sql \
+            "SELECT other_tags FROM multipolygons WHERE boundary='administrative' LIMIT 1" -q 2>/dev/null || true)
+          NAME_EN=$(echo "$COUNTRY_DATA" | grep -oP '"name:en"=>"?\K[^"]+' | head -1 || true)
+
+          # Fallback to regular name if name:en not found
+          if [[ -z "$NAME_EN" ]]; then
+            NAME_EN=$(ogrinfo "$TMPDIR/${ENTITY_CODE}_boundary.gpkg" multipolygons -sql \
+              "SELECT name FROM multipolygons WHERE boundary='administrative' LIMIT 1" -q 2>/dev/null | \
+              grep -oP 'name \(String\) = \K.*' || echo "$ENTITY_NAME")
+          fi
+          echo "  ✓ Name: $NAME_EN (Code: $ENTITY_CODE)"
+
+          # Step 5: Clip global land polygons with the boundary
+          echo "→ Step 5/7: Clipping coastline data with boundary..."
+          if ! ogr2ogr -f GeoJSON "$OUTPUT_DIR/${ENTITY_CODE}.geojson" "$COASTLINE_DB" land_polygons \
+            -clipsrc "$TMPDIR/${ENTITY_CODE}_boundary.gpkg" -q; then
+            echo "❌ Failed to clip coastline" >&2
+            echo "success=false" >> $GITHUB_OUTPUT
+            echo "failure_reason=Failed to clip coastline data" >> $GITHUB_OUTPUT
+            rm -rf "$TMPDIR"
+            exit 4
+          fi
+          echo "  ✓ Clipped coastline data"
+
+          # Step 6: Dissolve multiparts into a single geometry with metadata and area calculation
+          echo "→ Step 6/7: Dissolving multiparts, adding metadata, and computing area..."
+          if ! ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_closed.geojson" "$OUTPUT_DIR/${ENTITY_CODE}.geojson" -dialect sqlite \
+            -sql "SELECT \
+              ST_CollectionExtract(ST_UnaryUnion(ST_Collect(geometry)), 3) AS geometry, \
+              '$NAME_EN' AS \"name:en\", \
+              '$ENTITY_CODE' AS \"code\", \
+              ROUND(ST_Area(ST_Transform(ST_CollectionExtract(ST_UnaryUnion(ST_Collect(geometry)), 3), 'EPSG:4326', 'ESRI:54009')) / 1000000.0, 2) AS \"area_km2\" \
+            FROM land_polygons" -q; then
+            echo "❌ Failed to dissolve geometry and compute area" >&2
+            echo "success=false" >> $GITHUB_OUTPUT
+            echo "failure_reason=Failed to dissolve geometry and compute area" >> $GITHUB_OUTPUT
+            rm -rf "$TMPDIR"
+            exit 5
+          fi
+
+          mv -f "$TMPDIR/${ENTITY_CODE}_closed.geojson" "$OUTPUT_DIR/${ENTITY_CODE}.geojson"
+          echo "  ✓ Dissolved geometry with metadata and area in km²"
+
+          # Step 7: Validate the output has features
+          echo "→ Step 7/7: Validating output..."
+          if [ ! -f "$OUTPUT_DIR/${ENTITY_CODE}.geojson" ]; then
+            echo "❌ Output file not created" >&2
+            echo "success=false" >> $GITHUB_OUTPUT
+            echo "failure_reason=Output file not created" >> $GITHUB_OUTPUT
+            rm -rf "$TMPDIR"
+            exit 6
+          fi
+
+          # Check if the GeoJSON has features (use stat -f on BSD/macOS, -c on Linux)
+          FEATURE_COUNT=$(jq '.features | length' "$OUTPUT_DIR/${ENTITY_CODE}.geojson" 2>/dev/null || echo "0")
+
+          if [ "$FEATURE_COUNT" -eq 0 ]; then
+            echo "⚠️ WARNING: No features found in output - this may be a data issue" >&2
+            if command -v stat &>/dev/null; then
+              # Try Linux stat first, fallback to BSD stat
+              FILE_SIZE=$(stat -c%s "$OUTPUT_DIR/${ENTITY_CODE}.geojson" 2>/dev/null || stat -f%z "$OUTPUT_DIR/${ENTITY_CODE}.geojson" 2>/dev/null || echo "unknown")
+              echo "  File size: ${FILE_SIZE} bytes"
+            fi
+            echo "success=false" >> $GITHUB_OUTPUT
+            echo "failure_reason=No features in output" >> $GITHUB_OUTPUT
+            rm -f "$OUTPUT_DIR/${ENTITY_CODE}.geojson"
+            rm -rf "$TMPDIR"
+            exit 7
+          fi
+
+          echo "  ✓ Output validated: $FEATURE_COUNT feature(s)"
+
+          # Extract and display area
+          AREA_KM2=$(jq -r '.features[0].properties.area_km2 // "N/A"' "$OUTPUT_DIR/${ENTITY_CODE}.geojson" 2>/dev/null || echo "N/A")
+          if [ "$AREA_KM2" != "N/A" ] && [ "$AREA_KM2" != "null" ]; then
+            echo "  ✓ Computed area: ${AREA_KM2} km²"
+          fi
+
+          # Clean up temp files
+          rm -rf "$TMPDIR"
+
+          # Set outputs
+          echo "success=true" >> $GITHUB_OUTPUT
+          echo "output_file=$OUTPUT_DIR/${ENTITY_CODE}.geojson" >> $GITHUB_OUTPUT
+          echo "feature_count=$FEATURE_COUNT" >> $GITHUB_OUTPUT
+
+          echo "✅ ${ENTITY_CODE}.geojson created successfully with $FEATURE_COUNT feature(s)"
+          if [ "$AREA_KM2" != "N/A" ] && [ "$AREA_KM2" != "null" ]; then
+            echo "   Area: ${AREA_KM2} km²"
+          fi
+          echo "Finished at: $(date -u +%Y-%m-%d_%H:%M:%S)"
+
+      - name: Create metadata
+        if: steps.extract.outputs.success == 'true'
+        uses: openplanetdata/actions/create-metadata@main
+        with:
+          file: ${{ steps.extract.outputs.output_file }}
+          remote_filename: ${{ inputs.entity_code }}.geojson
+          remote_path: ${{ inputs.remote_path }}
+          remote_version: ${{ inputs.remote_version }}
+          tags: ${{ inputs.tags }}
+
+      - name: Upload to R2
+        if: steps.extract.outputs.success == 'true'
+        uses: openplanetdata/actions/upload@main
+        env:
+          RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}
+        with:
+          file: ${{ steps.extract.outputs.output_file }}
+          remote_filename: ${{ inputs.entity_code }}.geojson
+          remote_path: ${{ inputs.remote_path }}
+          remote_version: ${{ inputs.remote_version }}
+
+      - name: Cleanup downloaded and generated files
+        if: always()
+        run: |
+          rm -f planet-*.osm.pbf planet-*.osm.gol coastline.gpkg
+          rm -f boundaries/${{ inputs.entity_type }}s/*.geojson.{sha256,metadata}
+          rm -rf boundaries/tmp boundaries/logs
