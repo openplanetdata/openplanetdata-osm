@@ -1,4 +1,4 @@
-name: Build & Publish Coastline Snapshots
+name: Planet Coastline
 
 on:
   workflow_dispatch:
