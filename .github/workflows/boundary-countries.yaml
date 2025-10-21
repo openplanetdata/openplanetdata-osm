@@ -4,10 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       country_codes:
-        description: 'Comma-separated list of country codes to process (e.g. fr, de, us)'
+        description: 'Comma-separated list of country codes to process (e.g. FR, DE, US)'
         required: true
         type: string
-        default: 'fr'
+        default: 'FR'
 
 jobs:
   prepare:

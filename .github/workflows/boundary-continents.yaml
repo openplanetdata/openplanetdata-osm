@@ -4,10 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       continent_codes:
-        description: 'Comma-separated list of continent codes to process (e.g. eu, as, af)'
+        description: 'Comma-separated list of continent codes to process (e.g. AF, AN, AS, EU, NA, OC, SA)'
         required: true
         type: string
-        default: 'eu'
+        default: 'EU'
 
 jobs:
   prepare:
