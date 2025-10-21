@@ -158,7 +158,7 @@ jobs:
           ENTITY_TYPE="${{ inputs.entity_type }}"
           ENTITY_CODE="${{ inputs.entity_code }}"
           ENTITY_NAME="${{ inputs.entity_name }}"
-          OSM_QUERY="${{ inputs.osm_query }}"
+          OSM_QUERY='${{ inputs.osm_query }}'
           TAG="${{ steps.date.outputs.tag }}"
 
           PLANET_GOL="planet-${TAG}.osm.gol"
