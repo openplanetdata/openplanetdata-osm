@@ -1,4 +1,4 @@
-name: Build & Publish PBF Snapshots
+name: Planet PBF
 
 on:
   schedule:
