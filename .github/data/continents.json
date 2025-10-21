@@ -1,0 +1,44 @@
+{
+  "af": {
+    "code": "af",
+    "name": "Africa",
+    "osm_query": "a[place=continent][\"name:en\"=\"Africa\"]",
+    "tag_name": "africa"
+  },
+  "an": {
+    "code": "an",
+    "name": "Antarctica",
+    "osm_query": "a[place=continent][\"name:en\"=\"Antarctica\"]",
+    "tag_name": "antarctica"
+  },
+  "as": {
+    "code": "as",
+    "name": "Asia",
+    "osm_query": "a[place=continent][\"name:en\"=\"Asia\"]",
+    "tag_name": "asia"
+  },
+  "eu": {
+    "code": "eu",
+    "name": "Europe",
+    "osm_query": "a[place=continent][\"name:en\"=\"Europe\"]",
+    "tag_name": "europe"
+  },
+  "na": {
+    "code": "na",
+    "name": "North America",
+    "osm_query": "a[place=continent][\"name:en\"=\"North America\"]",
+    "tag_name": "north-america"
+  },
+  "oc": {
+    "code": "oc",
+    "name": "Oceania",
+    "osm_query": "a[place=continent][\"name:en\"=\"Oceania\"]",
+    "tag_name": "oceania"
+  },
+  "sa": {
+    "code": "sa",
+    "name": "South America",
+    "osm_query": "a[place=continent][\"name:en\"=\"South America\"]",
+    "tag_name": "south-america"
+  }
+}

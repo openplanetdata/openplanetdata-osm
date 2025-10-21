@@ -1,0 +1,83 @@
+name: Extract Country Boundaries
+
+on:
+  workflow_dispatch:
+    inputs:
+      country_codes:
+        description: 'JSON array of country codes to process (e.g. ["fr", "de", "us"])'
+        required: true
+        type: string
+        default: '["fr"]'
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up matrix
+        id: set-matrix
+        run: |
+          # Parse the input country codes and create matrix with metadata
+          CODES='${{ inputs.country_codes }}'
+
+          # Load country metadata
+          MATRIX_JSON=$(python3 -c "
+          import json
+          import sys
+
+          codes = json.loads('$CODES')
+
+          # Load country data
+          with open('.github/data/countries.json', 'r') as f:
+              countries = json.load(f)
+
+          # Build matrix
+          matrix = []
+          for code in codes:
+              code_lower = code.lower()
+              if code_lower in countries:
+                  country = countries[code_lower]
+                  matrix.append({
+                      'code': code_lower,
+                      'name': country['name'],
+                      'osm_query': country['osm_query'],
+                      'tag_name': country['tag_name']
+                  })
+              else:
+                  print(f'Warning: Unknown country code: {code}', file=sys.stderr)
+
+          print(json.dumps({'include': matrix}))
+          ")
+
+          echo "matrix=$MATRIX_JSON" >> $GITHUB_OUTPUT
+          echo "Matrix: $MATRIX_JSON"
+
+  extract:
+    needs: prepare
+    if: needs.prepare.outputs.matrix != '{"include":[]}'
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: ${{ matrix.code }}
+      entity_name: ${{ matrix.name }}
+      entity_type: country
+      osm_query: ${{ matrix.osm_query }}
+      remote_path: /osm/boundaries/countries/${{ matrix.code }}
+      remote_version: '1'
+      tags: |
+        boundary
+        country
+        ${{ matrix.tag_name }}
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}

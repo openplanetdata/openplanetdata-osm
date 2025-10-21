@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """
-Generate individual GitHub Actions workflows for each continent boundary extraction.
+Generate continent metadata file for boundary extraction workflows.
 
-This script generates a workflow file for each continent with staggered schedules.
+This script generates a JSON data file containing metadata for all continents.
 """
 
-import os
+import json
 import sys
 from pathlib import Path
 
 
 # Configuration
-WORKFLOWS_DIR = Path(__file__).parent.parent / ".github/workflows/boundaries/continents"
+OUTPUT_FILE = Path(__file__).parent.parent / ".github/data/continents.json"
 
 # Continent data: (code, name)
 CONTINENTS = [
@@ -24,52 +24,6 @@ CONTINENTS = [
     ("sa", "South America"),
 ]
 
-TEMPLATE = """name: Continent Boundary for {name} ({code_upper})
-
-on:
-  schedule:
-    - cron: '{cron}'  # {schedule_description}
-  workflow_dispatch:
-
-jobs:
-  boundary-continent-{code}:
-    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
-    with:
-      entity_code: {code}
-      entity_name: {name}
-      entity_type: continent
-      osm_query: 'a[place=continent]["name:en"="{name}"]'
-      remote_path: /osm/boundaries/continents/{code}
-      remote_version: '1'
-      tags: |
-        boundary
-        continent
-        {tag_name}
-        geojson
-        openstreetmap
-        public
-    secrets:
-      RCLONE_CONFIG_DATA: ${{{{ secrets.RCLONE_CONFIG_DATA }}}}
-"""
-
-
-def generate_cron_schedule(index: int, total: int) -> tuple[str, str]:
-    """
-    Generate a staggered cron schedule to distribute workflows across the month.
-
-    Returns: (cron_expression, description)
-    """
-    # Distribute across 7 days (one per continent)
-    day_of_month = index + 1  # Days 1-7
-    base_hour = 3  # Start at 3:00 AM UTC
-    minutes = (index * 10) % 60  # Stagger by 10 minutes
-    hour = base_hour + (index * 10) // 60  # Handle hour overflow
-
-    cron = f"{minutes} {hour} {day_of_month} * *"
-    description = f"Monthly on day {day_of_month} at {hour:02d}:{minutes:02d} UTC"
-
-    return cron, description
-
 
 def sanitize_tag(name: str) -> str:
     """Convert continent name to a suitable tag."""
@@ -77,60 +31,39 @@ def sanitize_tag(name: str) -> str:
 
 
 def main():
-    """Generate workflow files for all continents."""
+    """Generate continent metadata JSON file."""
 
     # Ensure output directory exists
-    WORKFLOWS_DIR.mkdir(parents=True, exist_ok=True)
+    OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
 
-    print(f"Generating continent workflow files in {WORKFLOWS_DIR}...")
+    print(f"Generating continent metadata file...")
 
-    total_continents = len(CONTINENTS)
-    generated_count = 0
+    continents_data = {}
 
-    for index, (code, name) in enumerate(CONTINENTS):
-        code_upper = code.upper()
-        output_file = WORKFLOWS_DIR / f"{code_upper}.yaml"
-
-        # Generate staggered cron schedule
-        cron, schedule_desc = generate_cron_schedule(index, total_continents)
-
+    for code, name in CONTINENTS:
         # Generate tag from continent name
         tag_name = sanitize_tag(name)
 
-        # Generate workflow content
-        workflow_content = TEMPLATE.format(
-            code=code,
-            code_upper=code_upper,
-            name=name,
-            tag_name=tag_name,
-            cron=cron,
-            schedule_description=schedule_desc
-        )
+        # Build continent metadata
+        continents_data[code] = {
+            "code": code,
+            "name": name,
+            "osm_query": f'a[place=continent]["name:en"="{name}"]',
+            "tag_name": tag_name
+        }
 
-        # Write workflow file
-        try:
-            with open(output_file, 'w') as f:
-                f.write(workflow_content)
-            generated_count += 1
-            print(f"  ✓ Generated {code_upper}: {name}")
-        except Exception as e:
-            print(f"  ⚠️ Failed to generate {code_upper}: {e}", file=sys.stderr)
+    # Write JSON file
+    with open(OUTPUT_FILE, 'w') as f:
+        json.dump(continents_data, f, indent=2, sort_keys=True)
 
     print(f"\n✅ Generation complete!")
-    print(f"   Generated: {generated_count} workflows")
-    print(f"   Location: {WORKFLOWS_DIR}")
+    print(f"   Generated metadata for {len(continents_data)} continents")
+    print(f"   Output: {OUTPUT_FILE}")
 
-    print(f"\n📅 Schedule Distribution:")
-    print(f"   One continent per day (days 1-7 of each month)")
-    print(f"   Time: 3:00 AM UTC, staggered by 10 minutes")
-
-    print(f"\n   Schedule:")
-    for index, (code, name) in enumerate(CONTINENTS):
-        cron, schedule_desc = generate_cron_schedule(index, total_continents)
-        base_hour = 3
-        minutes = (index * 10) % 60
-        hour = base_hour + (index * 10) // 60
-        print(f"   Day {index + 1:2d}, {hour}:{minutes:02d} AM UTC: {name} ({code.upper()})")
+    # Show all entries
+    print(f"\n   Continents:")
+    for code in sorted(continents_data.keys()):
+        print(f"   {code.upper()}: {continents_data[code]['name']}")
 
 
 if __name__ == "__main__":

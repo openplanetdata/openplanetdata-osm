@@ -1,0 +1,1496 @@
+{
+  "ad": {
+    "code": "ad",
+    "name": "Andorra",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"AD\"]",
+    "tag_name": "andorra"
+  },
+  "ae": {
+    "code": "ae",
+    "name": "United Arab Emirates",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"AE\"]",
+    "tag_name": "united-arab-emirates"
+  },
+  "af": {
+    "code": "af",
+    "name": "Afghanistan",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"AF\"]",
+    "tag_name": "afghanistan"
+  },
+  "ag": {
+    "code": "ag",
+    "name": "Antigua and Barbuda",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"AG\"]",
+    "tag_name": "antigua-and-barbuda"
+  },
+  "ai": {
+    "code": "ai",
+    "name": "Anguilla",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"AI\"]",
+    "tag_name": "anguilla"
+  },
+  "al": {
+    "code": "al",
+    "name": "Albania",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"AL\"]",
+    "tag_name": "albania"
+  },
+  "am": {
+    "code": "am",
+    "name": "Armenia",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"AM\"]",
+    "tag_name": "armenia"
+  },
+  "ao": {
+    "code": "ao",
+    "name": "Angola",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"AO\"]",
+    "tag_name": "angola"
+  },
+  "aq": {
+    "code": "aq",
+    "name": "Antarctica",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"AQ\"]",
+    "tag_name": "antarctica"
+  },
+  "ar": {
+    "code": "ar",
+    "name": "Argentina",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"AR\"]",
+    "tag_name": "argentina"
+  },
+  "as": {
+    "code": "as",
+    "name": "American Samoa",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"AS\"]",
+    "tag_name": "american-samoa"
+  },
+  "at": {
+    "code": "at",
+    "name": "Austria",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"AT\"]",
+    "tag_name": "austria"
+  },
+  "au": {
+    "code": "au",
+    "name": "Australia",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"AU\"]",
+    "tag_name": "australia"
+  },
+  "aw": {
+    "code": "aw",
+    "name": "Aruba",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"AW\"]",
+    "tag_name": "aruba"
+  },
+  "ax": {
+    "code": "ax",
+    "name": "\u00c5land Islands",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"AX\"]",
+    "tag_name": "\u00e5land-islands"
+  },
+  "az": {
+    "code": "az",
+    "name": "Azerbaijan",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"AZ\"]",
+    "tag_name": "azerbaijan"
+  },
+  "ba": {
+    "code": "ba",
+    "name": "Bosnia and Herzegovina",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BA\"]",
+    "tag_name": "bosnia-and-herzegovina"
+  },
+  "bb": {
+    "code": "bb",
+    "name": "Barbados",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BB\"]",
+    "tag_name": "barbados"
+  },
+  "bd": {
+    "code": "bd",
+    "name": "Bangladesh",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BD\"]",
+    "tag_name": "bangladesh"
+  },
+  "be": {
+    "code": "be",
+    "name": "Belgium",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BE\"]",
+    "tag_name": "belgium"
+  },
+  "bf": {
+    "code": "bf",
+    "name": "Burkina Faso",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BF\"]",
+    "tag_name": "burkina-faso"
+  },
+  "bg": {
+    "code": "bg",
+    "name": "Bulgaria",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BG\"]",
+    "tag_name": "bulgaria"
+  },
+  "bh": {
+    "code": "bh",
+    "name": "Bahrain",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BH\"]",
+    "tag_name": "bahrain"
+  },
+  "bi": {
+    "code": "bi",
+    "name": "Burundi",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BI\"]",
+    "tag_name": "burundi"
+  },
+  "bj": {
+    "code": "bj",
+    "name": "Benin",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BJ\"]",
+    "tag_name": "benin"
+  },
+  "bl": {
+    "code": "bl",
+    "name": "Saint Barth\u00e9lemy",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BL\"]",
+    "tag_name": "saint-barth\u00e9lemy"
+  },
+  "bm": {
+    "code": "bm",
+    "name": "Bermuda",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BM\"]",
+    "tag_name": "bermuda"
+  },
+  "bn": {
+    "code": "bn",
+    "name": "Brunei Darussalam",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BN\"]",
+    "tag_name": "brunei-darussalam"
+  },
+  "bo": {
+    "code": "bo",
+    "name": "Bolivia",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BO\"]",
+    "tag_name": "bolivia"
+  },
+  "bq": {
+    "code": "bq",
+    "name": "Bonaire",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BQ\"]",
+    "tag_name": "bonaire"
+  },
+  "br": {
+    "code": "br",
+    "name": "Brazil",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BR\"]",
+    "tag_name": "brazil"
+  },
+  "bs": {
+    "code": "bs",
+    "name": "Bahamas",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BS\"]",
+    "tag_name": "bahamas"
+  },
+  "bt": {
+    "code": "bt",
+    "name": "Bhutan",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BT\"]",
+    "tag_name": "bhutan"
+  },
+  "bv": {
+    "code": "bv",
+    "name": "Bouvet Island",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BV\"]",
+    "tag_name": "bouvet-island"
+  },
+  "bw": {
+    "code": "bw",
+    "name": "Botswana",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BW\"]",
+    "tag_name": "botswana"
+  },
+  "by": {
+    "code": "by",
+    "name": "Belarus",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BY\"]",
+    "tag_name": "belarus"
+  },
+  "bz": {
+    "code": "bz",
+    "name": "Belize",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BZ\"]",
+    "tag_name": "belize"
+  },
+  "ca": {
+    "code": "ca",
+    "name": "Canada",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CA\"]",
+    "tag_name": "canada"
+  },
+  "cc": {
+    "code": "cc",
+    "name": "Cocos",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CC\"]",
+    "tag_name": "cocos"
+  },
+  "cd": {
+    "code": "cd",
+    "name": "Congo",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CD\"]",
+    "tag_name": "congo"
+  },
+  "cf": {
+    "code": "cf",
+    "name": "Central African Republic",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CF\"]",
+    "tag_name": "central-african-republic"
+  },
+  "cg": {
+    "code": "cg",
+    "name": "Congo",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CG\"]",
+    "tag_name": "congo"
+  },
+  "ch": {
+    "code": "ch",
+    "name": "Switzerland",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CH\"]",
+    "tag_name": "switzerland"
+  },
+  "ci": {
+    "code": "ci",
+    "name": "C\u00f4te d'Ivoire",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CI\"]",
+    "tag_name": "c\u00f4te-d'ivoire"
+  },
+  "ck": {
+    "code": "ck",
+    "name": "Cook Islands",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CK\"]",
+    "tag_name": "cook-islands"
+  },
+  "cl": {
+    "code": "cl",
+    "name": "Chile",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CL\"]",
+    "tag_name": "chile"
+  },
+  "cm": {
+    "code": "cm",
+    "name": "Cameroon",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CM\"]",
+    "tag_name": "cameroon"
+  },
+  "cn": {
+    "code": "cn",
+    "name": "China",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CN\"]",
+    "tag_name": "china"
+  },
+  "co": {
+    "code": "co",
+    "name": "Colombia",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CO\"]",
+    "tag_name": "colombia"
+  },
+  "cr": {
+    "code": "cr",
+    "name": "Costa Rica",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CR\"]",
+    "tag_name": "costa-rica"
+  },
+  "cu": {
+    "code": "cu",
+    "name": "Cuba",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CU\"]",
+    "tag_name": "cuba"
+  },
+  "cv": {
+    "code": "cv",
+    "name": "Cabo Verde",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CV\"]",
+    "tag_name": "cabo-verde"
+  },
+  "cw": {
+    "code": "cw",
+    "name": "Cura\u00e7ao",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CW\"]",
+    "tag_name": "cura\u00e7ao"
+  },
+  "cx": {
+    "code": "cx",
+    "name": "Christmas Island",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CX\"]",
+    "tag_name": "christmas-island"
+  },
+  "cy": {
+    "code": "cy",
+    "name": "Cyprus",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CY\"]",
+    "tag_name": "cyprus"
+  },
+  "cz": {
+    "code": "cz",
+    "name": "Czechia",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CZ\"]",
+    "tag_name": "czechia"
+  },
+  "de": {
+    "code": "de",
+    "name": "Germany",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"DE\"]",
+    "tag_name": "germany"
+  },
+  "dj": {
+    "code": "dj",
+    "name": "Djibouti",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"DJ\"]",
+    "tag_name": "djibouti"
+  },
+  "dk": {
+    "code": "dk",
+    "name": "Denmark",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"DK\"]",
+    "tag_name": "denmark"
+  },
+  "dm": {
+    "code": "dm",
+    "name": "Dominica",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"DM\"]",
+    "tag_name": "dominica"
+  },
+  "do": {
+    "code": "do",
+    "name": "Dominican Republic",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"DO\"]",
+    "tag_name": "dominican-republic"
+  },
+  "dz": {
+    "code": "dz",
+    "name": "Algeria",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"DZ\"]",
+    "tag_name": "algeria"
+  },
+  "ec": {
+    "code": "ec",
+    "name": "Ecuador",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"EC\"]",
+    "tag_name": "ecuador"
+  },
+  "ee": {
+    "code": "ee",
+    "name": "Estonia",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"EE\"]",
+    "tag_name": "estonia"
+  },
+  "eg": {
+    "code": "eg",
+    "name": "Egypt",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"EG\"]",
+    "tag_name": "egypt"
+  },
+  "eh": {
+    "code": "eh",
+    "name": "Western Sahara",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"EH\"]",
+    "tag_name": "western-sahara"
+  },
+  "er": {
+    "code": "er",
+    "name": "Eritrea",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"ER\"]",
+    "tag_name": "eritrea"
+  },
+  "es": {
+    "code": "es",
+    "name": "Spain",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"ES\"]",
+    "tag_name": "spain"
+  },
+  "et": {
+    "code": "et",
+    "name": "Ethiopia",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"ET\"]",
+    "tag_name": "ethiopia"
+  },
+  "fi": {
+    "code": "fi",
+    "name": "Finland",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"FI\"]",
+    "tag_name": "finland"
+  },
+  "fj": {
+    "code": "fj",
+    "name": "Fiji",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"FJ\"]",
+    "tag_name": "fiji"
+  },
+  "fk": {
+    "code": "fk",
+    "name": "Falkland Islands",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"FK\"]",
+    "tag_name": "falkland-islands"
+  },
+  "fm": {
+    "code": "fm",
+    "name": "Micronesia",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"FM\"]",
+    "tag_name": "micronesia"
+  },
+  "fo": {
+    "code": "fo",
+    "name": "Faroe Islands",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"FO\"]",
+    "tag_name": "faroe-islands"
+  },
+  "fr": {
+    "code": "fr",
+    "name": "France",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"FR\"]",
+    "tag_name": "france"
+  },
+  "ga": {
+    "code": "ga",
+    "name": "Gabon",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GA\"]",
+    "tag_name": "gabon"
+  },
+  "gb": {
+    "code": "gb",
+    "name": "United Kingdom",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GB\"]",
+    "tag_name": "united-kingdom"
+  },
+  "gd": {
+    "code": "gd",
+    "name": "Grenada",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GD\"]",
+    "tag_name": "grenada"
+  },
+  "ge": {
+    "code": "ge",
+    "name": "Georgia",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GE\"]",
+    "tag_name": "georgia"
+  },
+  "gf": {
+    "code": "gf",
+    "name": "French Guiana",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GF\"]",
+    "tag_name": "french-guiana"
+  },
+  "gg": {
+    "code": "gg",
+    "name": "Guernsey",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GG\"]",
+    "tag_name": "guernsey"
+  },
+  "gh": {
+    "code": "gh",
+    "name": "Ghana",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GH\"]",
+    "tag_name": "ghana"
+  },
+  "gi": {
+    "code": "gi",
+    "name": "Gibraltar",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GI\"]",
+    "tag_name": "gibraltar"
+  },
+  "gl": {
+    "code": "gl",
+    "name": "Greenland",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GL\"]",
+    "tag_name": "greenland"
+  },
+  "gm": {
+    "code": "gm",
+    "name": "Gambia",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GM\"]",
+    "tag_name": "gambia"
+  },
+  "gn": {
+    "code": "gn",
+    "name": "Guinea",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GN\"]",
+    "tag_name": "guinea"
+  },
+  "gp": {
+    "code": "gp",
+    "name": "Guadeloupe",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GP\"]",
+    "tag_name": "guadeloupe"
+  },
+  "gq": {
+    "code": "gq",
+    "name": "Equatorial Guinea",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GQ\"]",
+    "tag_name": "equatorial-guinea"
+  },
+  "gr": {
+    "code": "gr",
+    "name": "Greece",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GR\"]",
+    "tag_name": "greece"
+  },
+  "gs": {
+    "code": "gs",
+    "name": "South Georgia and the South Sandwich Islands",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GS\"]",
+    "tag_name": "south-georgia-and-the-south-sandwich-islands"
+  },
+  "gt": {
+    "code": "gt",
+    "name": "Guatemala",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GT\"]",
+    "tag_name": "guatemala"
+  },
+  "gu": {
+    "code": "gu",
+    "name": "Guam",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GU\"]",
+    "tag_name": "guam"
+  },
+  "gw": {
+    "code": "gw",
+    "name": "Guinea-Bissau",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GW\"]",
+    "tag_name": "guinea-bissau"
+  },
+  "gy": {
+    "code": "gy",
+    "name": "Guyana",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GY\"]",
+    "tag_name": "guyana"
+  },
+  "hk": {
+    "code": "hk",
+    "name": "Hong Kong",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"HK\"]",
+    "tag_name": "hong-kong"
+  },
+  "hm": {
+    "code": "hm",
+    "name": "Heard Island and McDonald Islands",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"HM\"]",
+    "tag_name": "heard-island-and-mcdonald-islands"
+  },
+  "hn": {
+    "code": "hn",
+    "name": "Honduras",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"HN\"]",
+    "tag_name": "honduras"
+  },
+  "hr": {
+    "code": "hr",
+    "name": "Croatia",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"HR\"]",
+    "tag_name": "croatia"
+  },
+  "ht": {
+    "code": "ht",
+    "name": "Haiti",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"HT\"]",
+    "tag_name": "haiti"
+  },
+  "hu": {
+    "code": "hu",
+    "name": "Hungary",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"HU\"]",
+    "tag_name": "hungary"
+  },
+  "id": {
+    "code": "id",
+    "name": "Indonesia",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"ID\"]",
+    "tag_name": "indonesia"
+  },
+  "ie": {
+    "code": "ie",
+    "name": "Ireland",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"IE\"]",
+    "tag_name": "ireland"
+  },
+  "il": {
+    "code": "il",
+    "name": "Israel",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"IL\"]",
+    "tag_name": "israel"
+  },
+  "im": {
+    "code": "im",
+    "name": "Isle of Man",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"IM\"]",
+    "tag_name": "isle-of-man"
+  },
+  "in": {
+    "code": "in",
+    "name": "India",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"IN\"]",
+    "tag_name": "india"
+  },
+  "io": {
+    "code": "io",
+    "name": "British Indian Ocean Territory",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"IO\"]",
+    "tag_name": "british-indian-ocean-territory"
+  },
+  "iq": {
+    "code": "iq",
+    "name": "Iraq",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"IQ\"]",
+    "tag_name": "iraq"
+  },
+  "ir": {
+    "code": "ir",
+    "name": "Iran",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"IR\"]",
+    "tag_name": "iran"
+  },
+  "is": {
+    "code": "is",
+    "name": "Iceland",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"IS\"]",
+    "tag_name": "iceland"
+  },
+  "it": {
+    "code": "it",
+    "name": "Italy",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"IT\"]",
+    "tag_name": "italy"
+  },
+  "je": {
+    "code": "je",
+    "name": "Jersey",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"JE\"]",
+    "tag_name": "jersey"
+  },
+  "jm": {
+    "code": "jm",
+    "name": "Jamaica",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"JM\"]",
+    "tag_name": "jamaica"
+  },
+  "jo": {
+    "code": "jo",
+    "name": "Jordan",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"JO\"]",
+    "tag_name": "jordan"
+  },
+  "jp": {
+    "code": "jp",
+    "name": "Japan",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"JP\"]",
+    "tag_name": "japan"
+  },
+  "ke": {
+    "code": "ke",
+    "name": "Kenya",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"KE\"]",
+    "tag_name": "kenya"
+  },
+  "kg": {
+    "code": "kg",
+    "name": "Kyrgyzstan",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"KG\"]",
+    "tag_name": "kyrgyzstan"
+  },
+  "kh": {
+    "code": "kh",
+    "name": "Cambodia",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"KH\"]",
+    "tag_name": "cambodia"
+  },
+  "ki": {
+    "code": "ki",
+    "name": "Kiribati",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"KI\"]",
+    "tag_name": "kiribati"
+  },
+  "km": {
+    "code": "km",
+    "name": "Comoros",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"KM\"]",
+    "tag_name": "comoros"
+  },
+  "kn": {
+    "code": "kn",
+    "name": "Saint Kitts and Nevis",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"KN\"]",
+    "tag_name": "saint-kitts-and-nevis"
+  },
+  "kp": {
+    "code": "kp",
+    "name": "North Korea",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"KP\"]",
+    "tag_name": "north-korea"
+  },
+  "kr": {
+    "code": "kr",
+    "name": "South Korea",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"KR\"]",
+    "tag_name": "south-korea"
+  },
+  "kw": {
+    "code": "kw",
+    "name": "Kuwait",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"KW\"]",
+    "tag_name": "kuwait"
+  },
+  "ky": {
+    "code": "ky",
+    "name": "Cayman Islands",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"KY\"]",
+    "tag_name": "cayman-islands"
+  },
+  "kz": {
+    "code": "kz",
+    "name": "Kazakhstan",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"KZ\"]",
+    "tag_name": "kazakhstan"
+  },
+  "la": {
+    "code": "la",
+    "name": "Lao People's Democratic Republic",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"LA\"]",
+    "tag_name": "lao-people's-democratic-republic"
+  },
+  "lb": {
+    "code": "lb",
+    "name": "Lebanon",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"LB\"]",
+    "tag_name": "lebanon"
+  },
+  "lc": {
+    "code": "lc",
+    "name": "Saint Lucia",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"LC\"]",
+    "tag_name": "saint-lucia"
+  },
+  "li": {
+    "code": "li",
+    "name": "Liechtenstein",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"LI\"]",
+    "tag_name": "liechtenstein"
+  },
+  "lk": {
+    "code": "lk",
+    "name": "Sri Lanka",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"LK\"]",
+    "tag_name": "sri-lanka"
+  },
+  "lr": {
+    "code": "lr",
+    "name": "Liberia",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"LR\"]",
+    "tag_name": "liberia"
+  },
+  "ls": {
+    "code": "ls",
+    "name": "Lesotho",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"LS\"]",
+    "tag_name": "lesotho"
+  },
+  "lt": {
+    "code": "lt",
+    "name": "Lithuania",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"LT\"]",
+    "tag_name": "lithuania"
+  },
+  "lu": {
+    "code": "lu",
+    "name": "Luxembourg",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"LU\"]",
+    "tag_name": "luxembourg"
+  },
+  "lv": {
+    "code": "lv",
+    "name": "Latvia",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"LV\"]",
+    "tag_name": "latvia"
+  },
+  "ly": {
+    "code": "ly",
+    "name": "Libya",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"LY\"]",
+    "tag_name": "libya"
+  },
+  "ma": {
+    "code": "ma",
+    "name": "Morocco",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MA\"]",
+    "tag_name": "morocco"
+  },
+  "mc": {
+    "code": "mc",
+    "name": "Monaco",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MC\"]",
+    "tag_name": "monaco"
+  },
+  "md": {
+    "code": "md",
+    "name": "Moldova",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MD\"]",
+    "tag_name": "moldova"
+  },
+  "me": {
+    "code": "me",
+    "name": "Montenegro",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"ME\"]",
+    "tag_name": "montenegro"
+  },
+  "mf": {
+    "code": "mf",
+    "name": "Saint Martin",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MF\"]",
+    "tag_name": "saint-martin"
+  },
+  "mg": {
+    "code": "mg",
+    "name": "Madagascar",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MG\"]",
+    "tag_name": "madagascar"
+  },
+  "mh": {
+    "code": "mh",
+    "name": "Marshall Islands",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MH\"]",
+    "tag_name": "marshall-islands"
+  },
+  "mk": {
+    "code": "mk",
+    "name": "North Macedonia",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MK\"]",
+    "tag_name": "north-macedonia"
+  },
+  "ml": {
+    "code": "ml",
+    "name": "Mali",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"ML\"]",
+    "tag_name": "mali"
+  },
+  "mm": {
+    "code": "mm",
+    "name": "Myanmar",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MM\"]",
+    "tag_name": "myanmar"
+  },
+  "mn": {
+    "code": "mn",
+    "name": "Mongolia",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MN\"]",
+    "tag_name": "mongolia"
+  },
+  "mo": {
+    "code": "mo",
+    "name": "Macao",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MO\"]",
+    "tag_name": "macao"
+  },
+  "mp": {
+    "code": "mp",
+    "name": "Northern Mariana Islands",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MP\"]",
+    "tag_name": "northern-mariana-islands"
+  },
+  "mq": {
+    "code": "mq",
+    "name": "Martinique",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MQ\"]",
+    "tag_name": "martinique"
+  },
+  "mr": {
+    "code": "mr",
+    "name": "Mauritania",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MR\"]",
+    "tag_name": "mauritania"
+  },
+  "ms": {
+    "code": "ms",
+    "name": "Montserrat",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MS\"]",
+    "tag_name": "montserrat"
+  },
+  "mt": {
+    "code": "mt",
+    "name": "Malta",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MT\"]",
+    "tag_name": "malta"
+  },
+  "mu": {
+    "code": "mu",
+    "name": "Mauritius",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MU\"]",
+    "tag_name": "mauritius"
+  },
+  "mv": {
+    "code": "mv",
+    "name": "Maldives",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MV\"]",
+    "tag_name": "maldives"
+  },
+  "mw": {
+    "code": "mw",
+    "name": "Malawi",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MW\"]",
+    "tag_name": "malawi"
+  },
+  "mx": {
+    "code": "mx",
+    "name": "Mexico",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MX\"]",
+    "tag_name": "mexico"
+  },
+  "my": {
+    "code": "my",
+    "name": "Malaysia",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MY\"]",
+    "tag_name": "malaysia"
+  },
+  "mz": {
+    "code": "mz",
+    "name": "Mozambique",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MZ\"]",
+    "tag_name": "mozambique"
+  },
+  "na": {
+    "code": "na",
+    "name": "Namibia",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"NA\"]",
+    "tag_name": "namibia"
+  },
+  "nc": {
+    "code": "nc",
+    "name": "New Caledonia",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"NC\"]",
+    "tag_name": "new-caledonia"
+  },
+  "ne": {
+    "code": "ne",
+    "name": "Niger",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"NE\"]",
+    "tag_name": "niger"
+  },
+  "nf": {
+    "code": "nf",
+    "name": "Norfolk Island",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"NF\"]",
+    "tag_name": "norfolk-island"
+  },
+  "ng": {
+    "code": "ng",
+    "name": "Nigeria",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"NG\"]",
+    "tag_name": "nigeria"
+  },
+  "ni": {
+    "code": "ni",
+    "name": "Nicaragua",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"NI\"]",
+    "tag_name": "nicaragua"
+  },
+  "nl": {
+    "code": "nl",
+    "name": "Netherlands",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"NL\"]",
+    "tag_name": "netherlands"
+  },
+  "no": {
+    "code": "no",
+    "name": "Norway",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"NO\"]",
+    "tag_name": "norway"
+  },
+  "np": {
+    "code": "np",
+    "name": "Nepal",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"NP\"]",
+    "tag_name": "nepal"
+  },
+  "nr": {
+    "code": "nr",
+    "name": "Nauru",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"NR\"]",
+    "tag_name": "nauru"
+  },
+  "nu": {
+    "code": "nu",
+    "name": "Niue",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"NU\"]",
+    "tag_name": "niue"
+  },
+  "nz": {
+    "code": "nz",
+    "name": "New Zealand",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"NZ\"]",
+    "tag_name": "new-zealand"
+  },
+  "om": {
+    "code": "om",
+    "name": "Oman",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"OM\"]",
+    "tag_name": "oman"
+  },
+  "pa": {
+    "code": "pa",
+    "name": "Panama",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"PA\"]",
+    "tag_name": "panama"
+  },
+  "pe": {
+    "code": "pe",
+    "name": "Peru",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"PE\"]",
+    "tag_name": "peru"
+  },
+  "pf": {
+    "code": "pf",
+    "name": "French Polynesia",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"PF\"]",
+    "tag_name": "french-polynesia"
+  },
+  "pg": {
+    "code": "pg",
+    "name": "Papua New Guinea",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"PG\"]",
+    "tag_name": "papua-new-guinea"
+  },
+  "ph": {
+    "code": "ph",
+    "name": "Philippines",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"PH\"]",
+    "tag_name": "philippines"
+  },
+  "pk": {
+    "code": "pk",
+    "name": "Pakistan",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"PK\"]",
+    "tag_name": "pakistan"
+  },
+  "pl": {
+    "code": "pl",
+    "name": "Poland",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"PL\"]",
+    "tag_name": "poland"
+  },
+  "pm": {
+    "code": "pm",
+    "name": "Saint Pierre and Miquelon",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"PM\"]",
+    "tag_name": "saint-pierre-and-miquelon"
+  },
+  "pn": {
+    "code": "pn",
+    "name": "Pitcairn",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"PN\"]",
+    "tag_name": "pitcairn"
+  },
+  "pr": {
+    "code": "pr",
+    "name": "Puerto Rico",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"PR\"]",
+    "tag_name": "puerto-rico"
+  },
+  "ps": {
+    "code": "ps",
+    "name": "Palestine",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"PS\"]",
+    "tag_name": "palestine"
+  },
+  "pt": {
+    "code": "pt",
+    "name": "Portugal",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"PT\"]",
+    "tag_name": "portugal"
+  },
+  "pw": {
+    "code": "pw",
+    "name": "Palau",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"PW\"]",
+    "tag_name": "palau"
+  },
+  "py": {
+    "code": "py",
+    "name": "Paraguay",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"PY\"]",
+    "tag_name": "paraguay"
+  },
+  "qa": {
+    "code": "qa",
+    "name": "Qatar",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"QA\"]",
+    "tag_name": "qatar"
+  },
+  "re": {
+    "code": "re",
+    "name": "R\u00e9union",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"RE\"]",
+    "tag_name": "r\u00e9union"
+  },
+  "ro": {
+    "code": "ro",
+    "name": "Romania",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"RO\"]",
+    "tag_name": "romania"
+  },
+  "rs": {
+    "code": "rs",
+    "name": "Serbia",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"RS\"]",
+    "tag_name": "serbia"
+  },
+  "ru": {
+    "code": "ru",
+    "name": "Russian Federation",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"RU\"]",
+    "tag_name": "russian-federation"
+  },
+  "rw": {
+    "code": "rw",
+    "name": "Rwanda",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"RW\"]",
+    "tag_name": "rwanda"
+  },
+  "sa": {
+    "code": "sa",
+    "name": "Saudi Arabia",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SA\"]",
+    "tag_name": "saudi-arabia"
+  },
+  "sb": {
+    "code": "sb",
+    "name": "Solomon Islands",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SB\"]",
+    "tag_name": "solomon-islands"
+  },
+  "sc": {
+    "code": "sc",
+    "name": "Seychelles",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SC\"]",
+    "tag_name": "seychelles"
+  },
+  "sd": {
+    "code": "sd",
+    "name": "Sudan",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SD\"]",
+    "tag_name": "sudan"
+  },
+  "se": {
+    "code": "se",
+    "name": "Sweden",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SE\"]",
+    "tag_name": "sweden"
+  },
+  "sg": {
+    "code": "sg",
+    "name": "Singapore",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SG\"]",
+    "tag_name": "singapore"
+  },
+  "sh": {
+    "code": "sh",
+    "name": "Saint Helena",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SH\"]",
+    "tag_name": "saint-helena"
+  },
+  "si": {
+    "code": "si",
+    "name": "Slovenia",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SI\"]",
+    "tag_name": "slovenia"
+  },
+  "sj": {
+    "code": "sj",
+    "name": "Svalbard and Jan Mayen",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SJ\"]",
+    "tag_name": "svalbard-and-jan-mayen"
+  },
+  "sk": {
+    "code": "sk",
+    "name": "Slovakia",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SK\"]",
+    "tag_name": "slovakia"
+  },
+  "sl": {
+    "code": "sl",
+    "name": "Sierra Leone",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SL\"]",
+    "tag_name": "sierra-leone"
+  },
+  "sm": {
+    "code": "sm",
+    "name": "San Marino",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SM\"]",
+    "tag_name": "san-marino"
+  },
+  "sn": {
+    "code": "sn",
+    "name": "Senegal",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SN\"]",
+    "tag_name": "senegal"
+  },
+  "so": {
+    "code": "so",
+    "name": "Somalia",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SO\"]",
+    "tag_name": "somalia"
+  },
+  "sr": {
+    "code": "sr",
+    "name": "Suriname",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SR\"]",
+    "tag_name": "suriname"
+  },
+  "ss": {
+    "code": "ss",
+    "name": "South Sudan",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SS\"]",
+    "tag_name": "south-sudan"
+  },
+  "st": {
+    "code": "st",
+    "name": "Sao Tome and Principe",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"ST\"]",
+    "tag_name": "sao-tome-and-principe"
+  },
+  "sv": {
+    "code": "sv",
+    "name": "El Salvador",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SV\"]",
+    "tag_name": "el-salvador"
+  },
+  "sx": {
+    "code": "sx",
+    "name": "Sint Maarten",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SX\"]",
+    "tag_name": "sint-maarten"
+  },
+  "sy": {
+    "code": "sy",
+    "name": "Syrian Arab Republic",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SY\"]",
+    "tag_name": "syrian-arab-republic"
+  },
+  "sz": {
+    "code": "sz",
+    "name": "Eswatini",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SZ\"]",
+    "tag_name": "eswatini"
+  },
+  "tc": {
+    "code": "tc",
+    "name": "Turks and Caicos Islands",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"TC\"]",
+    "tag_name": "turks-and-caicos-islands"
+  },
+  "td": {
+    "code": "td",
+    "name": "Chad",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"TD\"]",
+    "tag_name": "chad"
+  },
+  "tf": {
+    "code": "tf",
+    "name": "French Southern Territories",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"TF\"]",
+    "tag_name": "french-southern-territories"
+  },
+  "tg": {
+    "code": "tg",
+    "name": "Togo",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"TG\"]",
+    "tag_name": "togo"
+  },
+  "th": {
+    "code": "th",
+    "name": "Thailand",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"TH\"]",
+    "tag_name": "thailand"
+  },
+  "tj": {
+    "code": "tj",
+    "name": "Tajikistan",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"TJ\"]",
+    "tag_name": "tajikistan"
+  },
+  "tk": {
+    "code": "tk",
+    "name": "Tokelau",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"TK\"]",
+    "tag_name": "tokelau"
+  },
+  "tl": {
+    "code": "tl",
+    "name": "Timor-Leste",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"TL\"]",
+    "tag_name": "timor-leste"
+  },
+  "tm": {
+    "code": "tm",
+    "name": "Turkmenistan",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"TM\"]",
+    "tag_name": "turkmenistan"
+  },
+  "tn": {
+    "code": "tn",
+    "name": "Tunisia",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"TN\"]",
+    "tag_name": "tunisia"
+  },
+  "to": {
+    "code": "to",
+    "name": "Tonga",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"TO\"]",
+    "tag_name": "tonga"
+  },
+  "tr": {
+    "code": "tr",
+    "name": "T\u00fcrkiye",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"TR\"]",
+    "tag_name": "t\u00fcrkiye"
+  },
+  "tt": {
+    "code": "tt",
+    "name": "Trinidad and Tobago",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"TT\"]",
+    "tag_name": "trinidad-and-tobago"
+  },
+  "tv": {
+    "code": "tv",
+    "name": "Tuvalu",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"TV\"]",
+    "tag_name": "tuvalu"
+  },
+  "tw": {
+    "code": "tw",
+    "name": "Taiwan",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"TW\"]",
+    "tag_name": "taiwan"
+  },
+  "tz": {
+    "code": "tz",
+    "name": "Tanzania",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"TZ\"]",
+    "tag_name": "tanzania"
+  },
+  "ua": {
+    "code": "ua",
+    "name": "Ukraine",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"UA\"]",
+    "tag_name": "ukraine"
+  },
+  "ug": {
+    "code": "ug",
+    "name": "Uganda",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"UG\"]",
+    "tag_name": "uganda"
+  },
+  "um": {
+    "code": "um",
+    "name": "United States Minor Outlying Islands",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"UM\"]",
+    "tag_name": "united-states-minor-outlying-islands"
+  },
+  "us": {
+    "code": "us",
+    "name": "United States",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"US\"]",
+    "tag_name": "united-states"
+  },
+  "uy": {
+    "code": "uy",
+    "name": "Uruguay",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"UY\"]",
+    "tag_name": "uruguay"
+  },
+  "uz": {
+    "code": "uz",
+    "name": "Uzbekistan",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"UZ\"]",
+    "tag_name": "uzbekistan"
+  },
+  "va": {
+    "code": "va",
+    "name": "Holy See",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"VA\"]",
+    "tag_name": "holy-see"
+  },
+  "vc": {
+    "code": "vc",
+    "name": "Saint Vincent and the Grenadines",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"VC\"]",
+    "tag_name": "saint-vincent-and-the-grenadines"
+  },
+  "ve": {
+    "code": "ve",
+    "name": "Venezuela",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"VE\"]",
+    "tag_name": "venezuela"
+  },
+  "vg": {
+    "code": "vg",
+    "name": "Virgin Islands (British)",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"VG\"]",
+    "tag_name": "virgin-islands-british"
+  },
+  "vi": {
+    "code": "vi",
+    "name": "Virgin Islands (U.S.)",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"VI\"]",
+    "tag_name": "virgin-islands-u.s."
+  },
+  "vn": {
+    "code": "vn",
+    "name": "Viet Nam",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"VN\"]",
+    "tag_name": "viet-nam"
+  },
+  "vu": {
+    "code": "vu",
+    "name": "Vanuatu",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"VU\"]",
+    "tag_name": "vanuatu"
+  },
+  "wf": {
+    "code": "wf",
+    "name": "Wallis and Futuna",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"WF\"]",
+    "tag_name": "wallis-and-futuna"
+  },
+  "ws": {
+    "code": "ws",
+    "name": "Samoa",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"WS\"]",
+    "tag_name": "samoa"
+  },
+  "ye": {
+    "code": "ye",
+    "name": "Yemen",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"YE\"]",
+    "tag_name": "yemen"
+  },
+  "yt": {
+    "code": "yt",
+    "name": "Mayotte",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"YT\"]",
+    "tag_name": "mayotte"
+  },
+  "za": {
+    "code": "za",
+    "name": "South Africa",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"ZA\"]",
+    "tag_name": "south-africa"
+  },
+  "zm": {
+    "code": "zm",
+    "name": "Zambia",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"ZM\"]",
+    "tag_name": "zambia"
+  },
+  "zw": {
+    "code": "zw",
+    "name": "Zimbabwe",
+    "osm_query": "a[\"ISO3166-1:alpha2\"=\"ZW\"]",
+    "tag_name": "zimbabwe"
+  }
+}

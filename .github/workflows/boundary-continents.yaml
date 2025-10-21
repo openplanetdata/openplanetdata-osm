@@ -1,0 +1,83 @@
+name: Extract Continent Boundaries
+
+on:
+  workflow_dispatch:
+    inputs:
+      continent_codes:
+        description: 'JSON array of continent codes to process (e.g. ["eu", "as", "af"])'
+        required: true
+        type: string
+        default: '["eu"]'
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up matrix
+        id: set-matrix
+        run: |
+          # Parse the input continent codes and create matrix with metadata
+          CODES='${{ inputs.continent_codes }}'
+
+          # Load continent metadata
+          MATRIX_JSON=$(python3 -c "
+          import json
+          import sys
+
+          codes = json.loads('$CODES')
+
+          # Load continent data
+          with open('.github/data/continents.json', 'r') as f:
+              continents = json.load(f)
+
+          # Build matrix
+          matrix = []
+          for code in codes:
+              code_lower = code.lower()
+              if code_lower in continents:
+                  continent = continents[code_lower]
+                  matrix.append({
+                      'code': code_lower,
+                      'name': continent['name'],
+                      'osm_query': continent['osm_query'],
+                      'tag_name': continent['tag_name']
+                  })
+              else:
+                  print(f'Warning: Unknown continent code: {code}', file=sys.stderr)
+
+          print(json.dumps({'include': matrix}))
+          ")
+
+          echo "matrix=$MATRIX_JSON" >> $GITHUB_OUTPUT
+          echo "Matrix: $MATRIX_JSON"
+
+  extract:
+    needs: prepare
+    if: needs.prepare.outputs.matrix != '{"include":[]}'
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+
+    uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
+    with:
+      entity_code: ${{ matrix.code }}
+      entity_name: ${{ matrix.name }}
+      entity_type: continent
+      osm_query: ${{ matrix.osm_query }}
+      remote_path: /osm/boundaries/continents/${{ matrix.code }}
+      remote_version: '1'
+      tags: |
+        boundary
+        continent
+        ${{ matrix.tag_name }}
+        geojson
+        openstreetmap
+        public
+    secrets:
+      RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}
