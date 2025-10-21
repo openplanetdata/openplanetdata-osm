@@ -1,4 +1,4 @@
-name: Build & Publish Geoparquet Snapshots
+name: Planet GeoParquet
 
 on:
   workflow_dispatch:

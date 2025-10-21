@@ -5,9 +5,9 @@ on:
   workflow_run:
     workflows: [
       "Build & Publish CRCP Snapshots",
-      "Build & Publish Geoparquet Snapshots",
       "Build & Publish GeoDesk v1 Snapshots",
       "Build & Publish GeoDesk v2 Snapshots",
+      "Planet GeoParquet",
       "Planet PBF",
     ]
     types: [completed]
