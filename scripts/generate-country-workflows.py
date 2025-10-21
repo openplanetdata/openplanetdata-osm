@@ -25,7 +25,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  extract-{iso_lower}:
+  boundary-country-{iso_lower}:
     uses: ./.github/workflows/boundaries/reusable-boundaries.yaml
     with:
       entity_code: {iso_lower}
