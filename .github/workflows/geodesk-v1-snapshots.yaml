@@ -48,8 +48,7 @@ jobs:
           export TMPDIR="$PWD/.tmp"
           mkdir -p "$TMPDIR"
 
-          # Set JVM heap size to 50GB for planet file processing
-          export JAVA_TOOL_OPTIONS="-Xms50g -Xmx56g"
+          export JAVA_TOOL_OPTIONS="-Xms52g -Xmx52g"
 
           echo "Starting build at $(date -u +%Y-%m-%d_%H:%M:%S)"
           echo "Using TMPDIR: $TMPDIR"

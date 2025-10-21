@@ -101,16 +101,49 @@ jobs:
         run: |
           PBF="planet-${TAG}.osm.pbf"
           OUT_DIR="ohsome-${TAG}"
-          time java -Xms32g -Xmx36g -jar "${{ env.OHSOME_JAR_PATH }}" contributions \
-               --pbf "$PBF" --output "$OUT_DIR" --overwrite
-          
+
+          # Check available disk space before starting
+          echo "::group::Disk space check"
+          df -h .
+          echo "::endgroup::"
+
+          # Ensure clean output directory
+          rm -rf "$OUT_DIR"
+
+          time java -Xms52g -Xmx52g -jar "${{ env.OHSOME_JAR_PATH }}" contributions \
+               --pbf "$PBF" --output "$OUT_DIR"
+
+          # Check if ohsome-planet completed successfully
+          if [ $? -ne 0 ]; then
+            echo "::error::ohsome-planet failed to complete"
+            exit 1
+          fi
+
           # list everything just produced
           echo "::group::Produced files"
           find "$OUT_DIR" -print | sort
           echo "::endgroup::"
 
-          # Configure DuckDB for low-memory environment with disk spilling
-          # Set memory limit to 54GB (leaving ~10GB for OS and other processes)
+          # Validate parquet files before processing with DuckDB
+          echo "::group::Validating parquet files"
+          VALIDATION_FAILED=0
+          for parquet_file in "$OUT_DIR"/contributions/latest/*.parquet; do
+            if [ -f "$parquet_file" ]; then
+              echo "Validating: $parquet_file"
+              if ! ./duckdb -c "SELECT COUNT(*) FROM '$parquet_file'" > /dev/null 2>&1; then
+                echo "::error::Corrupted parquet file detected: $parquet_file"
+                VALIDATION_FAILED=1
+              fi
+            fi
+          done
+
+          if [ $VALIDATION_FAILED -eq 1 ]; then
+            echo "::error::One or more parquet files failed validation"
+            exit 1
+          fi
+          echo "All parquet files validated successfully"
+          echo "::endgroup::"
+
           # Use workspace directory for temp files (not /tmp which may be tmpfs/RAM)
           DUCKDB_TEMP_DIR="${PWD}/.duckdb-temp"
           mkdir -p "$DUCKDB_TEMP_DIR"
