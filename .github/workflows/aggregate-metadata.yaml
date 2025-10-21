@@ -8,7 +8,7 @@ on:
       "Build & Publish Geoparquet Snapshots",
       "Build & Publish GeoDesk v1 Snapshots",
       "Build & Publish GeoDesk v2 Snapshots",
-      "Build & Publish PBF Snapshots",
+      "Planet PBF",
     ]
     types: [completed]
     branches: [main]

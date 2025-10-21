@@ -3,7 +3,7 @@ name: Build & Publish GeoDesk v2 Snapshots
 on:
   workflow_dispatch:
   workflow_run:
-    workflows: ["Build & Publish PBF Snapshots"]
+    workflows: ["Planet PBF"]
     types: [completed]
     branches: [main]
 
