@@ -70,7 +70,7 @@ jobs:
       entity_name: ${{ matrix.name }}
       entity_type: continent
       osm_query: ${{ matrix.osm_query }}
-      remote_path: /osm/boundaries/continents/${{ matrix.code }}
+      remote_path: /osm/boundaries/continents
       remote_version: '1'
       tags: |
         boundary
