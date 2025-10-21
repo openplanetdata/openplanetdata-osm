@@ -243,21 +243,39 @@ jobs:
           fi
           echo "  ✓ Clipped coastline data"
 
-          # Step 6: Dissolve multiparts into a single geometry with metadata and area calculation
-          echo "→ Step 6/7: Dissolving multiparts, adding metadata, and computing area..."
-          if ! ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_closed.geojson" "$OUTPUT_DIR/${ENTITY_CODE}.geojson" -dialect sqlite \
+          # Step 6: Dissolve multiparts into a single geometry with metadata
+          echo "→ Step 6/7: Dissolving multiparts and adding metadata..."
+          if ! ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_dissolved.geojson" "$OUTPUT_DIR/${ENTITY_CODE}.geojson" -dialect sqlite \
             -sql "SELECT \
               ST_CollectionExtract(ST_UnaryUnion(ST_Collect(geometry)), 3) AS geometry, \
               '$NAME_EN' AS \"name:en\", \
-              '$ENTITY_CODE' AS \"code\", \
-              ROUND(ST_Area(ST_Transform(ST_CollectionExtract(ST_UnaryUnion(ST_Collect(geometry)), 3), 'EPSG:4326', 'ESRI:54009')) / 1000000.0, 2) AS \"area\" \
+              '$ENTITY_CODE' AS \"code\" \
             FROM land_polygons" -q; then
-            echo "❌ Failed to dissolve geometry and compute area" >&2
+            echo "❌ Failed to dissolve geometry" >&2
             echo "success=false" >> $GITHUB_OUTPUT
-            echo "failure_reason=Failed to dissolve geometry and compute area" >> $GITHUB_OUTPUT
+            echo "failure_reason=Failed to dissolve geometry" >> $GITHUB_OUTPUT
             rm -rf "$TMPDIR"
             exit 5
           fi
+          echo "  ✓ Dissolved geometry with metadata"
+
+          # Step 6b: Compute area using equal-area projection (Mollweide - EPSG:54009)
+          echo "→ Step 6b/7: Computing area in km²..."
+          if ! ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_closed.geojson" "$TMPDIR/${ENTITY_CODE}_dissolved.geojson" \
+            -s_srs EPSG:4326 -t_srs EPSG:54009 -dialect sqlite \
+            -sql "SELECT \
+              ST_Transform(geometry, 4326) AS geometry, \
+              \"name:en\", \
+              code, \
+              ROUND(ST_Area(geometry) / 1000000.0, 2) AS area \
+            FROM \"${ENTITY_CODE}_dissolved\"" -q; then
+            echo "❌ Failed to compute area" >&2
+            echo "success=false" >> $GITHUB_OUTPUT
+            echo "failure_reason=Failed to compute area" >> $GITHUB_OUTPUT
+            rm -rf "$TMPDIR"
+            exit 5
+          fi
+          echo "  ✓ Computed area"
 
           mv -f "$TMPDIR/${ENTITY_CODE}_closed.geojson" "$OUTPUT_DIR/${ENTITY_CODE}.geojson"
           echo "  ✓ Dissolved geometry with metadata and area in km²"
