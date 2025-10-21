@@ -13,16 +13,15 @@ from pathlib import Path
 # Configuration
 WORKFLOWS_DIR = Path(__file__).parent.parent / ".github/workflows/boundaries/continents"
 
-# Continent data: (code, name, osm_relation_id)
-# OSM relation IDs for continents from OpenStreetMap
+# Continent data: (code, name)
 CONTINENTS = [
-    ("af", "Africa", "192784"),
-    ("an", "Antarctica", "2186646"),
-    ("as", "Asia", "214656"),
-    ("eu", "Europe", "52822"),
-    ("na", "North America", "49428"),
-    ("oc", "Oceania", "112224"),
-    ("sa", "South America", "52805"),
+    ("af", "Africa"),
+    ("an", "Antarctica"),
+    ("as", "Asia"),
+    ("eu", "Europe"),
+    ("na", "North America"),
+    ("oc", "Oceania"),
+    ("sa", "South America"),
 ]
 
 TEMPLATE = """name: Continent Boundary for {name} ({code_upper})
@@ -39,7 +38,7 @@ jobs:
       entity_code: {code}
       entity_name: {name}
       entity_type: continent
-      osm_query: 'r{osm_id}'
+      osm_query: 'a[place=continent]["name:en"="{name}"]'
       remote_path: /osm/boundaries/continents/{code}
       remote_version: '1'
       tags: |
@@ -88,7 +87,7 @@ def main():
     total_continents = len(CONTINENTS)
     generated_count = 0
 
-    for index, (code, name, osm_id) in enumerate(CONTINENTS):
+    for index, (code, name) in enumerate(CONTINENTS):
         code_upper = code.upper()
         output_file = WORKFLOWS_DIR / f"{code_upper}.yaml"
 
@@ -103,7 +102,6 @@ def main():
             code=code,
             code_upper=code_upper,
             name=name,
-            osm_id=osm_id,
             tag_name=tag_name,
             cron=cron,
             schedule_description=schedule_desc
@@ -127,7 +125,7 @@ def main():
     print(f"   Time: 3:00 AM UTC, staggered by 10 minutes")
 
     print(f"\n   Schedule:")
-    for index, (code, name, _) in enumerate(CONTINENTS):
+    for index, (code, name) in enumerate(CONTINENTS):
         cron, schedule_desc = generate_cron_schedule(index, total_continents)
         base_hour = 3
         minutes = (index * 10) % 60
