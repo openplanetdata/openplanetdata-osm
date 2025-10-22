@@ -12,7 +12,7 @@ env:
 
 jobs:
   geoparquet:
-    runs-on: openplanetdata-cortex
+    runs-on: self-hosted
     timeout-minutes: 300
 
     outputs:

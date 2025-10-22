@@ -7,7 +7,7 @@ on:
 
 jobs:
   planet-coastline:
-    runs-on: openplanetdata-cortex
+    runs-on: self-hosted
     timeout-minutes: 120
 
     outputs:

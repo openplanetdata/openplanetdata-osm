@@ -9,7 +9,7 @@ on:
 
 jobs:
   gol:
-    runs-on: openplanetdata-cortex
+    runs-on: self-hosted
 
     outputs:
       tag: ${{ steps.date.outputs.tag }}

@@ -23,7 +23,7 @@ env:
 
 jobs:
   aggregate:
-    runs-on: openplanetdata-cortex
+    runs-on: self-hosted
 
     steps:
       - name: Install core tools (skip if already present)

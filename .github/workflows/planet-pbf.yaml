@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   pbf:
-    runs-on: openplanetdata-cortex
+    runs-on: self-hosted
 
     outputs:
       tag: ${{ steps.date.outputs.tag }}
