@@ -100,7 +100,6 @@ jobs:
             PKG_MANAGER="apt-get"
             PKGS=()
 
-            need_install osmium && PKGS+=(osmium-tool)
             need_install ogr2ogr && PKGS+=(gdal-bin)
             need_install ogrinfo && PKGS+=(gdal-bin)
             need_install jq && PKGS+=(jq)
@@ -116,7 +115,6 @@ jobs:
             PKG_MANAGER="dnf"
             PKGS=()
 
-            need_install osmium && PKGS+=(osmium-tool)
             need_install ogr2ogr && PKGS+=(gdal)
             need_install ogrinfo && PKGS+=(gdal)
             need_install jq && PKGS+=(jq)
@@ -127,13 +125,12 @@ jobs:
               sudo dnf -y install "${PKGS[@]}"
             fi
           else
-            echo "⚠️ Unsupported package manager. Please install manually: osmium-tool, gdal, jq"
+            echo "⚠️ Unsupported package manager. Please install manually: gdal, jq"
             exit 1
           fi
 
           # Verify installations
           echo "Verifying installations..."
-          command -v osmium && osmium --version
           command -v ogr2ogr && ogr2ogr --version
           command -v jq && jq --version
 
@@ -219,26 +216,15 @@ jobs:
           echo "→ Step 1/5: Extracting boundary from PBF..."
           CODE_UPPER=$(echo "$ENTITY_CODE" | tr '[:lower:]' '[:upper:]')
 
-          # Extract using osmium tags-filter for admin_level=2 and ISO code
-          if ! osmium tags-filter "$PLANET_PBF" \
-            r/boundary=administrative \
-            r/admin_level=2 \
-            r/ISO3166-1:alpha2="$CODE_UPPER" \
-            -o "$TMPDIR/${ENTITY_CODE}_boundary.osm.pbf" --overwrite; then
-            echo "❌ Failed to extract boundary from PBF" >&2
+          # Extract boundary using ogr2ogr with SQL WHERE clause (supports AND logic)
+          # OSM stores tags in 'other_tags' as hstore format: "key"=>"value"
+          if ! ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_raw.geojson" "$PLANET_PBF" multipolygons \
+            -sql "SELECT * FROM multipolygons WHERE boundary='administrative' AND admin_level='2' AND other_tags LIKE '%\"ISO3166-1:alpha2\"=>\"$CODE_UPPER\"%'" -q; then
+            echo "❌ Failed to extract and convert boundary from PBF" >&2
             echo "success=false" >> $GITHUB_OUTPUT
-            echo "failure_reason=Failed to extract boundary from PBF" >> $GITHUB_OUTPUT
+            echo "failure_reason=Failed to extract and convert boundary from PBF" >> $GITHUB_OUTPUT
             rm -rf "$TMPDIR"
             exit 1
-          fi
-
-          # Convert to GeoJSON with properties
-          if ! ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_raw.geojson" "$TMPDIR/${ENTITY_CODE}_boundary.osm.pbf" multipolygons -q; then
-            echo "❌ Failed to convert boundary to GeoJSON" >&2
-            echo "success=false" >> $GITHUB_OUTPUT
-            echo "failure_reason=Failed to convert boundary to GeoJSON" >> $GITHUB_OUTPUT
-            rm -rf "$TMPDIR"
-            exit 2
           fi
 
           # Extract name from properties
