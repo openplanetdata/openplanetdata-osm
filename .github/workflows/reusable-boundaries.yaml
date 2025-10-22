@@ -144,6 +144,8 @@ jobs:
       - name: Check for existing planet files
         id: check_files
         run: |
+          pwd
+          ls -alh
           TAG="${{ steps.date.outputs.tag }}"
 
           # Check for GOL file (dated or latest)
