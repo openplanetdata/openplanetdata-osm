@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 """
-Compute area of a GeoJSON polygon in km² using equal-area projection.
+Compute area of a GeoJSON polygon in km² using geodesic calculation.
 Adds the computed area as a property to the GeoJSON features.
 """
 
 import json
 import sys
-from pathlib import Path
 
 try:
-    from shapely.geometry import shape
-    from shapely.ops import transform
-    import pyproj
+    from shapely.geometry import shape, mapping
+    from pyproj import Geod
 except ImportError as e:
     print(f"Error: Required Python packages not found: {e}", file=sys.stderr)
     print("Please install: pip install shapely pyproj", file=sys.stderr)
@@ -20,7 +18,8 @@ except ImportError as e:
 
 def compute_area_km2(geojson_path):
     """
-    Compute the area of a GeoJSON polygon in km².
+    Compute the geodesic area of a GeoJSON polygon in km².
+    Uses WGS84 ellipsoid for accurate area calculation.
 
     Args:
         geojson_path: Path to the GeoJSON file
@@ -40,19 +39,15 @@ def compute_area_km2(geojson_path):
     feature = data['features'][0]
     geom = shape(feature['geometry'])
 
-    # Define projection transformers
-    # WGS84 (EPSG:4326) to World Mollweide (ESRI:54009) equal-area projection
-    wgs84 = pyproj.CRS('EPSG:4326')
-    mollweide = pyproj.CRS('ESRI:54009')
+    # Use pyproj Geod for geodesic area calculation on WGS84 ellipsoid
+    geod = Geod(ellps='WGS84')
 
-    project = pyproj.Transformer.from_crs(wgs84, mollweide, always_xy=True).transform
+    # geometry_area_perimeter returns (area, perimeter) in square meters and meters
+    # For polygon, we need to get the exterior coordinates
+    area_m2, _ = geod.geometry_area_perimeter(geom)
 
-    # Transform geometry to equal-area projection
-    geom_projected = transform(project, geom)
-
-    # Compute area in square meters, convert to km²
-    area_m2 = geom_projected.area
-    area_km2 = round(area_m2 / 1_000_000, 2)
+    # Take absolute value since area can be negative depending on winding order
+    area_km2 = round(abs(area_m2) / 1_000_000, 2)
 
     return area_km2
 
