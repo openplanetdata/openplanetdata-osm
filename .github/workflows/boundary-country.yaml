@@ -93,7 +93,7 @@ jobs:
   cleanup:
     needs: extract
     if: always()
-    runs-on: openplanetdata-cortex
+    runs-on: self-hosted
     steps:
       - name: Cleanup planet files
         run: |
