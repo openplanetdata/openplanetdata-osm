@@ -263,7 +263,7 @@ jobs:
           # Step 3: Dissolve geometry (merge multiple polygons)
           echo "→ Step 3/4: Dissolving geometry..."
           if ! ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_dissolved.geojson" "$WORKING_FILE" -dialect sqlite \
-            -sql "SELECT ST_CollectionExtract(ST_UnaryUnion(ST_Collect(geometry)), 3) AS geometry FROM OGRGeoJSON" -q; then
+            -sql "SELECT ST_CollectionExtract(ST_UnaryUnion(ST_Collect(geometry)), 3) AS geometry FROM land_polygons" -q; then
             echo "❌ Failed to dissolve geometry" >&2
             echo "success=false" >> $GITHUB_OUTPUT
             echo "failure_reason=Failed to dissolve geometry" >> $GITHUB_OUTPUT
@@ -272,12 +272,10 @@ jobs:
           fi
           echo "  ✓ Dissolved geometry"
 
-          # Step 4: Add properties from raw boundary to dissolved geometry
-          echo "→ Step 4/4: Adding properties to final output..."
-          jq --slurpfile props <(jq '.features[0].properties' "$TMPDIR/${ENTITY_CODE}_raw.geojson") \
-            '.features[0].properties = $props[0]' \
-            "$TMPDIR/${ENTITY_CODE}_dissolved.geojson" > "$OUTPUT_DIR/$OUTPUT_FILE"
-          echo "  ✓ Created final output with properties"
+          # Step 4: Copy dissolved geometry to final output
+          echo "→ Step 4/4: Creating final output..."
+          cp "$TMPDIR/${ENTITY_CODE}_dissolved.geojson" "$OUTPUT_DIR/$OUTPUT_FILE"
+          echo "  ✓ Created final output"
 
           # Validate the output
           echo "→ Validating output..."
