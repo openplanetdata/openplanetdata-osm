@@ -141,6 +141,11 @@ jobs:
           command -v ogr2ogr && ogr2ogr --version
           command -v jq && jq --version
 
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install --user pyproj
+
       - name: Check for existing planet files
         id: check_files
         run: |
@@ -236,7 +241,7 @@ jobs:
           echo "=========================================="
 
           # Step 1: Extract boundary using gol query
-          echo "→ Step 1/4: Extracting boundary with gol query..."
+          echo "→ Step 1/5: Extracting boundary with gol query..."
           if ! gol query "$PLANET_GOL" "$OSM_QUERY" -f geojson > "$TMPDIR/${ENTITY_CODE}_raw.geojson"; then
             echo "❌ Failed to extract boundary with gol query" >&2
             echo "success=false" >> $GITHUB_OUTPUT
@@ -261,7 +266,7 @@ jobs:
           CLIPPED=false
 
           if [ "$HAS_COASTLINE" = "true" ]; then
-            echo "→ Step 2/4: Clipping with coastline data..."
+            echo "→ Step 2/5: Clipping with coastline data..."
             if ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_clipped.geojson" "$COASTLINE_DB" land_polygons \
               -clipsrc "$TMPDIR/${ENTITY_CODE}_raw.geojson" -q 2>/dev/null; then
               echo "  ✓ Clipped with coastline data"
@@ -272,13 +277,13 @@ jobs:
               WORKING_FILE="$TMPDIR/${ENTITY_CODE}_raw.geojson"
             fi
           else
-            echo "→ Step 2/4: Skipping coastline clipping (landlocked)"
+            echo "→ Step 2/5: Skipping coastline clipping (landlocked)"
             WORKING_FILE="$TMPDIR/${ENTITY_CODE}_raw.geojson"
           fi
 
           # Step 3: Dissolve geometry (only if clipped with coastline)
           if [ "$CLIPPED" = "true" ]; then
-            echo "→ Step 3/4: Dissolving geometry..."
+            echo "→ Step 3/5: Dissolving geometry..."
             if ! ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_dissolved.geojson" "$WORKING_FILE" -dialect sqlite \
               -sql "SELECT ST_CollectionExtract(ST_UnaryUnion(ST_Collect(geometry)), 3) AS geometry FROM land_polygons" -q; then
               echo "❌ Failed to dissolve geometry" >&2
@@ -290,14 +295,28 @@ jobs:
             echo "  ✓ Dissolved geometry"
             FINAL_FILE="$TMPDIR/${ENTITY_CODE}_dissolved.geojson"
           else
-            echo "→ Step 3/4: Skipping dissolve (no clipping performed)"
+            echo "→ Step 3/5: Skipping dissolve (no clipping performed)"
             FINAL_FILE="$WORKING_FILE"
           fi
 
           # Step 4: Copy to final output
-          echo "→ Step 4/4: Creating final output..."
+          echo "→ Step 4/5: Creating final output..."
           cp "$FINAL_FILE" "$OUTPUT_DIR/$OUTPUT_FILE"
           echo "  ✓ Created final output"
+
+          # Step 5: Compute and add area property
+          echo "→ Step 5/5: Computing area..."
+          AREA_KM2=$(python3 scripts/compute_area.py "$OUTPUT_DIR/$OUTPUT_FILE")
+          if [ $? -eq 0 ]; then
+            echo "  ✓ Computed area: ${AREA_KM2} km²"
+            # Add area to properties
+            jq --arg area "$AREA_KM2" '.features[0].properties.area = ($area | tonumber)' \
+              "$OUTPUT_DIR/$OUTPUT_FILE" > "$OUTPUT_DIR/$OUTPUT_FILE.tmp"
+            mv "$OUTPUT_DIR/$OUTPUT_FILE.tmp" "$OUTPUT_DIR/$OUTPUT_FILE"
+            echo "  ✓ Added area property to output"
+          else
+            echo "  ⚠️ Failed to compute area, continuing without area property"
+          fi
 
           # Validate the output
           echo "→ Validating output..."
