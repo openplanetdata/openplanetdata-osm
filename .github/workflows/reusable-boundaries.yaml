@@ -146,25 +146,10 @@ jobs:
         run: |
           python3 -m pip install --user pyproj
 
-      - name: Download planet GOB
+      - name: Download planet GOL
         uses: openplanetdata/actions/download@main
         with:
-          remote_path: /osm/planet/gob/v2/planet-latest.osm.gob
-
-      - name: Convert GOB to GOL
-        run: |
-          # Only convert if GOL doesn't exist or is older than GOB
-          if [ ! -f planet-latest.osm.gol ] || [ planet-latest.osm.gob -nt planet-latest.osm.gol ]; then
-            echo "Converting GOB to GOL..."
-            gol load planet-latest.osm.gol planet-latest.osm.gob
-            echo "✓ Conversion complete"
-            ls -alh planet-latest.osm.gol
-          else
-            echo "✓ GOL file already up to date, skipping conversion"
-          fi
-
-          # Remove GOB file after conversion (or if conversion not needed)
-          rm -f planet-latest.osm.gob
+          remote_path: /osm/planet/gol/v2/planet-latest.osm.gol
 
       - name: Download coastline GPKG
         uses: openplanetdata/actions/download@main
@@ -392,7 +377,7 @@ jobs:
         run: |
           echo "Cleaning up planet files..."
           # Only remove files that don't have a .cache file (not cached)
-          for file in planet-*.osm.gol planet-*.osm.gob coastline-*.gpkg; do
+          for file in planet-*.osm.gol coastline-*.gpkg; do
             if [ -f "$file" ] && [ ! -f "$file.cache" ]; then
               echo "Removing non-cached file: $file"
               rm -f "$file"
