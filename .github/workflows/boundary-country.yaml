@@ -72,6 +72,7 @@ jobs:
       osm_query: ${{ matrix.osm_query }}
       remote_path: /osm/boundaries/countries
       remote_version: 1
+      cleanup_planet_files: false
       tags: |
         boundary
         country
@@ -81,3 +82,14 @@ jobs:
         public
     secrets:
       RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}
+
+  cleanup:
+    needs: extract
+    if: always()
+    runs-on: openplanetdata-cortex
+    steps:
+      - name: Cleanup planet files
+        run: |
+          echo "Cleaning up planet files after all countries processed..."
+          rm -f planet-*.osm.pbf planet-*.osm.gol coastline.gpkg || true
+          echo "✓ Cleanup complete"

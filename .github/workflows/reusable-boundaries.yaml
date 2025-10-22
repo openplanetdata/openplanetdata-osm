@@ -36,6 +36,11 @@ on:
           boundary
           openstreetmap
           public
+      cleanup_planet_files:
+        description: 'Whether to cleanup planet files after processing (set to false to reuse across multiple countries)'
+        required: false
+        type: boolean
+        default: false
 
     outputs:
       failure_reason:
@@ -138,17 +143,49 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           version: 2
 
+      - name: Check for existing planet files
+        id: check_files
+        run: |
+          TAG="${{ steps.date.outputs.tag }}"
+
+          if [ -f "planet-${TAG}.osm.pbf" ]; then
+            echo "pbf_exists=true" >> $GITHUB_OUTPUT
+            echo "✓ Found existing planet-${TAG}.osm.pbf"
+          else
+            echo "pbf_exists=false" >> $GITHUB_OUTPUT
+            echo "→ Need to download planet-${TAG}.osm.pbf"
+          fi
+
+          if [ -f "planet-${TAG}.osm.gol" ]; then
+            echo "gol_exists=true" >> $GITHUB_OUTPUT
+            echo "✓ Found existing planet-${TAG}.osm.gol"
+          else
+            echo "gol_exists=false" >> $GITHUB_OUTPUT
+            echo "→ Need to download planet-${TAG}.osm.gol"
+          fi
+
+          if [ -f "coastline.gpkg" ]; then
+            echo "coastline_exists=true" >> $GITHUB_OUTPUT
+            echo "✓ Found existing coastline.gpkg"
+          else
+            echo "coastline_exists=false" >> $GITHUB_OUTPUT
+            echo "→ Need to download coastline.gpkg"
+          fi
+
       - name: Download planet PBF
+        if: steps.check_files.outputs.pbf_exists == 'false'
         uses: openplanetdata/actions/download@main
         with:
           remote_path: osm/planet/pbf/planet-latest.osm.pbf
 
       - name: Download planet GOL
+        if: steps.check_files.outputs.gol_exists == 'false'
         uses: openplanetdata/actions/download@main
         with:
           remote_path: /osm/planet/gol/v2/planet-latest.osm.gol
 
       - name: Download coastline GPKG
+        if: steps.check_files.outputs.coastline_exists == 'false'
         uses: openplanetdata/actions/download@main
         with:
           remote_path: /osm/planet/coastline/v1/planet-coastline-latest.osm.gpkg
@@ -156,9 +193,9 @@ jobs:
       - name: Rename downloaded files
         run: |
           TAG="${{ steps.date.outputs.tag }}"
-          mv planet-latest.osm.pbf "planet-${TAG}.osm.pbf"
-          mv planet-latest.osm.gol "planet-${TAG}.osm.gol"
-          mv planet-coastline-latest.osm.gpkg "coastline.gpkg"
+          [ -f planet-latest.osm.pbf ] && mv planet-latest.osm.pbf "planet-${TAG}.osm.pbf"
+          [ -f planet-latest.osm.gol ] && mv planet-latest.osm.gol "planet-${TAG}.osm.gol"
+          [ -f planet-coastline-latest.osm.gpkg ] && mv planet-coastline-latest.osm.gpkg "coastline.gpkg"
           ls -alh
 
       - name: Extract boundary
@@ -395,10 +432,16 @@ jobs:
           remote_path: ${{ inputs.remote_path }}
           remote_version: ${{ inputs.remote_version }}
 
-      - name: Cleanup downloaded and generated files
+      - name: Cleanup generated files
         if: always()
         run: |
-          rm -f planet-*.osm.pbf planet-*.osm.gol coastline.gpkg
+          # Always cleanup metadata and temp files
           rm -f boundaries/${{ inputs.entity_type }}s/*.boundary.geojson.{sha256,metadata}
           rm -f boundaries/${{ inputs.entity_type }}s/*.boundary.parquet.{sha256,metadata}
           rm -rf boundaries/tmp boundaries/logs
+
+      - name: Cleanup planet files
+        if: always() && inputs.cleanup_planet_files == true
+        run: |
+          echo "Cleaning up planet files..."
+          rm -f planet-*.osm.pbf planet-*.osm.gol coastline.gpkg
