@@ -1,1745 +1,998 @@
 {
   "ad": {
-    "code": "ad",
     "name": "Andorra",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"AD\"]",
-    "tag_name": "andorra",
     "has_coastline": false
   },
   "ae": {
-    "code": "ae",
     "name": "United Arab Emirates",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"AE\"]",
-    "tag_name": "united-arab-emirates",
     "has_coastline": true
   },
   "af": {
-    "code": "af",
     "name": "Afghanistan",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"AF\"]",
-    "tag_name": "afghanistan",
     "has_coastline": false
   },
   "ag": {
-    "code": "ag",
     "name": "Antigua and Barbuda",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"AG\"]",
-    "tag_name": "antigua-and-barbuda",
     "has_coastline": true
   },
   "ai": {
-    "code": "ai",
     "name": "Anguilla",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"AI\"]",
-    "tag_name": "anguilla",
     "has_coastline": true
   },
   "al": {
-    "code": "al",
     "name": "Albania",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"AL\"]",
-    "tag_name": "albania",
     "has_coastline": true
   },
   "am": {
-    "code": "am",
     "name": "Armenia",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"AM\"]",
-    "tag_name": "armenia",
     "has_coastline": false
   },
   "ao": {
-    "code": "ao",
     "name": "Angola",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"AO\"]",
-    "tag_name": "angola",
     "has_coastline": true
   },
   "aq": {
-    "code": "aq",
     "name": "Antarctica",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"AQ\"]",
-    "tag_name": "antarctica",
     "has_coastline": true
   },
   "ar": {
-    "code": "ar",
     "name": "Argentina",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"AR\"]",
-    "tag_name": "argentina",
     "has_coastline": true
   },
   "as": {
-    "code": "as",
     "name": "American Samoa",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"AS\"]",
-    "tag_name": "american-samoa",
     "has_coastline": true
   },
   "at": {
-    "code": "at",
     "name": "Austria",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"AT\"]",
-    "tag_name": "austria",
     "has_coastline": false
   },
   "au": {
-    "code": "au",
     "name": "Australia",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"AU\"]",
-    "tag_name": "australia",
     "has_coastline": true
   },
   "aw": {
-    "code": "aw",
     "name": "Aruba",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"AW\"]",
-    "tag_name": "aruba",
     "has_coastline": true
   },
   "ax": {
-    "code": "ax",
     "name": "Åland Islands",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"AX\"]",
-    "tag_name": "åland-islands",
     "has_coastline": true
   },
   "az": {
-    "code": "az",
     "name": "Azerbaijan",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"AZ\"]",
-    "tag_name": "azerbaijan",
     "has_coastline": false
   },
   "ba": {
-    "code": "ba",
     "name": "Bosnia and Herzegovina",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BA\"]",
-    "tag_name": "bosnia-and-herzegovina",
     "has_coastline": true
   },
   "bb": {
-    "code": "bb",
     "name": "Barbados",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BB\"]",
-    "tag_name": "barbados",
     "has_coastline": true
   },
   "bd": {
-    "code": "bd",
     "name": "Bangladesh",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BD\"]",
-    "tag_name": "bangladesh",
     "has_coastline": true
   },
   "be": {
-    "code": "be",
     "name": "Belgium",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BE\"]",
-    "tag_name": "belgium",
     "has_coastline": true
   },
   "bf": {
-    "code": "bf",
     "name": "Burkina Faso",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BF\"]",
-    "tag_name": "burkina-faso",
     "has_coastline": false
   },
   "bg": {
-    "code": "bg",
     "name": "Bulgaria",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BG\"]",
-    "tag_name": "bulgaria",
     "has_coastline": true
   },
   "bh": {
-    "code": "bh",
     "name": "Bahrain",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BH\"]",
-    "tag_name": "bahrain",
     "has_coastline": true
   },
   "bi": {
-    "code": "bi",
     "name": "Burundi",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BI\"]",
-    "tag_name": "burundi",
     "has_coastline": false
   },
   "bj": {
-    "code": "bj",
     "name": "Benin",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BJ\"]",
-    "tag_name": "benin",
     "has_coastline": true
   },
   "bl": {
-    "code": "bl",
     "name": "Saint Barthélemy",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BL\"]",
-    "tag_name": "saint-barthélemy",
     "has_coastline": true
   },
   "bm": {
-    "code": "bm",
     "name": "Bermuda",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BM\"]",
-    "tag_name": "bermuda",
     "has_coastline": true
   },
   "bn": {
-    "code": "bn",
     "name": "Brunei Darussalam",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BN\"]",
-    "tag_name": "brunei-darussalam",
     "has_coastline": true
   },
   "bo": {
-    "code": "bo",
     "name": "Bolivia",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BO\"]",
-    "tag_name": "bolivia",
     "has_coastline": false
   },
   "bq": {
-    "code": "bq",
     "name": "Bonaire",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BQ\"]",
-    "tag_name": "bonaire",
     "has_coastline": true
   },
   "br": {
-    "code": "br",
     "name": "Brazil",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BR\"]",
-    "tag_name": "brazil",
     "has_coastline": true
   },
   "bs": {
-    "code": "bs",
     "name": "Bahamas",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BS\"]",
-    "tag_name": "bahamas",
     "has_coastline": true
   },
   "bt": {
-    "code": "bt",
     "name": "Bhutan",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BT\"]",
-    "tag_name": "bhutan",
     "has_coastline": false
   },
   "bv": {
-    "code": "bv",
     "name": "Bouvet Island",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BV\"]",
-    "tag_name": "bouvet-island",
     "has_coastline": true
   },
   "bw": {
-    "code": "bw",
     "name": "Botswana",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BW\"]",
-    "tag_name": "botswana",
     "has_coastline": false
   },
   "by": {
-    "code": "by",
     "name": "Belarus",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BY\"]",
-    "tag_name": "belarus",
     "has_coastline": false
   },
   "bz": {
-    "code": "bz",
     "name": "Belize",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"BZ\"]",
-    "tag_name": "belize",
     "has_coastline": true
   },
   "ca": {
-    "code": "ca",
     "name": "Canada",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CA\"]",
-    "tag_name": "canada",
     "has_coastline": true
   },
   "cc": {
-    "code": "cc",
     "name": "Cocos",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CC\"]",
-    "tag_name": "cocos",
     "has_coastline": true
   },
   "cd": {
-    "code": "cd",
     "name": "Congo",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CD\"]",
-    "tag_name": "congo",
     "has_coastline": true
   },
   "cf": {
-    "code": "cf",
     "name": "Central African Republic",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CF\"]",
-    "tag_name": "central-african-republic",
     "has_coastline": false
   },
   "cg": {
-    "code": "cg",
     "name": "Congo",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CG\"]",
-    "tag_name": "congo",
     "has_coastline": true
   },
   "ch": {
-    "code": "ch",
     "name": "Switzerland",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CH\"]",
-    "tag_name": "switzerland",
     "has_coastline": false
   },
   "ci": {
-    "code": "ci",
     "name": "Côte d'Ivoire",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CI\"]",
-    "tag_name": "côte-d'ivoire",
     "has_coastline": true
   },
   "ck": {
-    "code": "ck",
     "name": "Cook Islands",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CK\"]",
-    "tag_name": "cook-islands",
     "has_coastline": true
   },
   "cl": {
-    "code": "cl",
     "name": "Chile",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CL\"]",
-    "tag_name": "chile",
     "has_coastline": true
   },
   "cm": {
-    "code": "cm",
     "name": "Cameroon",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CM\"]",
-    "tag_name": "cameroon",
     "has_coastline": true
   },
   "cn": {
-    "code": "cn",
     "name": "China",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CN\"]",
-    "tag_name": "china",
     "has_coastline": true
   },
   "co": {
-    "code": "co",
     "name": "Colombia",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CO\"]",
-    "tag_name": "colombia",
     "has_coastline": true
   },
   "cr": {
-    "code": "cr",
     "name": "Costa Rica",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CR\"]",
-    "tag_name": "costa-rica",
     "has_coastline": true
   },
   "cu": {
-    "code": "cu",
     "name": "Cuba",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CU\"]",
-    "tag_name": "cuba",
     "has_coastline": true
   },
   "cv": {
-    "code": "cv",
     "name": "Cabo Verde",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CV\"]",
-    "tag_name": "cabo-verde",
     "has_coastline": true
   },
   "cw": {
-    "code": "cw",
     "name": "Curaçao",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CW\"]",
-    "tag_name": "curaçao",
     "has_coastline": true
   },
   "cx": {
-    "code": "cx",
     "name": "Christmas Island",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CX\"]",
-    "tag_name": "christmas-island",
     "has_coastline": true
   },
   "cy": {
-    "code": "cy",
     "name": "Cyprus",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CY\"]",
-    "tag_name": "cyprus",
     "has_coastline": true
   },
   "cz": {
-    "code": "cz",
     "name": "Czechia",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"CZ\"]",
-    "tag_name": "czechia",
     "has_coastline": false
   },
   "de": {
-    "code": "de",
     "name": "Germany",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"DE\"]",
-    "tag_name": "germany",
     "has_coastline": true
   },
   "dj": {
-    "code": "dj",
     "name": "Djibouti",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"DJ\"]",
-    "tag_name": "djibouti",
     "has_coastline": true
   },
   "dk": {
-    "code": "dk",
     "name": "Denmark",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"DK\"]",
-    "tag_name": "denmark",
     "has_coastline": true
   },
   "dm": {
-    "code": "dm",
     "name": "Dominica",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"DM\"]",
-    "tag_name": "dominica",
     "has_coastline": true
   },
   "do": {
-    "code": "do",
     "name": "Dominican Republic",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"DO\"]",
-    "tag_name": "dominican-republic",
     "has_coastline": true
   },
   "dz": {
-    "code": "dz",
     "name": "Algeria",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"DZ\"]",
-    "tag_name": "algeria",
     "has_coastline": true
   },
   "ec": {
-    "code": "ec",
     "name": "Ecuador",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"EC\"]",
-    "tag_name": "ecuador",
     "has_coastline": true
   },
   "ee": {
-    "code": "ee",
     "name": "Estonia",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"EE\"]",
-    "tag_name": "estonia",
     "has_coastline": true
   },
   "eg": {
-    "code": "eg",
     "name": "Egypt",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"EG\"]",
-    "tag_name": "egypt",
     "has_coastline": true
   },
   "eh": {
-    "code": "eh",
     "name": "Western Sahara",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"EH\"]",
-    "tag_name": "western-sahara",
     "has_coastline": true
   },
   "er": {
-    "code": "er",
     "name": "Eritrea",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"ER\"]",
-    "tag_name": "eritrea",
     "has_coastline": true
   },
   "es": {
-    "code": "es",
     "name": "Spain",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"ES\"]",
-    "tag_name": "spain",
     "has_coastline": true
   },
   "et": {
-    "code": "et",
     "name": "Ethiopia",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"ET\"]",
-    "tag_name": "ethiopia",
     "has_coastline": false
   },
   "fi": {
-    "code": "fi",
     "name": "Finland",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"FI\"]",
-    "tag_name": "finland",
     "has_coastline": true
   },
   "fj": {
-    "code": "fj",
     "name": "Fiji",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"FJ\"]",
-    "tag_name": "fiji",
     "has_coastline": true
   },
   "fk": {
-    "code": "fk",
     "name": "Falkland Islands",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"FK\"]",
-    "tag_name": "falkland-islands",
     "has_coastline": true
   },
   "fm": {
-    "code": "fm",
     "name": "Micronesia",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"FM\"]",
-    "tag_name": "micronesia",
     "has_coastline": true
   },
   "fo": {
-    "code": "fo",
     "name": "Faroe Islands",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"FO\"]",
-    "tag_name": "faroe-islands",
     "has_coastline": true
   },
   "fr": {
-    "code": "fr",
     "name": "France",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"FR\"]",
-    "tag_name": "france",
     "has_coastline": true
   },
   "ga": {
-    "code": "ga",
     "name": "Gabon",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GA\"]",
-    "tag_name": "gabon",
     "has_coastline": true
   },
   "gb": {
-    "code": "gb",
     "name": "United Kingdom",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GB\"]",
-    "tag_name": "united-kingdom",
     "has_coastline": true
   },
   "gd": {
-    "code": "gd",
     "name": "Grenada",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GD\"]",
-    "tag_name": "grenada",
     "has_coastline": true
   },
   "ge": {
-    "code": "ge",
     "name": "Georgia",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GE\"]",
-    "tag_name": "georgia",
     "has_coastline": true
   },
   "gf": {
-    "code": "gf",
     "name": "French Guiana",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GF\"]",
-    "tag_name": "french-guiana",
     "has_coastline": true
   },
   "gg": {
-    "code": "gg",
     "name": "Guernsey",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GG\"]",
-    "tag_name": "guernsey",
     "has_coastline": true
   },
   "gh": {
-    "code": "gh",
     "name": "Ghana",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GH\"]",
-    "tag_name": "ghana",
     "has_coastline": true
   },
   "gi": {
-    "code": "gi",
     "name": "Gibraltar",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GI\"]",
-    "tag_name": "gibraltar",
     "has_coastline": true
   },
   "gl": {
-    "code": "gl",
     "name": "Greenland",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GL\"]",
-    "tag_name": "greenland",
     "has_coastline": true
   },
   "gm": {
-    "code": "gm",
     "name": "Gambia",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GM\"]",
-    "tag_name": "gambia",
     "has_coastline": true
   },
   "gn": {
-    "code": "gn",
     "name": "Guinea",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GN\"]",
-    "tag_name": "guinea",
     "has_coastline": true
   },
   "gp": {
-    "code": "gp",
     "name": "Guadeloupe",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GP\"]",
-    "tag_name": "guadeloupe",
     "has_coastline": true
   },
   "gq": {
-    "code": "gq",
     "name": "Equatorial Guinea",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GQ\"]",
-    "tag_name": "equatorial-guinea",
     "has_coastline": true
   },
   "gr": {
-    "code": "gr",
     "name": "Greece",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GR\"]",
-    "tag_name": "greece",
     "has_coastline": true
   },
   "gs": {
-    "code": "gs",
     "name": "South Georgia and the South Sandwich Islands",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GS\"]",
-    "tag_name": "south-georgia-and-the-south-sandwich-islands",
     "has_coastline": true
   },
   "gt": {
-    "code": "gt",
     "name": "Guatemala",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GT\"]",
-    "tag_name": "guatemala",
     "has_coastline": true
   },
   "gu": {
-    "code": "gu",
     "name": "Guam",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GU\"]",
-    "tag_name": "guam",
     "has_coastline": true
   },
   "gw": {
-    "code": "gw",
     "name": "Guinea-Bissau",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GW\"]",
-    "tag_name": "guinea-bissau",
     "has_coastline": true
   },
   "gy": {
-    "code": "gy",
     "name": "Guyana",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"GY\"]",
-    "tag_name": "guyana",
     "has_coastline": true
   },
   "hk": {
-    "code": "hk",
     "name": "Hong Kong",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"HK\"]",
-    "tag_name": "hong-kong",
     "has_coastline": true
   },
   "hm": {
-    "code": "hm",
     "name": "Heard Island and McDonald Islands",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"HM\"]",
-    "tag_name": "heard-island-and-mcdonald-islands",
     "has_coastline": true
   },
   "hn": {
-    "code": "hn",
     "name": "Honduras",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"HN\"]",
-    "tag_name": "honduras",
     "has_coastline": true
   },
   "hr": {
-    "code": "hr",
     "name": "Croatia",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"HR\"]",
-    "tag_name": "croatia",
     "has_coastline": true
   },
   "ht": {
-    "code": "ht",
     "name": "Haiti",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"HT\"]",
-    "tag_name": "haiti",
     "has_coastline": true
   },
   "hu": {
-    "code": "hu",
     "name": "Hungary",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"HU\"]",
-    "tag_name": "hungary",
     "has_coastline": false
   },
   "id": {
-    "code": "id",
     "name": "Indonesia",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"ID\"]",
-    "tag_name": "indonesia",
     "has_coastline": true
   },
   "ie": {
-    "code": "ie",
     "name": "Ireland",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"IE\"]",
-    "tag_name": "ireland",
     "has_coastline": true
   },
   "il": {
-    "code": "il",
     "name": "Israel",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"IL\"]",
-    "tag_name": "israel",
     "has_coastline": true
   },
   "im": {
-    "code": "im",
     "name": "Isle of Man",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"IM\"]",
-    "tag_name": "isle-of-man",
     "has_coastline": true
   },
   "in": {
-    "code": "in",
     "name": "India",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"IN\"]",
-    "tag_name": "india",
     "has_coastline": true
   },
   "io": {
-    "code": "io",
     "name": "British Indian Ocean Territory",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"IO\"]",
-    "tag_name": "british-indian-ocean-territory",
     "has_coastline": true
   },
   "iq": {
-    "code": "iq",
     "name": "Iraq",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"IQ\"]",
-    "tag_name": "iraq",
     "has_coastline": true
   },
   "ir": {
-    "code": "ir",
     "name": "Iran",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"IR\"]",
-    "tag_name": "iran",
     "has_coastline": true
   },
   "is": {
-    "code": "is",
     "name": "Iceland",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"IS\"]",
-    "tag_name": "iceland",
     "has_coastline": true
   },
   "it": {
-    "code": "it",
     "name": "Italy",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"IT\"]",
-    "tag_name": "italy",
     "has_coastline": true
   },
   "je": {
-    "code": "je",
     "name": "Jersey",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"JE\"]",
-    "tag_name": "jersey",
     "has_coastline": true
   },
   "jm": {
-    "code": "jm",
     "name": "Jamaica",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"JM\"]",
-    "tag_name": "jamaica",
     "has_coastline": true
   },
   "jo": {
-    "code": "jo",
     "name": "Jordan",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"JO\"]",
-    "tag_name": "jordan",
     "has_coastline": true
   },
   "jp": {
-    "code": "jp",
     "name": "Japan",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"JP\"]",
-    "tag_name": "japan",
     "has_coastline": true
   },
   "ke": {
-    "code": "ke",
     "name": "Kenya",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"KE\"]",
-    "tag_name": "kenya",
     "has_coastline": true
   },
   "kg": {
-    "code": "kg",
     "name": "Kyrgyzstan",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"KG\"]",
-    "tag_name": "kyrgyzstan",
     "has_coastline": false
   },
   "kh": {
-    "code": "kh",
     "name": "Cambodia",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"KH\"]",
-    "tag_name": "cambodia",
     "has_coastline": true
   },
   "ki": {
-    "code": "ki",
     "name": "Kiribati",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"KI\"]",
-    "tag_name": "kiribati",
     "has_coastline": true
   },
   "km": {
-    "code": "km",
     "name": "Comoros",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"KM\"]",
-    "tag_name": "comoros",
     "has_coastline": true
   },
   "kn": {
-    "code": "kn",
     "name": "Saint Kitts and Nevis",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"KN\"]",
-    "tag_name": "saint-kitts-and-nevis",
     "has_coastline": true
   },
   "kp": {
-    "code": "kp",
     "name": "North Korea",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"KP\"]",
-    "tag_name": "north-korea",
     "has_coastline": true
   },
   "kr": {
-    "code": "kr",
     "name": "South Korea",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"KR\"]",
-    "tag_name": "south-korea",
     "has_coastline": true
   },
   "kw": {
-    "code": "kw",
     "name": "Kuwait",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"KW\"]",
-    "tag_name": "kuwait",
     "has_coastline": true
   },
   "ky": {
-    "code": "ky",
     "name": "Cayman Islands",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"KY\"]",
-    "tag_name": "cayman-islands",
     "has_coastline": true
   },
   "kz": {
-    "code": "kz",
     "name": "Kazakhstan",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"KZ\"]",
-    "tag_name": "kazakhstan",
     "has_coastline": false
   },
   "la": {
-    "code": "la",
     "name": "Lao People's Democratic Republic",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"LA\"]",
-    "tag_name": "lao-people's-democratic-republic",
     "has_coastline": false
   },
   "lb": {
-    "code": "lb",
     "name": "Lebanon",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"LB\"]",
-    "tag_name": "lebanon",
     "has_coastline": true
   },
   "lc": {
-    "code": "lc",
     "name": "Saint Lucia",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"LC\"]",
-    "tag_name": "saint-lucia",
     "has_coastline": true
   },
   "li": {
-    "code": "li",
     "name": "Liechtenstein",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"LI\"]",
-    "tag_name": "liechtenstein",
     "has_coastline": false
   },
   "lk": {
-    "code": "lk",
     "name": "Sri Lanka",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"LK\"]",
-    "tag_name": "sri-lanka",
     "has_coastline": true
   },
   "lr": {
-    "code": "lr",
     "name": "Liberia",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"LR\"]",
-    "tag_name": "liberia",
     "has_coastline": true
   },
   "ls": {
-    "code": "ls",
     "name": "Lesotho",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"LS\"]",
-    "tag_name": "lesotho",
     "has_coastline": false
   },
   "lt": {
-    "code": "lt",
     "name": "Lithuania",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"LT\"]",
-    "tag_name": "lithuania",
     "has_coastline": true
   },
   "lu": {
-    "code": "lu",
     "name": "Luxembourg",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"LU\"]",
-    "tag_name": "luxembourg",
     "has_coastline": false
   },
   "lv": {
-    "code": "lv",
     "name": "Latvia",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"LV\"]",
-    "tag_name": "latvia",
     "has_coastline": true
   },
   "ly": {
-    "code": "ly",
     "name": "Libya",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"LY\"]",
-    "tag_name": "libya",
     "has_coastline": true
   },
   "ma": {
-    "code": "ma",
     "name": "Morocco",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MA\"]",
-    "tag_name": "morocco",
     "has_coastline": true
   },
   "mc": {
-    "code": "mc",
     "name": "Monaco",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MC\"]",
-    "tag_name": "monaco",
     "has_coastline": true
   },
   "md": {
-    "code": "md",
     "name": "Moldova",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MD\"]",
-    "tag_name": "moldova",
     "has_coastline": false
   },
   "me": {
-    "code": "me",
     "name": "Montenegro",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"ME\"]",
-    "tag_name": "montenegro",
     "has_coastline": true
   },
   "mf": {
-    "code": "mf",
     "name": "Saint Martin",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MF\"]",
-    "tag_name": "saint-martin",
     "has_coastline": true
   },
   "mg": {
-    "code": "mg",
     "name": "Madagascar",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MG\"]",
-    "tag_name": "madagascar",
     "has_coastline": true
   },
   "mh": {
-    "code": "mh",
     "name": "Marshall Islands",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MH\"]",
-    "tag_name": "marshall-islands",
     "has_coastline": true
   },
   "mk": {
-    "code": "mk",
     "name": "North Macedonia",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MK\"]",
-    "tag_name": "north-macedonia",
     "has_coastline": false
   },
   "ml": {
-    "code": "ml",
     "name": "Mali",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"ML\"]",
-    "tag_name": "mali",
     "has_coastline": false
   },
   "mm": {
-    "code": "mm",
     "name": "Myanmar",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MM\"]",
-    "tag_name": "myanmar",
     "has_coastline": true
   },
   "mn": {
-    "code": "mn",
     "name": "Mongolia",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MN\"]",
-    "tag_name": "mongolia",
     "has_coastline": false
   },
   "mo": {
-    "code": "mo",
     "name": "Macao",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MO\"]",
-    "tag_name": "macao",
     "has_coastline": true
   },
   "mp": {
-    "code": "mp",
     "name": "Northern Mariana Islands",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MP\"]",
-    "tag_name": "northern-mariana-islands",
     "has_coastline": true
   },
   "mq": {
-    "code": "mq",
     "name": "Martinique",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MQ\"]",
-    "tag_name": "martinique",
     "has_coastline": true
   },
   "mr": {
-    "code": "mr",
     "name": "Mauritania",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MR\"]",
-    "tag_name": "mauritania",
     "has_coastline": true
   },
   "ms": {
-    "code": "ms",
     "name": "Montserrat",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MS\"]",
-    "tag_name": "montserrat",
     "has_coastline": true
   },
   "mt": {
-    "code": "mt",
     "name": "Malta",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MT\"]",
-    "tag_name": "malta",
     "has_coastline": true
   },
   "mu": {
-    "code": "mu",
     "name": "Mauritius",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MU\"]",
-    "tag_name": "mauritius",
     "has_coastline": true
   },
   "mv": {
-    "code": "mv",
     "name": "Maldives",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MV\"]",
-    "tag_name": "maldives",
     "has_coastline": true
   },
   "mw": {
-    "code": "mw",
     "name": "Malawi",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MW\"]",
-    "tag_name": "malawi",
     "has_coastline": false
   },
   "mx": {
-    "code": "mx",
     "name": "Mexico",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MX\"]",
-    "tag_name": "mexico",
     "has_coastline": true
   },
   "my": {
-    "code": "my",
     "name": "Malaysia",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MY\"]",
-    "tag_name": "malaysia",
     "has_coastline": true
   },
   "mz": {
-    "code": "mz",
     "name": "Mozambique",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"MZ\"]",
-    "tag_name": "mozambique",
     "has_coastline": true
   },
   "na": {
-    "code": "na",
     "name": "Namibia",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"NA\"]",
-    "tag_name": "namibia",
     "has_coastline": true
   },
   "nc": {
-    "code": "nc",
     "name": "New Caledonia",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"NC\"]",
-    "tag_name": "new-caledonia",
     "has_coastline": true
   },
   "ne": {
-    "code": "ne",
     "name": "Niger",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"NE\"]",
-    "tag_name": "niger",
     "has_coastline": false
   },
   "nf": {
-    "code": "nf",
     "name": "Norfolk Island",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"NF\"]",
-    "tag_name": "norfolk-island",
     "has_coastline": true
   },
   "ng": {
-    "code": "ng",
     "name": "Nigeria",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"NG\"]",
-    "tag_name": "nigeria",
     "has_coastline": true
   },
   "ni": {
-    "code": "ni",
     "name": "Nicaragua",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"NI\"]",
-    "tag_name": "nicaragua",
     "has_coastline": true
   },
   "nl": {
-    "code": "nl",
     "name": "Netherlands",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"NL\"]",
-    "tag_name": "netherlands",
     "has_coastline": true
   },
   "no": {
-    "code": "no",
     "name": "Norway",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"NO\"]",
-    "tag_name": "norway",
     "has_coastline": true
   },
   "np": {
-    "code": "np",
     "name": "Nepal",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"NP\"]",
-    "tag_name": "nepal",
     "has_coastline": false
   },
   "nr": {
-    "code": "nr",
     "name": "Nauru",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"NR\"]",
-    "tag_name": "nauru",
     "has_coastline": true
   },
   "nu": {
-    "code": "nu",
     "name": "Niue",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"NU\"]",
-    "tag_name": "niue",
     "has_coastline": true
   },
   "nz": {
-    "code": "nz",
     "name": "New Zealand",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"NZ\"]",
-    "tag_name": "new-zealand",
     "has_coastline": true
   },
   "om": {
-    "code": "om",
     "name": "Oman",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"OM\"]",
-    "tag_name": "oman",
     "has_coastline": true
   },
   "pa": {
-    "code": "pa",
     "name": "Panama",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"PA\"]",
-    "tag_name": "panama",
     "has_coastline": true
   },
   "pe": {
-    "code": "pe",
     "name": "Peru",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"PE\"]",
-    "tag_name": "peru",
     "has_coastline": true
   },
   "pf": {
-    "code": "pf",
     "name": "French Polynesia",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"PF\"]",
-    "tag_name": "french-polynesia",
     "has_coastline": true
   },
   "pg": {
-    "code": "pg",
     "name": "Papua New Guinea",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"PG\"]",
-    "tag_name": "papua-new-guinea",
     "has_coastline": true
   },
   "ph": {
-    "code": "ph",
     "name": "Philippines",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"PH\"]",
-    "tag_name": "philippines",
     "has_coastline": true
   },
   "pk": {
-    "code": "pk",
     "name": "Pakistan",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"PK\"]",
-    "tag_name": "pakistan",
     "has_coastline": true
   },
   "pl": {
-    "code": "pl",
     "name": "Poland",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"PL\"]",
-    "tag_name": "poland",
     "has_coastline": true
   },
   "pm": {
-    "code": "pm",
     "name": "Saint Pierre and Miquelon",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"PM\"]",
-    "tag_name": "saint-pierre-and-miquelon",
     "has_coastline": true
   },
   "pn": {
-    "code": "pn",
     "name": "Pitcairn",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"PN\"]",
-    "tag_name": "pitcairn",
     "has_coastline": true
   },
   "pr": {
-    "code": "pr",
     "name": "Puerto Rico",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"PR\"]",
-    "tag_name": "puerto-rico",
     "has_coastline": true
   },
   "ps": {
-    "code": "ps",
     "name": "Palestine",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"PS\"]",
-    "tag_name": "palestine",
     "has_coastline": true
   },
   "pt": {
-    "code": "pt",
     "name": "Portugal",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"PT\"]",
-    "tag_name": "portugal",
     "has_coastline": true
   },
   "pw": {
-    "code": "pw",
     "name": "Palau",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"PW\"]",
-    "tag_name": "palau",
     "has_coastline": true
   },
   "py": {
-    "code": "py",
     "name": "Paraguay",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"PY\"]",
-    "tag_name": "paraguay",
     "has_coastline": false
   },
   "qa": {
-    "code": "qa",
     "name": "Qatar",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"QA\"]",
-    "tag_name": "qatar",
     "has_coastline": true
   },
   "re": {
-    "code": "re",
     "name": "Réunion",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"RE\"]",
-    "tag_name": "réunion",
     "has_coastline": true
   },
   "ro": {
-    "code": "ro",
     "name": "Romania",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"RO\"]",
-    "tag_name": "romania",
     "has_coastline": true
   },
   "rs": {
-    "code": "rs",
     "name": "Serbia",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"RS\"]",
-    "tag_name": "serbia",
     "has_coastline": false
   },
   "ru": {
-    "code": "ru",
     "name": "Russian Federation",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"RU\"]",
-    "tag_name": "russian-federation",
     "has_coastline": true
   },
   "rw": {
-    "code": "rw",
     "name": "Rwanda",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"RW\"]",
-    "tag_name": "rwanda",
     "has_coastline": false
   },
   "sa": {
-    "code": "sa",
     "name": "Saudi Arabia",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SA\"]",
-    "tag_name": "saudi-arabia",
     "has_coastline": true
   },
   "sb": {
-    "code": "sb",
     "name": "Solomon Islands",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SB\"]",
-    "tag_name": "solomon-islands",
     "has_coastline": true
   },
   "sc": {
-    "code": "sc",
     "name": "Seychelles",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SC\"]",
-    "tag_name": "seychelles",
     "has_coastline": true
   },
   "sd": {
-    "code": "sd",
     "name": "Sudan",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SD\"]",
-    "tag_name": "sudan",
     "has_coastline": true
   },
   "se": {
-    "code": "se",
     "name": "Sweden",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SE\"]",
-    "tag_name": "sweden",
     "has_coastline": true
   },
   "sg": {
-    "code": "sg",
     "name": "Singapore",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SG\"]",
-    "tag_name": "singapore",
     "has_coastline": true
   },
   "sh": {
-    "code": "sh",
     "name": "Saint Helena",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SH\"]",
-    "tag_name": "saint-helena",
     "has_coastline": true
   },
   "si": {
-    "code": "si",
     "name": "Slovenia",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SI\"]",
-    "tag_name": "slovenia",
     "has_coastline": true
   },
   "sj": {
-    "code": "sj",
     "name": "Svalbard and Jan Mayen",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SJ\"]",
-    "tag_name": "svalbard-and-jan-mayen",
     "has_coastline": true
   },
   "sk": {
-    "code": "sk",
     "name": "Slovakia",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SK\"]",
-    "tag_name": "slovakia",
     "has_coastline": false
   },
   "sl": {
-    "code": "sl",
     "name": "Sierra Leone",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SL\"]",
-    "tag_name": "sierra-leone",
     "has_coastline": true
   },
   "sm": {
-    "code": "sm",
     "name": "San Marino",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SM\"]",
-    "tag_name": "san-marino",
     "has_coastline": false
   },
   "sn": {
-    "code": "sn",
     "name": "Senegal",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SN\"]",
-    "tag_name": "senegal",
     "has_coastline": true
   },
   "so": {
-    "code": "so",
     "name": "Somalia",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SO\"]",
-    "tag_name": "somalia",
     "has_coastline": true
   },
   "sr": {
-    "code": "sr",
     "name": "Suriname",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SR\"]",
-    "tag_name": "suriname",
     "has_coastline": true
   },
   "ss": {
-    "code": "ss",
     "name": "South Sudan",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SS\"]",
-    "tag_name": "south-sudan",
     "has_coastline": false
   },
   "st": {
-    "code": "st",
     "name": "Sao Tome and Principe",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"ST\"]",
-    "tag_name": "sao-tome-and-principe",
     "has_coastline": true
   },
   "sv": {
-    "code": "sv",
     "name": "El Salvador",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SV\"]",
-    "tag_name": "el-salvador",
     "has_coastline": true
   },
   "sx": {
-    "code": "sx",
     "name": "Sint Maarten",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SX\"]",
-    "tag_name": "sint-maarten",
     "has_coastline": true
   },
   "sy": {
-    "code": "sy",
     "name": "Syrian Arab Republic",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SY\"]",
-    "tag_name": "syrian-arab-republic",
     "has_coastline": true
   },
   "sz": {
-    "code": "sz",
     "name": "Eswatini",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"SZ\"]",
-    "tag_name": "eswatini",
     "has_coastline": false
   },
   "tc": {
-    "code": "tc",
     "name": "Turks and Caicos Islands",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"TC\"]",
-    "tag_name": "turks-and-caicos-islands",
     "has_coastline": true
   },
   "td": {
-    "code": "td",
     "name": "Chad",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"TD\"]",
-    "tag_name": "chad",
     "has_coastline": false
   },
   "tf": {
-    "code": "tf",
     "name": "French Southern Territories",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"TF\"]",
-    "tag_name": "french-southern-territories",
     "has_coastline": true
   },
   "tg": {
-    "code": "tg",
     "name": "Togo",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"TG\"]",
-    "tag_name": "togo",
     "has_coastline": true
   },
   "th": {
-    "code": "th",
     "name": "Thailand",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"TH\"]",
-    "tag_name": "thailand",
     "has_coastline": true
   },
   "tj": {
-    "code": "tj",
     "name": "Tajikistan",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"TJ\"]",
-    "tag_name": "tajikistan",
     "has_coastline": false
   },
   "tk": {
-    "code": "tk",
     "name": "Tokelau",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"TK\"]",
-    "tag_name": "tokelau",
     "has_coastline": true
   },
   "tl": {
-    "code": "tl",
     "name": "Timor-Leste",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"TL\"]",
-    "tag_name": "timor-leste",
     "has_coastline": true
   },
   "tm": {
-    "code": "tm",
     "name": "Turkmenistan",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"TM\"]",
-    "tag_name": "turkmenistan",
     "has_coastline": false
   },
   "tn": {
-    "code": "tn",
     "name": "Tunisia",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"TN\"]",
-    "tag_name": "tunisia",
     "has_coastline": true
   },
   "to": {
-    "code": "to",
     "name": "Tonga",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"TO\"]",
-    "tag_name": "tonga",
     "has_coastline": true
   },
   "tr": {
-    "code": "tr",
     "name": "Türkiye",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"TR\"]",
-    "tag_name": "türkiye",
     "has_coastline": true
   },
   "tt": {
-    "code": "tt",
     "name": "Trinidad and Tobago",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"TT\"]",
-    "tag_name": "trinidad-and-tobago",
     "has_coastline": true
   },
   "tv": {
-    "code": "tv",
     "name": "Tuvalu",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"TV\"]",
-    "tag_name": "tuvalu",
     "has_coastline": true
   },
   "tw": {
-    "code": "tw",
     "name": "Taiwan",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"TW\"]",
-    "tag_name": "taiwan",
     "has_coastline": true
   },
   "tz": {
-    "code": "tz",
     "name": "Tanzania",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"TZ\"]",
-    "tag_name": "tanzania",
     "has_coastline": true
   },
   "ua": {
-    "code": "ua",
     "name": "Ukraine",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"UA\"]",
-    "tag_name": "ukraine",
     "has_coastline": true
   },
   "ug": {
-    "code": "ug",
     "name": "Uganda",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"UG\"]",
-    "tag_name": "uganda",
     "has_coastline": false
   },
   "um": {
-    "code": "um",
     "name": "United States Minor Outlying Islands",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"UM\"]",
-    "tag_name": "united-states-minor-outlying-islands",
     "has_coastline": true
   },
   "us": {
-    "code": "us",
     "name": "United States",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"US\"]",
-    "tag_name": "united-states",
     "has_coastline": true
   },
   "uy": {
-    "code": "uy",
     "name": "Uruguay",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"UY\"]",
-    "tag_name": "uruguay",
     "has_coastline": true
   },
   "uz": {
-    "code": "uz",
     "name": "Uzbekistan",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"UZ\"]",
-    "tag_name": "uzbekistan",
     "has_coastline": false
   },
   "va": {
-    "code": "va",
     "name": "Holy See",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"VA\"]",
-    "tag_name": "holy-see",
     "has_coastline": false
   },
   "vc": {
-    "code": "vc",
     "name": "Saint Vincent and the Grenadines",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"VC\"]",
-    "tag_name": "saint-vincent-and-the-grenadines",
     "has_coastline": true
   },
   "ve": {
-    "code": "ve",
     "name": "Venezuela",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"VE\"]",
-    "tag_name": "venezuela",
     "has_coastline": true
   },
   "vg": {
-    "code": "vg",
     "name": "Virgin Islands (British)",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"VG\"]",
-    "tag_name": "virgin-islands-british",
     "has_coastline": true
   },
   "vi": {
-    "code": "vi",
     "name": "Virgin Islands (U.S.)",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"VI\"]",
-    "tag_name": "virgin-islands-u.s.",
     "has_coastline": true
   },
   "vn": {
-    "code": "vn",
     "name": "Viet Nam",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"VN\"]",
-    "tag_name": "viet-nam",
     "has_coastline": true
   },
   "vu": {
-    "code": "vu",
     "name": "Vanuatu",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"VU\"]",
-    "tag_name": "vanuatu",
     "has_coastline": true
   },
   "wf": {
-    "code": "wf",
     "name": "Wallis and Futuna",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"WF\"]",
-    "tag_name": "wallis-and-futuna",
     "has_coastline": true
   },
   "ws": {
-    "code": "ws",
     "name": "Samoa",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"WS\"]",
-    "tag_name": "samoa",
     "has_coastline": true
   },
   "ye": {
-    "code": "ye",
     "name": "Yemen",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"YE\"]",
-    "tag_name": "yemen",
     "has_coastline": true
   },
   "yt": {
-    "code": "yt",
     "name": "Mayotte",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"YT\"]",
-    "tag_name": "mayotte",
     "has_coastline": true
   },
   "za": {
-    "code": "za",
     "name": "South Africa",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"ZA\"]",
-    "tag_name": "south-africa",
     "has_coastline": true
   },
   "zm": {
-    "code": "zm",
     "name": "Zambia",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"ZM\"]",
-    "tag_name": "zambia",
     "has_coastline": false
   },
   "zw": {
-    "code": "zw",
     "name": "Zimbabwe",
-    "osm_query": "a[\"ISO3166-1:alpha2\"=\"ZW\"]",
-    "tag_name": "zimbabwe",
     "has_coastline": false
   }
 }

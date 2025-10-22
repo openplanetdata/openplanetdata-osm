@@ -41,11 +41,15 @@ jobs:
           for code in codes:
               if code in continents:
                   continent = continents[code]
+                  # Generate fields from name
+                  tag_name = continent['name'].lower().replace(' ', '-')
+                  osm_query = f'a[place=continent][\"name:en\"=\"{continent[\"name\"]}\"]'
+
                   matrix.append({
                       'code': code,
                       'name': continent['name'],
-                      'osm_query': continent['osm_query'],
-                      'tag_name': continent['tag_name']
+                      'osm_query': osm_query,
+                      'tag_name': tag_name
                   })
               else:
                   print(f'Warning: Unknown continent code: {code}', file=sys.stderr)

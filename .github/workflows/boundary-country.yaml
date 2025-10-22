@@ -41,11 +41,16 @@ jobs:
           for code in codes:
               if code in countries:
                   country = countries[code]
+                  # Generate fields from code and name
+                  code_upper = code.upper()
+                  tag_name = country['name'].lower().replace(' ', '-').replace('.', '').replace(',', '')
+                  osm_query = f'a[\"ISO3166-1:alpha2\"=\"{code_upper}\"]'
+
                   matrix.append({
                       'code': code,
                       'name': country['name'],
-                      'osm_query': country['osm_query'],
-                      'tag_name': country['tag_name'],
+                      'osm_query': osm_query,
+                      'tag_name': tag_name,
                       'has_coastline': country.get('has_coastline', True)
                   })
               else:
