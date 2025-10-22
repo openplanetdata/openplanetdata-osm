@@ -72,6 +72,9 @@ jobs:
       success: ${{ steps.extract.outputs.success }}
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Set date tag
         id: date
         uses: openplanetdata/actions/set-date-tag@main
@@ -123,6 +126,11 @@ jobs:
           command -v osmium && osmium --version
           command -v ogr2ogr && ogr2ogr --version
           command -v jq && jq --version
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install --user pyproj
 
       - name: Install GOL 2.x
         uses: openplanetdata/actions/install-gol@main
@@ -265,40 +273,17 @@ jobs:
           mv -f "$TMPDIR/${ENTITY_CODE}_dissolved.geojson" "$OUTPUT_DIR/$OUTPUT_FILE"
           echo "  ✓ Dissolved geometry with metadata"
 
-          # Step 6b: Compute area using equal-area projection (Mollweide - ESRI:54009)
+          # Step 6b: Compute area using Python script with shapely
           echo "→ Step 6b/7: Computing area in km²..."
-          # First, reproject to equal-area projection
-          if ! ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_projected.geojson" "$OUTPUT_DIR/$OUTPUT_FILE" \
-            -t_srs ESRI:54009 -q; then
-            echo "❌ Failed to reproject to equal-area projection" >&2
-            echo "success=false" >> $GITHUB_OUTPUT
-            echo "failure_reason=Failed to reproject geometry" >> $GITHUB_OUTPUT
-            rm -rf "$TMPDIR"
-            exit 5
-          fi
-
-          # Then compute area on the projected geometry
-          if ! ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_area.geojson" "$TMPDIR/${ENTITY_CODE}_projected.geojson" \
-            -dialect sqlite \
-            -sql "SELECT \
-              ROUND(ST_Area(geometry) / 1000000.0, 2) AS area \
-            FROM OGRGeoJSON" -q; then
-            echo "❌ Failed to compute area" >&2
+          COMPUTED_AREA=$(python3 scripts/compute_area.py "$OUTPUT_DIR/$OUTPUT_FILE" 2>&1)
+          if [ $? -eq 0 ]; then
+            echo "  ✓ Computed area: ${COMPUTED_AREA} km²"
+          else
+            echo "❌ Failed to compute area: $COMPUTED_AREA" >&2
             echo "success=false" >> $GITHUB_OUTPUT
             echo "failure_reason=Failed to compute area" >> $GITHUB_OUTPUT
             rm -rf "$TMPDIR"
             exit 5
-          fi
-
-          # Extract computed area and add it to the original GeoJSON
-          COMPUTED_AREA=$(jq -r '.features[0].properties.area // "N/A"' "$TMPDIR/${ENTITY_CODE}_area.geojson" 2>/dev/null || echo "N/A")
-          if [ "$COMPUTED_AREA" != "N/A" ] && [ "$COMPUTED_AREA" != "null" ]; then
-            echo "  ✓ Computed area: ${COMPUTED_AREA} km²"
-            # Add area property to the original GeoJSON
-            jq --arg area "$COMPUTED_AREA" '.features[0].properties.area = ($area | tonumber)' "$OUTPUT_DIR/$OUTPUT_FILE" > "$TMPDIR/${ENTITY_CODE}_with_area.geojson"
-            mv -f "$TMPDIR/${ENTITY_CODE}_with_area.geojson" "$OUTPUT_DIR/$OUTPUT_FILE"
-          else
-            echo "  ⚠️  Could not compute area"
           fi
 
           # Step 7: Validate the output has features
