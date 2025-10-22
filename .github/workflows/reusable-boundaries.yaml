@@ -164,12 +164,12 @@ jobs:
             echo "→ Need to download planet-${TAG}.osm.gol"
           fi
 
-          if [ -f "coastline.gpkg" ]; then
+          if [ -f "coastline-${TAG}.gpkg" ]; then
             echo "coastline_exists=true" >> $GITHUB_OUTPUT
-            echo "✓ Found existing coastline.gpkg"
+            echo "✓ Found existing coastline-${TAG}.gpkg"
           else
             echo "coastline_exists=false" >> $GITHUB_OUTPUT
-            echo "→ Need to download coastline.gpkg"
+            echo "→ Need to download coastline-${TAG}.gpkg"
           fi
 
       - name: Download planet PBF
@@ -195,7 +195,7 @@ jobs:
           TAG="${{ steps.date.outputs.tag }}"
           [ -f planet-latest.osm.pbf ] && mv planet-latest.osm.pbf "planet-${TAG}.osm.pbf"
           [ -f planet-latest.osm.gol ] && mv planet-latest.osm.gol "planet-${TAG}.osm.gol"
-          [ -f planet-coastline-latest.osm.gpkg ] && mv planet-coastline-latest.osm.gpkg "coastline.gpkg"
+          [ -f planet-coastline-latest.osm.gpkg ] && mv planet-coastline-latest.osm.gpkg "coastline-${TAG}.gpkg"
           ls -alh
 
       - name: Extract boundary
@@ -212,7 +212,7 @@ jobs:
 
           PLANET_GOL="planet-${TAG}.osm.gol"
           PLANET_PBF="planet-${TAG}.osm.pbf"
-          COASTLINE_DB="coastline.gpkg"
+          COASTLINE_DB="coastline-${TAG}.gpkg"
           OUTPUT_DIR="boundaries/${ENTITY_TYPE}s"
           OUTPUT_FILE="${ENTITY_CODE}.boundary.geojson"
           TMPDIR="boundaries/tmp/${ENTITY_CODE}"
@@ -444,4 +444,4 @@ jobs:
         if: always() && inputs.cleanup_planet_files == true
         run: |
           echo "Cleaning up planet files..."
-          rm -f planet-*.osm.pbf planet-*.osm.gol coastline.gpkg
+          rm -f planet-*.osm.pbf planet-*.osm.gol coastline-*.gpkg
