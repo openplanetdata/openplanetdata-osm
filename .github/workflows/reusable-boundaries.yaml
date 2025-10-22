@@ -332,15 +332,26 @@ jobs:
             fi
           else
             # Landlocked entity: use boundary polygon directly
-            if ! ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_dissolved.geojson" "$TMPDIR/${ENTITY_CODE}_boundary.gpkg" -dialect sqlite \
+            # First convert GPKG to GeoJSON
+            if ! ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_boundary.geojson" "$TMPDIR/${ENTITY_CODE}_boundary.gpkg" \
+              -sql "SELECT * FROM multipolygons WHERE boundary='administrative'" -q; then
+              echo "❌ Failed to convert boundary to GeoJSON" >&2
+              echo "success=false" >> $GITHUB_OUTPUT
+              echo "failure_reason=Failed to convert boundary to GeoJSON" >> $GITHUB_OUTPUT
+              rm -rf "$TMPDIR"
+              exit 5
+            fi
+
+            # Then dissolve and add metadata
+            if ! ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_dissolved.geojson" "$TMPDIR/${ENTITY_CODE}_boundary.geojson" -dialect sqlite \
               -sql "SELECT \
                 ST_CollectionExtract(ST_UnaryUnion(ST_Collect(geometry)), 3) AS geometry, \
                 '$NAME_EN' AS \"name:en\", \
                 '$ENTITY_CODE' AS \"code\" \
-              FROM multipolygons WHERE boundary='administrative'" -q; then
-              echo "❌ Failed to process boundary geometry" >&2
+              FROM OGRGeoJSON" -q; then
+              echo "❌ Failed to dissolve boundary geometry" >&2
               echo "success=false" >> $GITHUB_OUTPUT
-              echo "failure_reason=Failed to process boundary geometry" >> $GITHUB_OUTPUT
+              echo "failure_reason=Failed to dissolve boundary geometry" >> $GITHUB_OUTPUT
               rm -rf "$TMPDIR"
               exit 5
             fi
