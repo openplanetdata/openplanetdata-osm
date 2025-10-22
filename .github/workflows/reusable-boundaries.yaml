@@ -250,7 +250,7 @@ jobs:
 
           # Step 6: Dissolve multiparts into a single geometry with metadata
           echo "→ Step 6/7: Dissolving multiparts and adding metadata..."
-          if ! ogr2ogr -f GeoJSON "$OUTPUT_DIR/$OUTPUT_FILE" "$OUTPUT_DIR/$OUTPUT_FILE" -dialect sqlite \
+          if ! ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_dissolved.geojson" "$OUTPUT_DIR/$OUTPUT_FILE" -dialect sqlite \
             -sql "SELECT \
               ST_CollectionExtract(ST_UnaryUnion(ST_Collect(geometry)), 3) AS geometry, \
               '$NAME_EN' AS \"name:en\", \
@@ -262,6 +262,7 @@ jobs:
             rm -rf "$TMPDIR"
             exit 5
           fi
+          mv -f "$TMPDIR/${ENTITY_CODE}_dissolved.geojson" "$OUTPUT_DIR/$OUTPUT_FILE"
           echo "  ✓ Dissolved geometry with metadata"
 
           # Step 6b: Compute area using equal-area projection (Mollweide - ESRI:54009)
