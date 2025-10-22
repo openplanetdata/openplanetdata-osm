@@ -94,6 +94,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
+        with:
+          clean: false
 
       - name: Cleanup downloaded files
         uses: openplanetdata/actions/cleanup-downloads@main
