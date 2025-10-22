@@ -11,7 +11,7 @@ on:
 
 jobs:
   prepare:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
@@ -71,7 +71,7 @@ jobs:
       entity_type: country
       osm_query: ${{ matrix.osm_query }}
       remote_path: /osm/boundaries/countries
-      remote_version: '1'
+      remote_version: 1
       tags: |
         boundary
         country

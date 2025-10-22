@@ -47,6 +47,9 @@ on:
       output_file:
         description: 'Path to the generated GeoJSON file'
         value: ${{ jobs.extract.outputs.output_file }}
+      parquet_file:
+        description: 'Path to the generated GeoParquet file'
+        value: ${{ jobs.extract.outputs.parquet_file }}
       success:
         description: 'Whether the extraction succeeded (true/false)'
         value: ${{ jobs.extract.outputs.success }}
@@ -58,13 +61,14 @@ on:
 
 jobs:
   extract:
-    runs-on: openplanetdata-cortex
+    runs-on: self-hosted
     timeout-minutes: 60
 
     outputs:
       failure_reason: ${{ steps.extract.outputs.failure_reason }}
       feature_count: ${{ steps.extract.outputs.feature_count }}
       output_file: ${{ steps.extract.outputs.output_file }}
+      parquet_file: ${{ steps.extract.outputs.parquet_file }}
       success: ${{ steps.extract.outputs.success }}
 
     steps:
@@ -260,10 +264,10 @@ jobs:
           fi
           echo "  ✓ Dissolved geometry with metadata"
 
-          # Step 6b: Compute area using equal-area projection (Mollweide - EPSG:54009)
+          # Step 6b: Compute area using equal-area projection (Mollweide - ESRI:54009)
           echo "→ Step 6b/7: Computing area in km²..."
           if ! ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_closed.geojson" "$TMPDIR/${ENTITY_CODE}_dissolved.geojson" \
-            -s_srs EPSG:4326 -t_srs EPSG:54009 -dialect sqlite \
+            -s_srs EPSG:4326 -t_srs ESRI:54009 -dialect sqlite \
             -sql "SELECT \
               ST_Transform(geometry, 4326) AS geometry, \
               \"name:en\", \
@@ -288,7 +292,7 @@ jobs:
           mv -f "$TMPDIR/${ENTITY_CODE}_closed.geojson" "$OUTPUT_DIR/$OUTPUT_FILE"
 
           # Step 7: Validate the output has features
-          echo "→ Step 7/7: Validating output..."
+          echo "→ Step 7/8: Validating output..."
           if [ ! -f "$OUTPUT_DIR/$OUTPUT_FILE" ]; then
             echo "❌ Output file not created" >&2
             echo "success=false" >> $GITHUB_OUTPUT
@@ -325,15 +329,32 @@ jobs:
           # Clean up temp files
           rm -rf "$TMPDIR"
 
+          # Step 8: Convert GeoJSON to GeoParquet
+          echo "→ Step 8/8: Converting to GeoParquet..."
+          PARQUET_FILE="${OUTPUT_DIR}/${ENTITY_CODE}.boundary.parquet"
+          if ! ogr2ogr -f Parquet "$PARQUET_FILE" "$OUTPUT_DIR/$OUTPUT_FILE" \
+            -lco COMPRESSION=ZSTD \
+            -lco GEOMETRY_ENCODING=GEOARROW \
+            -lco ROW_GROUP_SIZE=65536; then
+            echo "❌ Failed to convert to GeoParquet" >&2
+            echo "success=false" >> $GITHUB_OUTPUT
+            echo "failure_reason=Failed to convert to GeoParquet" >> $GITHUB_OUTPUT
+            rm -f "$OUTPUT_DIR/$OUTPUT_FILE"
+            exit 8
+          fi
+          echo "  ✓ GeoParquet created: $(basename $PARQUET_FILE)"
+
           # Set outputs
           echo "success=true" >> $GITHUB_OUTPUT
           echo "output_file=$OUTPUT_DIR/$OUTPUT_FILE" >> $GITHUB_OUTPUT
+          echo "parquet_file=$PARQUET_FILE" >> $GITHUB_OUTPUT
           echo "feature_count=$FEATURE_COUNT" >> $GITHUB_OUTPUT
 
           echo "✅ $OUTPUT_FILE created successfully with $FEATURE_COUNT feature(s)"
           if [ "$AREA_KM2" != "N/A" ] && [ "$AREA_KM2" != "null" ]; then
             echo "   Area: ${AREA_KM2} km²"
           fi
+          echo "✅ $(basename $PARQUET_FILE) created successfully"
           echo "Finished at: $(date -u +%Y-%m-%d_%H:%M:%S)"
 
       - name: Create metadata
@@ -357,9 +378,31 @@ jobs:
           remote_path: ${{ inputs.remote_path }}
           remote_version: ${{ inputs.remote_version }}
 
+      - name: Create metadata for Parquet
+        if: steps.extract.outputs.success == 'true'
+        uses: openplanetdata/actions/create-metadata@main
+        with:
+          file: ${{ steps.extract.outputs.parquet_file }}
+          remote_filename: ${{ inputs.entity_code }}.boundary.parquet
+          remote_path: ${{ inputs.remote_path }}
+          remote_version: ${{ inputs.remote_version }}
+          tags: ${{ inputs.tags }}
+
+      - name: Upload Parquet to R2
+        if: steps.extract.outputs.success == 'true'
+        uses: openplanetdata/actions/upload@main
+        env:
+          RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}
+        with:
+          file: ${{ steps.extract.outputs.parquet_file }}
+          remote_filename: ${{ inputs.entity_code }}.boundary.parquet
+          remote_path: ${{ inputs.remote_path }}
+          remote_version: ${{ inputs.remote_version }}
+
       - name: Cleanup downloaded and generated files
         if: always()
         run: |
           rm -f planet-*.osm.pbf planet-*.osm.gol coastline.gpkg
           rm -f boundaries/${{ inputs.entity_type }}s/*.boundary.geojson.{sha256,metadata}
+          rm -f boundaries/${{ inputs.entity_type }}s/*.boundary.parquet.{sha256,metadata}
           rm -rf boundaries/tmp boundaries/logs
