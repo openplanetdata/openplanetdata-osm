@@ -144,20 +144,30 @@ jobs:
         run: |
           TAG="${{ steps.date.outputs.tag }}"
 
+          # Check for GOL file (dated or latest)
           if [ -f "planet-${TAG}.osm.gol" ]; then
             echo "gol_exists=true" >> $GITHUB_OUTPUT
             echo "✓ Found existing planet-${TAG}.osm.gol"
+          elif [ -f "planet-latest.osm.gol" ]; then
+            mv planet-latest.osm.gol "planet-${TAG}.osm.gol"
+            echo "gol_exists=true" >> $GITHUB_OUTPUT
+            echo "✓ Found and renamed planet-latest.osm.gol to planet-${TAG}.osm.gol"
           else
             echo "gol_exists=false" >> $GITHUB_OUTPUT
-            echo "→ Need to download planet-${TAG}.osm.gol"
+            echo "→ Need to download planet GOL"
           fi
 
+          # Check for coastline file (dated or latest)
           if [ -f "coastline-${TAG}.gpkg" ]; then
             echo "coastline_exists=true" >> $GITHUB_OUTPUT
             echo "✓ Found existing coastline-${TAG}.gpkg"
+          elif [ -f "planet-coastline-latest.osm.gpkg" ]; then
+            mv planet-coastline-latest.osm.gpkg "coastline-${TAG}.gpkg"
+            echo "coastline_exists=true" >> $GITHUB_OUTPUT
+            echo "✓ Found and renamed planet-coastline-latest.osm.gpkg to coastline-${TAG}.gpkg"
           else
             echo "coastline_exists=false" >> $GITHUB_OUTPUT
-            echo "→ Need to download coastline-${TAG}.gpkg"
+            echo "→ Need to download coastline GPKG"
           fi
 
       - name: Download planet GOB
@@ -316,6 +326,8 @@ jobs:
             exit 6
           fi
           echo "  ✓ GeoParquet created: $(basename $PARQUET_FILE)"
+
+          ls -alh .
 
           # Set outputs
           echo "success=true" >> $GITHUB_OUTPUT
