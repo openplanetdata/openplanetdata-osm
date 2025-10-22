@@ -264,11 +264,32 @@ jobs:
           fi
           echo "  ✓ Computed area: ${AREA_KM2} km²"
 
-          # Add area to properties
-          jq --arg area "$AREA_KM2" '.features[0].properties.area = ($area | tonumber)' \
-            "$OUTPUT_DIR/$OUTPUT_FILE" > "$OUTPUT_DIR/$OUTPUT_FILE.tmp"
+          # Add properties (area, name, and entity code)
+          ENTITY_TYPE="${{ inputs.entity_type }}"
+          ENTITY_CODE="${{ inputs.entity_code }}"
+          ENTITY_NAME="${{ inputs.entity_name }}"
+
+          if [ "$ENTITY_TYPE" = "country" ]; then
+            # For countries, add ISO3166-1:alpha2 code and name
+            CODE_UPPER=$(echo "$ENTITY_CODE" | tr '[:lower:]' '[:upper:]')
+            jq --arg area "$AREA_KM2" --arg iso_code "$CODE_UPPER" --arg name "$ENTITY_NAME" \
+              '.features[0].properties.area = ($area | tonumber) | .features[0].properties."ISO3166-1:alpha2" = $iso_code | .features[0].properties.name = $name' \
+              "$OUTPUT_DIR/$OUTPUT_FILE" > "$OUTPUT_DIR/$OUTPUT_FILE.tmp"
+          elif [ "$ENTITY_TYPE" = "continent" ]; then
+            # For continents, add continent code and name
+            CODE_UPPER=$(echo "$ENTITY_CODE" | tr '[:lower:]' '[:upper:]')
+            jq --arg area "$AREA_KM2" --arg code "$CODE_UPPER" --arg name "$ENTITY_NAME" \
+              '.features[0].properties.area = ($area | tonumber) | .features[0].properties.code = $code | .features[0].properties.name = $name' \
+              "$OUTPUT_DIR/$OUTPUT_FILE" > "$OUTPUT_DIR/$OUTPUT_FILE.tmp"
+          else
+            # For other entity types, add area and name
+            jq --arg area "$AREA_KM2" --arg name "$ENTITY_NAME" \
+              '.features[0].properties.area = ($area | tonumber) | .features[0].properties.name = $name' \
+              "$OUTPUT_DIR/$OUTPUT_FILE" > "$OUTPUT_DIR/$OUTPUT_FILE.tmp"
+          fi
+
           mv "$OUTPUT_DIR/$OUTPUT_FILE.tmp" "$OUTPUT_DIR/$OUTPUT_FILE"
-          echo "  ✓ Added area property to output"
+          echo "  ✓ Added properties to output"
 
           # Validate the output
           echo "→ Validating output..."
