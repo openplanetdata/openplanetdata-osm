@@ -328,6 +328,7 @@ jobs:
           echo "→ Step 8/8: Converting to GeoParquet..."
           PARQUET_FILE="${OUTPUT_DIR}/${ENTITY_CODE}.boundary.parquet"
           if ! ogr2ogr -f Parquet "$PARQUET_FILE" "$OUTPUT_DIR/$OUTPUT_FILE" \
+            --config OGR_GEOJSON_MAX_OBJ_SIZE 0 \
             -lco COMPRESSION=ZSTD \
             -lco GEOMETRY_ENCODING=GEOARROW \
             -lco ROW_GROUP_SIZE=65536; then
