@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Compute area of a GeoJSON polygon in km² using geodesic calculation.
-Adds the computed area as a property to the GeoJSON features.
+Returns the computed area value.
 """
 
 import json
@@ -94,44 +94,15 @@ def compute_area_km2(geojson_path):
     return area_km2
 
 
-def add_area_to_geojson(geojson_path, output_path=None):
-    """
-    Add computed area to GeoJSON properties.
+if __name__ == '__main__':
+    if len(sys.argv) != 2:
+        print("Usage: compute_area.py <geojson_file>", file=sys.stderr)
+        sys.exit(1)
 
-    Args:
-        geojson_path: Path to input GeoJSON file
-        output_path: Path to output GeoJSON file (defaults to overwriting input)
-    """
-    # Compute area
-    area_km2 = compute_area_km2(geojson_path)
+    input_file = sys.argv[1]
+    area_km2 = compute_area_km2(input_file)
 
     if area_km2 is None:
         sys.exit(1)
 
-    # Read GeoJSON
-    with open(geojson_path, 'r') as f:
-        data = json.load(f)
-
-    # Add area to properties
-    data['features'][0]['properties']['area'] = area_km2
-
-    # Write output
-    if output_path is None:
-        output_path = geojson_path
-
-    with open(output_path, 'w') as f:
-        json.dump(data, f)
-
     print(f"{area_km2}")
-    return area_km2
-
-
-if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        print("Usage: compute_area.py <geojson_file> [output_file]", file=sys.stderr)
-        sys.exit(1)
-
-    input_file = sys.argv[1]
-    output_file = sys.argv[2] if len(sys.argv) > 2 else None
-
-    add_area_to_geojson(input_file, output_file)
