@@ -98,5 +98,5 @@ jobs:
       - name: Cleanup planet files
         run: |
           echo "Cleaning up planet files after all countries processed..."
-          rm -f planet-*.osm.pbf planet-*.osm.gol coastline-*.gpkg || true
+          rm -f planet-*.osm.pbf coastline-*.gpkg || true
           echo "✓ Cleanup complete"

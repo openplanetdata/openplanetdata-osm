@@ -142,12 +142,6 @@ jobs:
         run: |
           python3 -m pip install --user pyproj
 
-      - name: Install GOL 2.x
-        uses: openplanetdata/actions/install-gol@main
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          version: 2
-
       - name: Check for existing planet files
         id: check_files
         run: |
@@ -159,14 +153,6 @@ jobs:
           else
             echo "pbf_exists=false" >> $GITHUB_OUTPUT
             echo "→ Need to download planet-${TAG}.osm.pbf"
-          fi
-
-          if [ -f "planet-${TAG}.osm.gol" ]; then
-            echo "gol_exists=true" >> $GITHUB_OUTPUT
-            echo "✓ Found existing planet-${TAG}.osm.gol"
-          else
-            echo "gol_exists=false" >> $GITHUB_OUTPUT
-            echo "→ Need to download planet-${TAG}.osm.gol"
           fi
 
           if [ -f "coastline-${TAG}.gpkg" ]; then
@@ -183,12 +169,6 @@ jobs:
         with:
           remote_path: osm/planet/pbf/planet-latest.osm.pbf
 
-      - name: Download planet GOL
-        if: steps.check_files.outputs.gol_exists == 'false'
-        uses: openplanetdata/actions/download@main
-        with:
-          remote_path: /osm/planet/gol/v2/planet-latest.osm.gol
-
       - name: Download coastline GPKG
         if: steps.check_files.outputs.coastline_exists == 'false'
         uses: openplanetdata/actions/download@main
@@ -199,7 +179,6 @@ jobs:
         run: |
           TAG="${{ steps.date.outputs.tag }}"
           [ -f planet-latest.osm.pbf ] && mv planet-latest.osm.pbf "planet-${TAG}.osm.pbf"
-          [ -f planet-latest.osm.gol ] && mv planet-latest.osm.gol "planet-${TAG}.osm.gol"
           [ -f planet-coastline-latest.osm.gpkg ] && mv planet-coastline-latest.osm.gpkg "coastline-${TAG}.gpkg"
           ls -alh
 
@@ -215,7 +194,6 @@ jobs:
           OSM_QUERY='${{ inputs.osm_query }}'
           TAG="${{ steps.date.outputs.tag }}"
 
-          PLANET_GOL="planet-${TAG}.osm.gol"
           PLANET_PBF="planet-${TAG}.osm.pbf"
           COASTLINE_DB="coastline-${TAG}.gpkg"
           OUTPUT_DIR="boundaries/${ENTITY_TYPE}s"
@@ -237,121 +215,69 @@ jobs:
           echo "Started at: $(date -u +%Y-%m-%d_%H:%M:%S)"
           echo "=========================================="
 
-          # Step 1: Find relation ID using indexed GOL
-          echo "→ Step 1/7: Finding relation ID..."
-          REL_ID=$(gol query "$PLANET_GOL" "$OSM_QUERY" -f list -q | grep -oP '^R\K\d+' || true)
+          # Step 1: Extract country boundary with tags from PBF
+          echo "→ Step 1/5: Extracting boundary from PBF..."
+          CODE_UPPER=$(echo "$ENTITY_CODE" | tr '[:lower:]' '[:upper:]')
 
-          if [[ -z "$REL_ID" ]]; then
-            echo "❌ No relation found for query: $OSM_QUERY" >&2
+          # Extract using osmium tags-filter for admin_level=2 and ISO code
+          if ! osmium tags-filter "$PLANET_PBF" \
+            r/boundary=administrative \
+            r/admin_level=2 \
+            r/ISO3166-1:alpha2="$CODE_UPPER" \
+            -o "$TMPDIR/${ENTITY_CODE}_boundary.osm.pbf" --overwrite; then
+            echo "❌ Failed to extract boundary from PBF" >&2
             echo "success=false" >> $GITHUB_OUTPUT
-            echo "failure_reason=No OSM relation found" >> $GITHUB_OUTPUT
+            echo "failure_reason=Failed to extract boundary from PBF" >> $GITHUB_OUTPUT
+            rm -rf "$TMPDIR"
             exit 1
           fi
 
-          echo "  ✓ Found relation ID: $REL_ID"
-
-          # Step 2: Extract relation and all its member ways/nodes
-          echo "→ Step 2/7: Extracting relation members from PBF..."
-          if ! osmium getid -r "$PLANET_PBF" r"$REL_ID" -o "$TMPDIR/${ENTITY_CODE}_rel.pbf" --overwrite; then
-            echo "❌ Failed to extract relation" >&2
+          # Convert to GeoJSON with properties
+          if ! ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_raw.geojson" "$TMPDIR/${ENTITY_CODE}_boundary.osm.pbf" multipolygons -q; then
+            echo "❌ Failed to convert boundary to GeoJSON" >&2
             echo "success=false" >> $GITHUB_OUTPUT
-            echo "failure_reason=Failed to extract relation from PBF" >> $GITHUB_OUTPUT
+            echo "failure_reason=Failed to convert boundary to GeoJSON" >> $GITHUB_OUTPUT
             rm -rf "$TMPDIR"
             exit 2
           fi
-          echo "  ✓ Extracted to $TMPDIR/${ENTITY_CODE}_rel.pbf"
 
-          # Step 3: Convert relation to multipolygons
-          echo "→ Step 3/7: Converting to polygons..."
-          if ! ogr2ogr -f GPKG "$TMPDIR/${ENTITY_CODE}_boundary.gpkg" "$TMPDIR/${ENTITY_CODE}_rel.pbf" multipolygons -q; then
-            echo "❌ Failed to convert to polygons" >&2
-            echo "success=false" >> $GITHUB_OUTPUT
-            echo "failure_reason=Failed to convert to polygons" >> $GITHUB_OUTPUT
-            rm -rf "$TMPDIR"
-            exit 3
-          fi
-          echo "  ✓ Converted to polygons"
+          # Extract name from properties
+          NAME_EN=$(jq -r '.features[0].properties["name:en"] // .features[0].properties.name // "'"$ENTITY_NAME"'"' "$TMPDIR/${ENTITY_CODE}_raw.geojson")
+          echo "  ✓ Extracted boundary: $NAME_EN (Code: $CODE_UPPER)"
 
-          # Step 4: Extract entity metadata
-          echo "→ Step 4/7: Extracting metadata..."
-          COUNTRY_DATA=$(ogrinfo "$TMPDIR/${ENTITY_CODE}_boundary.gpkg" multipolygons -sql \
-            "SELECT other_tags FROM multipolygons WHERE boundary='administrative' LIMIT 1" -q 2>/dev/null || true)
-          NAME_EN=$(echo "$COUNTRY_DATA" | grep -oP '"name:en"=>"?\K[^"]+' | head -1 || true)
-
-          # Fallback to regular name if name:en not found
-          if [[ -z "$NAME_EN" ]]; then
-            NAME_EN=$(ogrinfo "$TMPDIR/${ENTITY_CODE}_boundary.gpkg" multipolygons -sql \
-              "SELECT name FROM multipolygons WHERE boundary='administrative' LIMIT 1" -q 2>/dev/null | \
-              grep -oP 'name \(String\) = \K.*' || echo "$ENTITY_NAME")
-          fi
-          echo "  ✓ Name: $NAME_EN (Code: $ENTITY_CODE)"
-
-          # Step 5: Clip global land polygons with the boundary (for coastal entities)
+          # Step 2: Clip with coastline if coastal entity
           HAS_COASTLINE="${{ inputs.has_coastline }}"
 
           if [ "$HAS_COASTLINE" = "true" ]; then
-            echo "→ Step 5/7: Clipping coastline data with boundary..."
-            if ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_clipped_coastline.geojson" "$COASTLINE_DB" land_polygons \
-              -clipsrc "$TMPDIR/${ENTITY_CODE}_boundary.gpkg" -q 2>/dev/null; then
-
-              # Check if the clipped coastline has features
-              COASTLINE_FEATURES=$(jq '.features | length' "$TMPDIR/${ENTITY_CODE}_clipped_coastline.geojson" 2>/dev/null || echo "0")
-
-              if [ "$COASTLINE_FEATURES" -gt 0 ]; then
-                echo "  ✓ Clipped coastline data ($COASTLINE_FEATURES features)"
-                USE_COASTLINE=true
-              else
-                echo "  ℹ No coastline intersection found"
-                USE_COASTLINE=false
-              fi
+            echo "→ Step 2/5: Clipping with coastline data..."
+            if ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_clipped.geojson" "$COASTLINE_DB" land_polygons \
+              -clipsrc "$TMPDIR/${ENTITY_CODE}_raw.geojson" -q 2>/dev/null; then
+              echo "  ✓ Clipped with coastline data"
+              WORKING_FILE="$TMPDIR/${ENTITY_CODE}_clipped.geojson"
             else
-              echo "  ⚠️ Coastline clipping failed, will use boundary polygon"
-              USE_COASTLINE=false
+              echo "  ⚠️ Coastline clipping failed, using raw boundary"
+              WORKING_FILE="$TMPDIR/${ENTITY_CODE}_raw.geojson"
             fi
           else
-            echo "→ Step 5/7: Skipping coastline clipping (landlocked entity)"
-            USE_COASTLINE=false
+            echo "→ Step 2/5: Skipping coastline clipping (landlocked)"
+            WORKING_FILE="$TMPDIR/${ENTITY_CODE}_raw.geojson"
           fi
 
-          # Step 6: Create boundary geometry with metadata
-          echo "→ Step 6/7: Creating boundary geometry with metadata..."
-
-          if [ "$USE_COASTLINE" = true ]; then
-            # Coastal entity: dissolve coastline features
-            if ! ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_dissolved.geojson" "$TMPDIR/${ENTITY_CODE}_clipped_coastline.geojson" -dialect sqlite \
-              -sql "SELECT \
-                ST_CollectionExtract(ST_UnaryUnion(ST_Collect(geometry)), 3) AS geometry, \
-                '$NAME_EN' AS \"name:en\", \
-                '$ENTITY_CODE' AS \"code\" \
-              FROM land_polygons" -q; then
-              echo "❌ Failed to dissolve coastline geometry" >&2
-              echo "success=false" >> $GITHUB_OUTPUT
-              echo "failure_reason=Failed to dissolve coastline geometry" >> $GITHUB_OUTPUT
-              rm -rf "$TMPDIR"
-              exit 5
-            fi
-          else
-            # Landlocked entity: use boundary polygon directly from GPKG
-            if ! ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_dissolved.geojson" "$TMPDIR/${ENTITY_CODE}_boundary.gpkg" -dialect sqlite \
-              -sql "SELECT \
-                ST_CollectionExtract(ST_UnaryUnion(ST_Collect(geom)), 3) AS geometry, \
-                '$NAME_EN' AS \"name:en\", \
-                '$ENTITY_CODE' AS \"code\" \
-              FROM multipolygons WHERE boundary='administrative'" -q; then
-              echo "❌ Failed to process boundary geometry" >&2
-              echo "success=false" >> $GITHUB_OUTPUT
-              echo "failure_reason=Failed to process boundary geometry" >> $GITHUB_OUTPUT
-              rm -rf "$TMPDIR"
-              exit 5
-            fi
+          # Step 3: Dissolve and simplify geometry
+          echo "→ Step 3/5: Dissolving geometry..."
+          if ! ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_dissolved.geojson" "$WORKING_FILE" -dialect sqlite \
+            -sql "SELECT ST_CollectionExtract(ST_UnaryUnion(ST_Collect(geometry)), 3) AS geometry FROM OGRGeoJSON" -q; then
+            echo "❌ Failed to dissolve geometry" >&2
+            echo "success=false" >> $GITHUB_OUTPUT
+            echo "failure_reason=Failed to dissolve geometry" >> $GITHUB_OUTPUT
+            rm -rf "$TMPDIR"
+            exit 3
           fi
+          echo "  ✓ Dissolved geometry"
 
-          mv -f "$TMPDIR/${ENTITY_CODE}_dissolved.geojson" "$OUTPUT_DIR/$OUTPUT_FILE"
-          echo "  ✓ Created boundary geometry with metadata"
-
-          # Step 6b: Compute area using Python script with shapely
-          echo "→ Step 6b/7: Computing area in km²..."
-          COMPUTED_AREA=$(python3 scripts/compute_area.py "$OUTPUT_DIR/$OUTPUT_FILE" 2>&1)
+          # Step 4: Compute area using Python script
+          echo "→ Step 4/5: Computing area in km²..."
+          COMPUTED_AREA=$(python3 scripts/compute_area.py "$TMPDIR/${ENTITY_CODE}_dissolved.geojson" 2>&1)
           if [ $? -eq 0 ]; then
             echo "  ✓ Computed area: ${COMPUTED_AREA} km²"
           else
@@ -359,49 +285,34 @@ jobs:
             echo "success=false" >> $GITHUB_OUTPUT
             echo "failure_reason=Failed to compute area" >> $GITHUB_OUTPUT
             rm -rf "$TMPDIR"
-            exit 5
+            exit 4
           fi
 
-          # Step 7: Validate the output has features
-          echo "→ Step 7/8: Validating output..."
-          if [ ! -f "$OUTPUT_DIR/$OUTPUT_FILE" ]; then
-            echo "❌ Output file not created" >&2
-            echo "success=false" >> $GITHUB_OUTPUT
-            echo "failure_reason=Output file not created" >> $GITHUB_OUTPUT
-            rm -rf "$TMPDIR"
-            exit 6
-          fi
-
-          # Check if the GeoJSON has features (use stat -f on BSD/macOS, -c on Linux)
-          FEATURE_COUNT=$(jq '.features | length' "$OUTPUT_DIR/$OUTPUT_FILE" 2>/dev/null || echo "0")
-
-          if [ "$FEATURE_COUNT" -eq 0 ]; then
-            echo "⚠️ WARNING: No features found in output - this may be a data issue" >&2
-            if command -v stat &>/dev/null; then
-              # Try Linux stat first, fallback to BSD stat
-              FILE_SIZE=$(stat -c%s "$OUTPUT_DIR/$OUTPUT_FILE" 2>/dev/null || stat -f%z "$OUTPUT_DIR/$OUTPUT_FILE" 2>/dev/null || echo "unknown")
-              echo "  File size: ${FILE_SIZE} bytes"
-            fi
-            echo "success=false" >> $GITHUB_OUTPUT
-            echo "failure_reason=No features in output" >> $GITHUB_OUTPUT
-            rm -f "$OUTPUT_DIR/$OUTPUT_FILE"
-            rm -rf "$TMPDIR"
-            exit 7
-          fi
-
-          echo "  ✓ Output validated: $FEATURE_COUNT feature(s)"
-
-          # Extract and display area
-          AREA_KM2=$(jq -r '.features[0].properties.area // "N/A"' "$OUTPUT_DIR/$OUTPUT_FILE" 2>/dev/null || echo "N/A")
-          if [ "$AREA_KM2" != "N/A" ] && [ "$AREA_KM2" != "null" ]; then
-            echo "  ✓ Computed area: ${AREA_KM2} km²"
-          fi
+          # Step 5: Create final GeoJSON with only essential properties
+          echo "→ Step 5/5: Creating final output..."
+          jq --arg name "$NAME_EN" --arg code "$CODE_UPPER" --arg area "$COMPUTED_AREA" \
+            '.features[0].properties = {"name:en": $name, "code": $code, "area": ($area | tonumber)}' \
+            "$TMPDIR/${ENTITY_CODE}_dissolved.geojson" > "$OUTPUT_DIR/$OUTPUT_FILE"
+          echo "  ✓ Created final output"
 
           # Clean up temp files
           rm -rf "$TMPDIR"
 
-          # Step 8: Convert GeoJSON to GeoParquet
-          echo "→ Step 8/8: Converting to GeoParquet..."
+          # Validate the output has features
+          FEATURE_COUNT=$(jq '.features | length' "$OUTPUT_DIR/$OUTPUT_FILE" 2>/dev/null || echo "0")
+
+          if [ "$FEATURE_COUNT" -eq 0 ]; then
+            echo "❌ No features found in output" >&2
+            echo "success=false" >> $GITHUB_OUTPUT
+            echo "failure_reason=No features in output" >> $GITHUB_OUTPUT
+            rm -f "$OUTPUT_DIR/$OUTPUT_FILE"
+            exit 5
+          fi
+
+          echo "  ✓ Output validated: $FEATURE_COUNT feature(s), area: ${COMPUTED_AREA} km²"
+
+          # Convert GeoJSON to GeoParquet
+          echo "→ Converting to GeoParquet..."
           PARQUET_FILE="${OUTPUT_DIR}/${ENTITY_CODE}.boundary.parquet"
           if ! ogr2ogr -f Parquet "$PARQUET_FILE" "$OUTPUT_DIR/$OUTPUT_FILE" \
             --config OGR_GEOJSON_MAX_OBJ_SIZE 0 \
@@ -483,4 +394,4 @@ jobs:
         if: always() && inputs.cleanup_planet_files == true
         run: |
           echo "Cleaning up planet files..."
-          rm -f planet-*.osm.pbf planet-*.osm.gol coastline-*.gpkg
+          rm -f planet-*.osm.pbf coastline-*.gpkg
