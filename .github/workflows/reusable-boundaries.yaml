@@ -371,17 +371,3 @@ jobs:
           rm -f boundaries/${{ inputs.entity_type }}s/*.boundary.geojson.{sha256,metadata}
           rm -f boundaries/${{ inputs.entity_type }}s/*.boundary.parquet.{sha256,metadata}
           rm -rf boundaries/tmp boundaries/logs
-
-      - name: Cleanup planet files
-        if: always() && inputs.cleanup_planet_files == true
-        run: |
-          echo "Cleaning up planet files..."
-          # Only remove files that don't have a .cache file (not cached)
-          for file in planet-*.osm.gol coastline-*.gpkg; do
-            if [ -f "$file" ] && [ ! -f "$file.cache" ]; then
-              echo "Removing non-cached file: $file"
-              rm -f "$file"
-            elif [ -f "$file" ]; then
-              echo "Preserving cached file: $file"
-            fi
-          done
