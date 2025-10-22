@@ -251,6 +251,7 @@ jobs:
           # Step 6: Dissolve multiparts into a single geometry with metadata
           echo "→ Step 6/7: Dissolving multiparts and adding metadata..."
           if ! ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_dissolved.geojson" "$OUTPUT_DIR/$OUTPUT_FILE" -dialect sqlite \
+            -nln "${ENTITY_CODE}_dissolved" \
             -sql "SELECT \
               ST_CollectionExtract(ST_UnaryUnion(ST_Collect(geometry)), 3) AS geometry, \
               '$NAME_EN' AS \"name:en\", \
