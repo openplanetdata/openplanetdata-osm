@@ -306,17 +306,21 @@ jobs:
 
           # Step 5: Compute and add area property
           echo "→ Step 5/5: Computing area..."
-          AREA_KM2=$(python3 scripts/compute_area.py "$OUTPUT_DIR/$OUTPUT_FILE")
-          if [ $? -eq 0 ]; then
-            echo "  ✓ Computed area: ${AREA_KM2} km²"
-            # Add area to properties
-            jq --arg area "$AREA_KM2" '.features[0].properties.area = ($area | tonumber)' \
-              "$OUTPUT_DIR/$OUTPUT_FILE" > "$OUTPUT_DIR/$OUTPUT_FILE.tmp"
-            mv "$OUTPUT_DIR/$OUTPUT_FILE.tmp" "$OUTPUT_DIR/$OUTPUT_FILE"
-            echo "  ✓ Added area property to output"
-          else
-            echo "  ⚠️ Failed to compute area, continuing without area property"
+          if ! AREA_KM2=$(python3 scripts/compute_area.py "$OUTPUT_DIR/$OUTPUT_FILE"); then
+            echo "❌ Failed to compute area" >&2
+            echo "success=false" >> $GITHUB_OUTPUT
+            echo "failure_reason=Failed to compute area" >> $GITHUB_OUTPUT
+            rm -f "$OUTPUT_DIR/$OUTPUT_FILE"
+            rm -rf "$TMPDIR"
+            exit 6
           fi
+          echo "  ✓ Computed area: ${AREA_KM2} km²"
+
+          # Add area to properties
+          jq --arg area "$AREA_KM2" '.features[0].properties.area = ($area | tonumber)' \
+            "$OUTPUT_DIR/$OUTPUT_FILE" > "$OUTPUT_DIR/$OUTPUT_FILE.tmp"
+          mv "$OUTPUT_DIR/$OUTPUT_FILE.tmp" "$OUTPUT_DIR/$OUTPUT_FILE"
+          echo "  ✓ Added area property to output"
 
           # Validate the output
           echo "→ Validating output..."
@@ -354,7 +358,7 @@ jobs:
             echo "success=false" >> $GITHUB_OUTPUT
             echo "failure_reason=Failed to convert to GeoParquet" >> $GITHUB_OUTPUT
             rm -f "$OUTPUT_DIR/$OUTPUT_FILE"
-            exit 6
+            exit 7
           fi
           echo "  ✓ GeoParquet created: $(basename $PARQUET_FILE)"
 
