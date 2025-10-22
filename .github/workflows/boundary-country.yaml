@@ -98,5 +98,13 @@ jobs:
       - name: Cleanup planet files
         run: |
           echo "Cleaning up planet files after all countries processed..."
-          rm -f planet-*.osm.pbf coastline-*.gpkg || true
+          # Only remove files that don't have a .cache file (not cached)
+          for file in planet-*.osm.gol planet-coastline-*.osm.gpkg; do
+            if [ -f "$file" ] && [ ! -f "$file.cache" ]; then
+              echo "Removing non-cached file: $file"
+              rm -f "$file"
+            elif [ -f "$file" ]; then
+              echo "Preserving cached file: $file"
+            fi
+          done
           echo "✓ Cleanup complete"
