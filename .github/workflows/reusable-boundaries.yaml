@@ -250,8 +250,7 @@ jobs:
 
           # Step 6: Dissolve multiparts into a single geometry with metadata
           echo "→ Step 6/7: Dissolving multiparts and adding metadata..."
-          if ! ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_dissolved.geojson" "$OUTPUT_DIR/$OUTPUT_FILE" -dialect sqlite \
-            -nln "${ENTITY_CODE}_dissolved" \
+          if ! ogr2ogr -f GeoJSON "$OUTPUT_DIR/$OUTPUT_FILE" "$OUTPUT_DIR/$OUTPUT_FILE" -dialect sqlite \
             -sql "SELECT \
               ST_CollectionExtract(ST_UnaryUnion(ST_Collect(geometry)), 3) AS geometry, \
               '$NAME_EN' AS \"name:en\", \
@@ -267,14 +266,12 @@ jobs:
 
           # Step 6b: Compute area using equal-area projection (Mollweide - ESRI:54009)
           echo "→ Step 6b/7: Computing area in km²..."
-          if ! ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_closed.geojson" "$TMPDIR/${ENTITY_CODE}_dissolved.geojson" \
-            -s_srs EPSG:4326 -t_srs ESRI:54009 -dialect sqlite \
+          # Project to equal-area projection and compute area
+          if ! ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_area.geojson" "$OUTPUT_DIR/$OUTPUT_FILE" \
+            -t_srs ESRI:54009 -dialect sqlite \
             -sql "SELECT \
-              ST_Transform(geometry, 4326) AS geometry, \
-              \"name:en\", \
-              code, \
               ROUND(ST_Area(geometry) / 1000000.0, 2) AS area \
-            FROM \"${ENTITY_CODE}_dissolved\"" -q; then
+            FROM OGRGeoJSON" -q; then
             echo "❌ Failed to compute area" >&2
             echo "success=false" >> $GITHUB_OUTPUT
             echo "failure_reason=Failed to compute area" >> $GITHUB_OUTPUT
@@ -282,15 +279,16 @@ jobs:
             exit 5
           fi
 
-          # Extract and display computed area
-          COMPUTED_AREA=$(jq -r '.features[0].properties.area // "N/A"' "$TMPDIR/${ENTITY_CODE}_closed.geojson" 2>/dev/null || echo "N/A")
+          # Extract computed area and add it to the original GeoJSON
+          COMPUTED_AREA=$(jq -r '.features[0].properties.area // "N/A"' "$TMPDIR/${ENTITY_CODE}_area.geojson" 2>/dev/null || echo "N/A")
           if [ "$COMPUTED_AREA" != "N/A" ] && [ "$COMPUTED_AREA" != "null" ]; then
             echo "  ✓ Computed area: ${COMPUTED_AREA} km²"
+            # Add area property to the original GeoJSON
+            jq --arg area "$COMPUTED_AREA" '.features[0].properties.area = ($area | tonumber)' "$OUTPUT_DIR/$OUTPUT_FILE" > "$TMPDIR/${ENTITY_CODE}_with_area.geojson"
+            mv -f "$TMPDIR/${ENTITY_CODE}_with_area.geojson" "$OUTPUT_DIR/$OUTPUT_FILE"
           else
-            echo "  ✓ Area computation completed"
+            echo "  ⚠️  Could not compute area"
           fi
-
-          mv -f "$TMPDIR/${ENTITY_CODE}_closed.geojson" "$OUTPUT_DIR/$OUTPUT_FILE"
 
           # Step 7: Validate the output has features
           echo "→ Step 7/8: Validating output..."
