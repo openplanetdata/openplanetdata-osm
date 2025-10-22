@@ -256,6 +256,7 @@ jobs:
 
           # Step 2: Clip with coastline if coastal entity
           HAS_COASTLINE="${{ inputs.has_coastline }}"
+          CLIPPED=false
 
           if [ "$HAS_COASTLINE" = "true" ]; then
             echo "→ Step 2/4: Clipping with coastline data..."
@@ -263,6 +264,7 @@ jobs:
               -clipsrc "$TMPDIR/${ENTITY_CODE}_raw.geojson" -q 2>/dev/null; then
               echo "  ✓ Clipped with coastline data"
               WORKING_FILE="$TMPDIR/${ENTITY_CODE}_clipped.geojson"
+              CLIPPED=true
             else
               echo "  ⚠️ Coastline clipping failed, using raw boundary"
               WORKING_FILE="$TMPDIR/${ENTITY_CODE}_raw.geojson"
@@ -272,21 +274,27 @@ jobs:
             WORKING_FILE="$TMPDIR/${ENTITY_CODE}_raw.geojson"
           fi
 
-          # Step 3: Dissolve geometry (merge multiple polygons)
-          echo "→ Step 3/4: Dissolving geometry..."
-          if ! ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_dissolved.geojson" "$WORKING_FILE" -dialect sqlite \
-            -sql "SELECT ST_CollectionExtract(ST_UnaryUnion(ST_Collect(geometry)), 3) AS geometry FROM land_polygons" -q; then
-            echo "❌ Failed to dissolve geometry" >&2
-            echo "success=false" >> $GITHUB_OUTPUT
-            echo "failure_reason=Failed to dissolve geometry" >> $GITHUB_OUTPUT
-            rm -rf "$TMPDIR"
-            exit 3
+          # Step 3: Dissolve geometry (only if clipped with coastline)
+          if [ "$CLIPPED" = "true" ]; then
+            echo "→ Step 3/4: Dissolving geometry..."
+            if ! ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_dissolved.geojson" "$WORKING_FILE" -dialect sqlite \
+              -sql "SELECT ST_CollectionExtract(ST_UnaryUnion(ST_Collect(geometry)), 3) AS geometry FROM land_polygons" -q; then
+              echo "❌ Failed to dissolve geometry" >&2
+              echo "success=false" >> $GITHUB_OUTPUT
+              echo "failure_reason=Failed to dissolve geometry" >> $GITHUB_OUTPUT
+              rm -rf "$TMPDIR"
+              exit 3
+            fi
+            echo "  ✓ Dissolved geometry"
+            FINAL_FILE="$TMPDIR/${ENTITY_CODE}_dissolved.geojson"
+          else
+            echo "→ Step 3/4: Skipping dissolve (no clipping performed)"
+            FINAL_FILE="$WORKING_FILE"
           fi
-          echo "  ✓ Dissolved geometry"
 
-          # Step 4: Copy dissolved geometry to final output
+          # Step 4: Copy to final output
           echo "→ Step 4/4: Creating final output..."
-          cp "$TMPDIR/${ENTITY_CODE}_dissolved.geojson" "$OUTPUT_DIR/$OUTPUT_FILE"
+          cp "$FINAL_FILE" "$OUTPUT_DIR/$OUTPUT_FILE"
           echo "  ✓ Created final output"
 
           # Validate the output
