@@ -332,26 +332,29 @@ jobs:
             fi
           else
             # Landlocked entity: use boundary polygon directly
-            # First convert GPKG to GeoJSON
-            if ! ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_boundary.geojson" "$TMPDIR/${ENTITY_CODE}_boundary.gpkg" \
-              -sql "SELECT * FROM multipolygons WHERE boundary='administrative'" -q; then
-              echo "❌ Failed to convert boundary to GeoJSON" >&2
-              echo "success=false" >> $GITHUB_OUTPUT
-              echo "failure_reason=Failed to convert boundary to GeoJSON" >> $GITHUB_OUTPUT
-              rm -rf "$TMPDIR"
-              exit 5
-            fi
+            # Inspect GPKG schema to identify geometry column
+            echo "  Inspecting GPKG schema..."
+            ogrinfo "$TMPDIR/${ENTITY_CODE}_boundary.gpkg" multipolygons | head -20
 
-            # Then dissolve and add metadata
-            if ! ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_dissolved.geojson" "$TMPDIR/${ENTITY_CODE}_boundary.geojson" -dialect sqlite \
-              -sql "SELECT \
-                ST_CollectionExtract(ST_UnaryUnion(ST_Collect(geometry)), 3) AS geometry, \
-                '$NAME_EN' AS \"name:en\", \
-                '$ENTITY_CODE' AS \"code\" \
-              FROM OGRGeoJSON" -q; then
-              echo "❌ Failed to dissolve boundary geometry" >&2
+            # Try common geometry column names
+            for GEOM_COL in "geom" "GEOMETRY" "geometry" "wkb_geometry"; do
+              echo "  Trying geometry column: $GEOM_COL"
+              if ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_dissolved.geojson" "$TMPDIR/${ENTITY_CODE}_boundary.gpkg" -dialect sqlite \
+                -sql "SELECT \
+                  ST_CollectionExtract(ST_UnaryUnion(ST_Collect($GEOM_COL)), 3) AS geometry, \
+                  '$NAME_EN' AS \"name:en\", \
+                  '$ENTITY_CODE' AS \"code\" \
+                FROM multipolygons WHERE boundary='administrative'" -q 2>/dev/null; then
+                echo "  ✓ Success with geometry column: $GEOM_COL"
+                break
+              fi
+            done
+
+            # Check if we succeeded
+            if [ ! -f "$TMPDIR/${ENTITY_CODE}_dissolved.geojson" ]; then
+              echo "❌ Failed to process boundary geometry with any geometry column name" >&2
               echo "success=false" >> $GITHUB_OUTPUT
-              echo "failure_reason=Failed to dissolve boundary geometry" >> $GITHUB_OUTPUT
+              echo "failure_reason=Failed to process boundary geometry" >> $GITHUB_OUTPUT
               rm -rf "$TMPDIR"
               exit 5
             fi
