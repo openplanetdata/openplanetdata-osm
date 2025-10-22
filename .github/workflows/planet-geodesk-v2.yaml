@@ -108,8 +108,12 @@ jobs:
           remote_path: /osm/planet/gob
           remote_version: 2
 
-      - name: Cleanup downloaded and generated files
+      - name: Cleanup downloaded files
+        if: always()
+        uses: openplanetdata/actions/cleanup-downloads@main
+
+      - name: Cleanup generated files
         if: always()
         run: |
-          rm -f planet-*.osm.gob planet-*.osm.gol planet-*.osm.pbf planet-*.osm.gob.{sha256,metadata} planet-*.osm.gol.{sha256,metadata}
+          rm -f planet-*.osm.gob planet-*.osm.gol planet-*.osm.gob.{sha256,metadata} planet-*.osm.gol.{sha256,metadata}
           find /tmp -name "tmp.*" -user "$USER" -delete 2>/dev/null || true

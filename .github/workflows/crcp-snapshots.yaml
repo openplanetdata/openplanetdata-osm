@@ -48,10 +48,13 @@ jobs:
           '
           ls -alh
 
-      - name: Cleanup downloaded and generated files
+      - name: Cleanup downloaded files
+        if: always()
+        uses: openplanetdata/actions/cleanup-downloads@main
+
+      - name: Cleanup generated files
         if: always()
         run: |
-          rm -f planet-latest.osm.gol
           rm -f *.geojson
           rm -f *-latest.osm.parquet *-latest.osm.parquet.{sha256,metadata}
           find /tmp -name "tmp.*" -user "$USER" -delete 2>/dev/null || true

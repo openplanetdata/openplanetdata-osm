@@ -196,11 +196,15 @@ jobs:
           remote_path: /osm/planet/geoparquet
           remote_version: 1
 
-      - name: Cleanup downloaded and generated files
+      - name: Cleanup downloaded files
+        if: always()
+        uses: openplanetdata/actions/cleanup-downloads@main
+
+      - name: Cleanup generated files
         if: always()
         run: |
           rm -f duckdb duckdb_cli-*.zip
-          rm -f planet-*.osm.pbf planet-*.osm.parquet planet-*.osm.parquet.{sha256,metadata}
+          rm -f planet-*.osm.parquet planet-*.osm.parquet.{sha256,metadata}
           rm -rf ohsome-*
           rm -rf ohsome-planet
           rm -rf .duckdb-temp

@@ -131,10 +131,14 @@ jobs:
           remote_path: /osm/planet/coastline
           remote_version: 1
 
-      - name: Cleanup downloaded and generated files
+      - name: Cleanup downloaded files
+        if: always()
+        uses: openplanetdata/actions/cleanup-downloads@main
+
+      - name: Cleanup generated files
         if: always()
         run: |
-          rm -f planet-*.osm.pbf coastline-*.sqlite planet-coastline-*.osm.gpkg planet-coastline-*.osm.gpkg.{sha256,metadata}
+          rm -f coastline-*.sqlite planet-coastline-*.osm.gpkg planet-coastline-*.osm.gpkg.{sha256,metadata}
           find /tmp -name "tmp.*" -user "$USER" -delete 2>/dev/null || true
           # Clean up osmcoastline build directory if it exists
           rm -rf /tmp/osmcoastline
