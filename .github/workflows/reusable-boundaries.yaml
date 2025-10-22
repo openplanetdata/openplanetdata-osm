@@ -218,8 +218,9 @@ jobs:
 
           # Extract boundary using ogr2ogr with SQL WHERE clause (supports AND logic)
           # OSM stores tags in 'other_tags' as hstore format: "key"=>"value"
+          # Filters ordered by selectivity: ISO code (most selective) → admin_level → boundary (least selective)
           if ! ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_raw.geojson" "$PLANET_PBF" multipolygons \
-            -sql "SELECT * FROM multipolygons WHERE boundary='administrative' AND admin_level='2' AND other_tags LIKE '%\"ISO3166-1:alpha2\"=>\"$CODE_UPPER\"%'" -q; then
+            -sql "SELECT * FROM multipolygons WHERE other_tags LIKE '%\"ISO3166-1:alpha2\"=>\"$CODE_UPPER\"%' AND admin_level='2' AND boundary='administrative'" -q; then
             echo "❌ Failed to extract and convert boundary from PBF" >&2
             echo "success=false" >> $GITHUB_OUTPUT
             echo "failure_reason=Failed to extract and convert boundary from PBF" >> $GITHUB_OUTPUT
