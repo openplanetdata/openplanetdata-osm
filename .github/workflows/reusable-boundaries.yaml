@@ -146,66 +146,30 @@ jobs:
         run: |
           python3 -m pip install --user pyproj
 
-      - name: Check for existing planet files
-        id: check_files
-        run: |
-          pwd
-          ls -alh
-          TAG="${{ steps.date.outputs.tag }}"
-
-          # Check for GOL file (dated or latest)
-          if [ -f "planet-${TAG}.osm.gol" ]; then
-            echo "gol_exists=true" >> $GITHUB_OUTPUT
-            echo "✓ Found existing planet-${TAG}.osm.gol"
-          elif [ -f "planet-latest.osm.gol" ]; then
-            mv planet-latest.osm.gol "planet-${TAG}.osm.gol"
-            echo "gol_exists=true" >> $GITHUB_OUTPUT
-            echo "✓ Found and renamed planet-latest.osm.gol to planet-${TAG}.osm.gol"
-          else
-            echo "gol_exists=false" >> $GITHUB_OUTPUT
-            echo "→ Need to download planet GOL"
-          fi
-
-          # Check for coastline file (dated or latest)
-          if [ -f "coastline-${TAG}.gpkg" ]; then
-            echo "coastline_exists=true" >> $GITHUB_OUTPUT
-            echo "✓ Found existing coastline-${TAG}.gpkg"
-          elif [ -f "planet-coastline-latest.osm.gpkg" ]; then
-            mv planet-coastline-latest.osm.gpkg "coastline-${TAG}.gpkg"
-            echo "coastline_exists=true" >> $GITHUB_OUTPUT
-            echo "✓ Found and renamed planet-coastline-latest.osm.gpkg to coastline-${TAG}.gpkg"
-          else
-            echo "coastline_exists=false" >> $GITHUB_OUTPUT
-            echo "→ Need to download coastline GPKG"
-          fi
-
       - name: Download planet GOB
-        if: steps.check_files.outputs.gol_exists == 'false'
         uses: openplanetdata/actions/download@main
         with:
           remote_path: /osm/planet/gob/v2/planet-latest.osm.gob
 
       - name: Convert GOB to GOL
-        if: steps.check_files.outputs.gol_exists == 'false'
         run: |
-          echo "Converting GOB to GOL..."
-          gol load planet-latest.osm.gol planet-latest.osm.gob
-          echo "✓ Conversion complete"
-          rm planet-latest.osm.gob
-          ls -alh planet-latest.osm.gol
+          # Only convert if GOL doesn't exist or is older than GOB
+          if [ ! -f planet-latest.osm.gol ] || [ planet-latest.osm.gob -nt planet-latest.osm.gol ]; then
+            echo "Converting GOB to GOL..."
+            gol load planet-latest.osm.gol planet-latest.osm.gob
+            echo "✓ Conversion complete"
+            ls -alh planet-latest.osm.gol
+          else
+            echo "✓ GOL file already up to date, skipping conversion"
+          fi
+
+          # Remove GOB file after conversion (or if conversion not needed)
+          rm -f planet-latest.osm.gob
 
       - name: Download coastline GPKG
-        if: steps.check_files.outputs.coastline_exists == 'false'
         uses: openplanetdata/actions/download@main
         with:
           remote_path: /osm/planet/coastline/v1/planet-coastline-latest.osm.gpkg
-
-      - name: Rename downloaded files
-        run: |
-          TAG="${{ steps.date.outputs.tag }}"
-          [ -f planet-latest.osm.gol ] && mv planet-latest.osm.gol "planet-${TAG}.osm.gol"
-          [ -f planet-coastline-latest.osm.gpkg ] && mv planet-coastline-latest.osm.gpkg "coastline-${TAG}.gpkg"
-          ls -alh
 
       - name: Extract boundary
         id: extract
@@ -217,10 +181,9 @@ jobs:
           ENTITY_CODE="${{ inputs.entity_code }}"
           ENTITY_NAME="${{ inputs.entity_name }}"
           OSM_QUERY='${{ inputs.osm_query }}'
-          TAG="${{ steps.date.outputs.tag }}"
 
-          PLANET_GOL="planet-${TAG}.osm.gol"
-          COASTLINE_DB="coastline-${TAG}.gpkg"
+          PLANET_GOL="planet-latest.osm.gol"
+          COASTLINE_DB="planet-coastline-latest.osm.gpkg"
           OUTPUT_DIR="boundaries/${ENTITY_TYPE}s"
           OUTPUT_FILE="${ENTITY_CODE}.boundary.geojson"
           TMPDIR="boundaries/tmp/${ENTITY_CODE}"
@@ -428,4 +391,12 @@ jobs:
         if: always() && inputs.cleanup_planet_files == true
         run: |
           echo "Cleaning up planet files..."
-          rm -f planet-*.osm.gol coastline-*.gpkg
+          # Only remove files that don't have a .cache file (not cached)
+          for file in planet-*.osm.gol planet-*.osm.gob coastline-*.gpkg; do
+            if [ -f "$file" ] && [ ! -f "$file.cache" ]; then
+              echo "Removing non-cached file: $file"
+              rm -f "$file"
+            elif [ -f "$file" ]; then
+              echo "Preserving cached file: $file"
+            fi
+          done
