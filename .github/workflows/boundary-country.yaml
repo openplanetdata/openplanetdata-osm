@@ -45,7 +45,8 @@ jobs:
                       'code': code,
                       'name': country['name'],
                       'osm_query': country['osm_query'],
-                      'tag_name': country['tag_name']
+                      'tag_name': country['tag_name'],
+                      'has_coastline': country.get('has_coastline', True)
                   })
               else:
                   print(f'Warning: Unknown country code: {code}', file=sys.stderr)
@@ -66,13 +67,14 @@ jobs:
 
     uses: ./.github/workflows/reusable-boundaries.yaml
     with:
+      cleanup_planet_files: false
       entity_code: ${{ matrix.code }}
       entity_name: ${{ matrix.name }}
       entity_type: country
+      has_coastline: ${{ matrix.has_coastline }}
       osm_query: ${{ matrix.osm_query }}
       remote_path: /osm/boundaries/countries
       remote_version: 1
-      cleanup_planet_files: false
       tags: |
         boundary
         country

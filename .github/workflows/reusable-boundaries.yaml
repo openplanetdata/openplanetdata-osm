@@ -41,6 +41,11 @@ on:
         required: false
         type: boolean
         default: false
+      has_coastline:
+        description: 'Whether this entity has a coastline (false for landlocked countries)'
+        required: false
+        type: boolean
+        default: true
 
     outputs:
       failure_reason:
@@ -282,22 +287,29 @@ jobs:
           echo "  ✓ Name: $NAME_EN (Code: $ENTITY_CODE)"
 
           # Step 5: Clip global land polygons with the boundary (for coastal entities)
-          echo "→ Step 5/7: Clipping coastline data with boundary..."
-          if ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_clipped_coastline.geojson" "$COASTLINE_DB" land_polygons \
-            -clipsrc "$TMPDIR/${ENTITY_CODE}_boundary.gpkg" -q 2>/dev/null; then
+          HAS_COASTLINE="${{ inputs.has_coastline }}"
 
-            # Check if the clipped coastline has features
-            COASTLINE_FEATURES=$(jq '.features | length' "$TMPDIR/${ENTITY_CODE}_clipped_coastline.geojson" 2>/dev/null || echo "0")
+          if [ "$HAS_COASTLINE" = "true" ]; then
+            echo "→ Step 5/7: Clipping coastline data with boundary..."
+            if ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_clipped_coastline.geojson" "$COASTLINE_DB" land_polygons \
+              -clipsrc "$TMPDIR/${ENTITY_CODE}_boundary.gpkg" -q 2>/dev/null; then
 
-            if [ "$COASTLINE_FEATURES" -gt 0 ]; then
-              echo "  ✓ Clipped coastline data ($COASTLINE_FEATURES features)"
-              USE_COASTLINE=true
+              # Check if the clipped coastline has features
+              COASTLINE_FEATURES=$(jq '.features | length' "$TMPDIR/${ENTITY_CODE}_clipped_coastline.geojson" 2>/dev/null || echo "0")
+
+              if [ "$COASTLINE_FEATURES" -gt 0 ]; then
+                echo "  ✓ Clipped coastline data ($COASTLINE_FEATURES features)"
+                USE_COASTLINE=true
+              else
+                echo "  ℹ No coastline intersection found"
+                USE_COASTLINE=false
+              fi
             else
-              echo "  ℹ No coastline intersection (landlocked entity)"
+              echo "  ⚠️ Coastline clipping failed, will use boundary polygon"
               USE_COASTLINE=false
             fi
           else
-            echo "  ⚠️ Coastline clipping failed, will use boundary polygon"
+            echo "→ Step 5/7: Skipping coastline clipping (landlocked entity)"
             USE_COASTLINE=false
           fi
 
