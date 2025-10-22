@@ -281,34 +281,61 @@ jobs:
           fi
           echo "  ✓ Name: $NAME_EN (Code: $ENTITY_CODE)"
 
-          # Step 5: Clip global land polygons with the boundary
+          # Step 5: Clip global land polygons with the boundary (for coastal entities)
           echo "→ Step 5/7: Clipping coastline data with boundary..."
-          if ! ogr2ogr -f GeoJSON "$OUTPUT_DIR/$OUTPUT_FILE" "$COASTLINE_DB" land_polygons \
-            -clipsrc "$TMPDIR/${ENTITY_CODE}_boundary.gpkg" -q; then
-            echo "❌ Failed to clip coastline" >&2
-            echo "success=false" >> $GITHUB_OUTPUT
-            echo "failure_reason=Failed to clip coastline data" >> $GITHUB_OUTPUT
-            rm -rf "$TMPDIR"
-            exit 4
-          fi
-          echo "  ✓ Clipped coastline data"
+          if ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_clipped_coastline.geojson" "$COASTLINE_DB" land_polygons \
+            -clipsrc "$TMPDIR/${ENTITY_CODE}_boundary.gpkg" -q 2>/dev/null; then
 
-          # Step 6: Dissolve multiparts into a single geometry with metadata
-          echo "→ Step 6/7: Dissolving multiparts and adding metadata..."
-          if ! ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_dissolved.geojson" "$OUTPUT_DIR/$OUTPUT_FILE" -dialect sqlite \
-            -sql "SELECT \
-              ST_CollectionExtract(ST_UnaryUnion(ST_Collect(geometry)), 3) AS geometry, \
-              '$NAME_EN' AS \"name:en\", \
-              '$ENTITY_CODE' AS \"code\" \
-            FROM land_polygons" -q; then
-            echo "❌ Failed to dissolve geometry" >&2
-            echo "success=false" >> $GITHUB_OUTPUT
-            echo "failure_reason=Failed to dissolve geometry" >> $GITHUB_OUTPUT
-            rm -rf "$TMPDIR"
-            exit 5
+            # Check if the clipped coastline has features
+            COASTLINE_FEATURES=$(jq '.features | length' "$TMPDIR/${ENTITY_CODE}_clipped_coastline.geojson" 2>/dev/null || echo "0")
+
+            if [ "$COASTLINE_FEATURES" -gt 0 ]; then
+              echo "  ✓ Clipped coastline data ($COASTLINE_FEATURES features)"
+              USE_COASTLINE=true
+            else
+              echo "  ℹ No coastline intersection (landlocked entity)"
+              USE_COASTLINE=false
+            fi
+          else
+            echo "  ⚠️ Coastline clipping failed, will use boundary polygon"
+            USE_COASTLINE=false
           fi
+
+          # Step 6: Create boundary geometry with metadata
+          echo "→ Step 6/7: Creating boundary geometry with metadata..."
+
+          if [ "$USE_COASTLINE" = true ]; then
+            # Coastal entity: dissolve coastline features
+            if ! ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_dissolved.geojson" "$TMPDIR/${ENTITY_CODE}_clipped_coastline.geojson" -dialect sqlite \
+              -sql "SELECT \
+                ST_CollectionExtract(ST_UnaryUnion(ST_Collect(geometry)), 3) AS geometry, \
+                '$NAME_EN' AS \"name:en\", \
+                '$ENTITY_CODE' AS \"code\" \
+              FROM land_polygons" -q; then
+              echo "❌ Failed to dissolve coastline geometry" >&2
+              echo "success=false" >> $GITHUB_OUTPUT
+              echo "failure_reason=Failed to dissolve coastline geometry" >> $GITHUB_OUTPUT
+              rm -rf "$TMPDIR"
+              exit 5
+            fi
+          else
+            # Landlocked entity: use boundary polygon directly
+            if ! ogr2ogr -f GeoJSON "$TMPDIR/${ENTITY_CODE}_dissolved.geojson" "$TMPDIR/${ENTITY_CODE}_boundary.gpkg" -dialect sqlite \
+              -sql "SELECT \
+                ST_CollectionExtract(ST_UnaryUnion(ST_Collect(geometry)), 3) AS geometry, \
+                '$NAME_EN' AS \"name:en\", \
+                '$ENTITY_CODE' AS \"code\" \
+              FROM multipolygons WHERE boundary='administrative'" -q; then
+              echo "❌ Failed to process boundary geometry" >&2
+              echo "success=false" >> $GITHUB_OUTPUT
+              echo "failure_reason=Failed to process boundary geometry" >> $GITHUB_OUTPUT
+              rm -rf "$TMPDIR"
+              exit 5
+            fi
+          fi
+
           mv -f "$TMPDIR/${ENTITY_CODE}_dissolved.geojson" "$OUTPUT_DIR/$OUTPUT_FILE"
-          echo "  ✓ Dissolved geometry with metadata"
+          echo "  ✓ Created boundary geometry with metadata"
 
           # Step 6b: Compute area using Python script with shapely
           echo "→ Step 6b/7: Computing area in km²..."
