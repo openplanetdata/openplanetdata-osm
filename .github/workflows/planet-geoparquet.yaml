@@ -151,7 +151,7 @@ jobs:
           ./duckdb -c "
               INSTALL 'spatial'; LOAD 'spatial';
               SET max_temp_directory_size='500GB';
-              SET memory_limit='54GB';
+              SET memory_limit='100GB';
               SET temp_directory='${DUCKDB_TEMP_DIR}';
 
               COPY (
@@ -162,10 +162,11 @@ jobs:
                     bbox,
                     ST_GeomFromWKB(geometry) as geometry
                   FROM '${OUT_DIR}/contributions/latest/*.parquet'
+                  ORDER BY bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax
               ) TO 'planet-${TAG}.osm.parquet' (
                   FORMAT PARQUET,
                   CODEC 'zstd',
-                  COMPRESSION_LEVEL 3,
+                  COMPRESSION_LEVEL 13,
                   PARQUET_VERSION v2
               );
           "
