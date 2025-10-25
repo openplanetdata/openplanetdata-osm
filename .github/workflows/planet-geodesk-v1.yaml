@@ -48,7 +48,7 @@ jobs:
           export TMPDIR="$PWD/.tmp"
           mkdir -p "$TMPDIR"
 
-          export JAVA_TOOL_OPTIONS="-Xms52g -Xmx52g"
+          export JAVA_TOOL_OPTIONS="-Xms96g -Xmx96g"
 
           echo "Starting build at $(date -u +%Y-%m-%d_%H:%M:%S)"
           echo "Using TMPDIR: $TMPDIR"

@@ -110,7 +110,7 @@ jobs:
           # Ensure clean output directory
           rm -rf "$OUT_DIR"
 
-          time java -Xms48g -Xmx48g -jar "${{ env.OHSOME_JAR_PATH }}" contributions \
+          time java -Xms96g -Xmx96g -jar "${{ env.OHSOME_JAR_PATH }}" contributions \
                --pbf "$PBF" --output "$OUT_DIR"
 
           # Check if ohsome-planet completed successfully
