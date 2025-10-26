@@ -107,22 +107,42 @@ jobs:
           df -h .
           echo "::endgroup::"
 
-          # Ensure clean output directory
-          rm -rf "$OUT_DIR"
-
-          time java -Xms96g -Xmx96g -jar "${{ env.OHSOME_JAR_PATH }}" contributions \
-               --pbf "$PBF" --output "$OUT_DIR"
-
-          # Check if ohsome-planet completed successfully
-          if [ $? -ne 0 ]; then
-            echo "::error::ohsome-planet failed to complete"
-            exit 1
-          fi
-
-          # list everything just produced
-          echo "::group::Produced files"
-          find "$OUT_DIR" -print | sort
+          # Remove old ohsome folders from previous days
+          echo "::group::Cleaning old ohsome folders"
+          for dir in ohsome-*; do
+            if [ -d "$dir" ] && [ "$dir" != "$OUT_DIR" ]; then
+              echo "Removing old folder: $dir"
+              rm -rf "$dir"
+            fi
+          done
           echo "::endgroup::"
+
+          # Check if today's ohsome output already exists
+          if [ -d "$OUT_DIR" ] && [ -d "$OUT_DIR/contributions/latest" ]; then
+            echo "::notice::Found existing ohsome output for today ($OUT_DIR), skipping 2+ hour build"
+            echo "::group::Cached files"
+            find "$OUT_DIR" -print | sort
+            echo "::endgroup::"
+          else
+            echo "::notice::Building ohsome output for today ($OUT_DIR)"
+
+            # Ensure clean output directory
+            rm -rf "$OUT_DIR"
+
+            time java -Xms96g -Xmx96g -jar "${{ env.OHSOME_JAR_PATH }}" contributions \
+                 --pbf "$PBF" --output "$OUT_DIR"
+
+            # Check if ohsome-planet completed successfully
+            if [ $? -ne 0 ]; then
+              echo "::error::ohsome-planet failed to complete"
+              exit 1
+            fi
+
+            # list everything just produced
+            echo "::group::Produced files"
+            find "$OUT_DIR" -print | sort
+            echo "::endgroup::"
+          fi
 
           # Validate parquet files before processing with DuckDB
           echo "::group::Validating parquet files"
@@ -206,7 +226,7 @@ jobs:
         run: |
           rm -f duckdb duckdb_cli-*.zip
           rm -f planet-*.osm.parquet planet-*.osm.parquet.{sha256,metadata}
-          rm -rf ohsome-*
+          # Keep ohsome-* folders for day-based caching (cleaned up on next day's run)
           rm -rf ohsome-planet
           rm -rf .duckdb-temp
           find . -name "*.jar" -delete
