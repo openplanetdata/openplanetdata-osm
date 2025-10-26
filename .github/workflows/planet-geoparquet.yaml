@@ -80,8 +80,17 @@ jobs:
           key: ${{ runner.os }}-ohsome-planet-${{ steps.get_ohsome_tag.outputs.tag }}
           path: ${{ env.OHSOME_JAR_PATH }}
 
+      - name: Check if JAR exists
+        id: check-jar
+        run: |
+          if [ -f "${{ env.OHSOME_JAR_PATH }}" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Build ohsome-planet JAR
-        if: steps.jar-cache.outputs.cache-hit != 'true'
+        if: steps.jar-cache.outputs.cache-hit != 'true' || steps.check-jar.outputs.exists != 'true'
         run: |
           cd ohsome-planet
           ./mvnw -q clean package -DskipTests
