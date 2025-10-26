@@ -225,8 +225,7 @@ jobs:
         run: |
           rm -f duckdb duckdb_cli-*.zip
           rm -f planet-*.osm.parquet planet-*.osm.parquet.{sha256,metadata}
-          # Keep ohsome-* folders for day-based caching (cleaned up on next day's run)
-          rm -rf ohsome-planet
           rm -rf .duckdb-temp
-          find . -name "*.jar" -delete
           find /tmp -name "tmp.*" -user "$USER" -delete 2>/dev/null || true
+          # Keep ohsome-* output folders for day-based caching (cleaned up on next day's run)
+          # Keep ohsome-planet source directory and JAR for GitHub Actions cache
