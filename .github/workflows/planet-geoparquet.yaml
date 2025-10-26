@@ -170,9 +170,8 @@ jobs:
 
           ./duckdb -c "
               INSTALL 'spatial'; LOAD 'spatial';
-              SET max_temp_directory_size='500GB';
-              SET memory_limit='100GB';
               SET temp_directory='${DUCKDB_TEMP_DIR}';
+              SET preserve_insertion_order=false;
 
               COPY (
                   SELECT
