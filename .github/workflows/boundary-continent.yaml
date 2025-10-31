@@ -41,15 +41,33 @@ jobs:
           for code in codes:
               if code in continents:
                   continent = continents[code]
+                  countries = continent.get('countries', [])
+
                   # Generate fields from name
                   tag_name = continent['name'].lower().replace(' ', '-')
-                  osm_query = f'a[place=continent][\"name:en\"=\"{continent[\"name\"]}\"]'
+
+                  # Build OSM query based on country list with ISO codes
+                  if countries:
+                      # Create a union query that fetches all country boundaries for this continent
+                      # Using ISO 3166-1 alpha-2 codes for more reliable matching
+                      # Format: (r[boundary=administrative][admin_level=2][\"ISO3166-1:alpha2\"=\"US\"];...)
+                      country_queries = []
+                      for country in countries:
+                          iso_code = country.get('iso', '')
+                          if iso_code:
+                              country_queries.append(f'r[boundary=administrative][admin_level=2][\"ISO3166-1:alpha2\"=\"{iso_code}\"]')
+
+                      osm_query = '(' + ';'.join(country_queries) + ';)' if country_queries else ''
+                  else:
+                      # Fallback to continent query if no countries defined
+                      osm_query = f'a[place=continent][\"name:en\"=\"{continent[\"name\"]}\"]'
 
                   matrix.append({
                       'code': code,
                       'name': continent['name'],
                       'osm_query': osm_query,
-                      'tag_name': tag_name
+                      'tag_name': tag_name,
+                      'country_count': len(countries)
                   })
               else:
                   print(f'Warning: Unknown continent code: {code}', file=sys.stderr)
