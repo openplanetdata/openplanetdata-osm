@@ -86,27 +86,15 @@ jobs:
       - name: Rename downloaded PBF
         run: mv planet-latest.osm.pbf "planet-${{ steps.date.outputs.tag }}.osm.pbf"
 
-      - name: Generate coastline SQLite database
+      - name: Generate coastline GeoPackage
         run: |
           TAG="${{ steps.date.outputs.tag }}"
           PBF="planet-${TAG}.osm.pbf"
-          SQLITE="coastline-${TAG}.sqlite"
-
-          echo "Starting coastline extraction at $(date -u +%Y-%m-%d_%H:%M:%S)"
-          time osmcoastline "$PBF" -o "$SQLITE" -g SQLite -p both -v -f -e
-          echo "Coastline extraction finished at $(date -u +%Y-%m-%d_%H:%M:%S)"
-
-      - name: Convert SQLite to GeoPackage
-        run: |
-          TAG="${{ steps.date.outputs.tag }}"
-          SQLITE="coastline-${TAG}.sqlite"
           GPKG="planet-coastline-${TAG}.osm.gpkg"
 
-          echo "Starting conversion to GeoPackage at $(date -u +%Y-%m-%d_%H:%M:%S)"
-          time ogr2ogr -f GPKG "$GPKG" "$SQLITE"
-          echo "Conversion finished at $(date -u +%Y-%m-%d_%H:%M:%S)"
-
-          ls -alh
+          echo "Starting coastline extraction at $(date -u +%Y-%m-%d_%H:%M:%S)"
+          time osmcoastline "$PBF" -o "$GPKG" -g GPKG -p both -v -f -e
+          echo "Coastline extraction finished at $(date -u +%Y-%m-%d_%H:%M:%S)"
 
       - name: Create metadata
         uses: openplanetdata/actions/create-metadata@main
@@ -138,7 +126,7 @@ jobs:
       - name: Cleanup generated files
         if: always()
         run: |
-          rm -f coastline-*.sqlite planet-coastline-*.osm.gpkg planet-coastline-*.osm.gpkg.{sha256,metadata}
+          rm -f planet-coastline-*.osm.gpkg planet-coastline-*.osm.gpkg.{sha256,metadata}
           find /tmp -name "tmp.*" -user "$USER" -delete 2>/dev/null || true
           # Clean up osmcoastline build directory if it exists
           rm -rf /tmp/osmcoastline
