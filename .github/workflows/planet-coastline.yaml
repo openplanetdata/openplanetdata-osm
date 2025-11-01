@@ -96,7 +96,31 @@ jobs:
           time osmcoastline "$PBF" -o "$GPKG" -g GPKG -p both -v -f -e
           echo "Coastline extraction finished at $(date -u +%Y-%m-%d_%H:%M:%S)"
 
-      - name: Create metadata
+      - name: Convert GeoPackage to GeoJSON
+        run: |
+          TAG="${{ steps.date.outputs.tag }}"
+          GPKG="planet-coastline-${TAG}.osm.gpkg"
+          GEOJSON="planet-coastline-${TAG}.osm.geojson"
+
+          SQL="SELECT 'land' AS feature_class, a.* FROM land_polygons AS a UNION ALL SELECT 'water' AS feature_class, b.* FROM water_polygons AS b"
+
+          echo "Starting GeoJSON export at $(date -u +%Y-%m-%d_%H:%M:%S)"
+          time ogr2ogr -f GeoJSON "$GEOJSON" "$GPKG" -dialect SQLite -sql "$SQL" -nln planet_coastline -lco RFC7946=YES -lco COORDINATE_PRECISION=6
+          echo "GeoJSON export finished at $(date -u +%Y-%m-%d_%H:%M:%S)"
+
+      - name: Convert GeoPackage to GeoParquet
+        run: |
+          TAG="${{ steps.date.outputs.tag }}"
+          GPKG="planet-coastline-${TAG}.osm.gpkg"
+          PARQUET="planet-coastline-${TAG}.osm.parquet"
+
+          SQL="SELECT 'land' AS feature_class, a.* FROM land_polygons AS a UNION ALL SELECT 'water' AS feature_class, b.* FROM water_polygons AS b"
+
+          echo "Starting GeoParquet export at $(date -u +%Y-%m-%d_%H:%M:%S)"
+          time ogr2ogr -f Parquet "$PARQUET" "$GPKG" -dialect SQLite -sql "$SQL" -nln planet_coastline -lco COMPRESSION=ZSTD
+          echo "GeoParquet export finished at $(date -u +%Y-%m-%d_%H:%M:%S)"
+
+      - name: Create GeoPackage metadata
         uses: openplanetdata/actions/create-metadata@main
         with:
           file: planet-coastline-${{ steps.date.outputs.tag }}.osm.gpkg
@@ -109,13 +133,59 @@ jobs:
             openstreetmap
             private
 
-      - name: Upload to R2
+      - name: Upload GeoPackage to R2
         uses: openplanetdata/actions/upload@main
         env:
           RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}
         with:
           file: planet-coastline-${{ steps.date.outputs.tag }}.osm.gpkg
           remote_filename: planet-coastline-latest.osm.gpkg
+          remote_path: /osm/planet/coastline
+          remote_version: 1
+
+      - name: Create GeoJSON metadata
+        uses: openplanetdata/actions/create-metadata@main
+        with:
+          file: planet-coastline-${{ steps.date.outputs.tag }}.osm.geojson
+          remote_filename: planet-coastline-latest.osm.geojson
+          remote_path: /osm/planet/coastline
+          remote_version: 1
+          tags: |
+            coastline
+            geojson
+            openstreetmap
+            private
+
+      - name: Upload GeoJSON to R2
+        uses: openplanetdata/actions/upload@main
+        env:
+          RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}
+        with:
+          file: planet-coastline-${{ steps.date.outputs.tag }}.osm.geojson
+          remote_filename: planet-coastline-latest.osm.geojson
+          remote_path: /osm/planet/coastline
+          remote_version: 1
+
+      - name: Create GeoParquet metadata
+        uses: openplanetdata/actions/create-metadata@main
+        with:
+          file: planet-coastline-${{ steps.date.outputs.tag }}.osm.parquet
+          remote_filename: planet-coastline-latest.osm.parquet
+          remote_path: /osm/planet/coastline
+          remote_version: 1
+          tags: |
+            coastline
+            geoparquet
+            openstreetmap
+            private
+
+      - name: Upload GeoParquet to R2
+        uses: openplanetdata/actions/upload@main
+        env:
+          RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}
+        with:
+          file: planet-coastline-${{ steps.date.outputs.tag }}.osm.parquet
+          remote_filename: planet-coastline-latest.osm.parquet
           remote_path: /osm/planet/coastline
           remote_version: 1
 
@@ -127,6 +197,8 @@ jobs:
         if: always()
         run: |
           rm -f planet-coastline-*.osm.gpkg planet-coastline-*.osm.gpkg.{sha256,metadata}
+          rm -f planet-coastline-*.osm.geojson planet-coastline-*.osm.geojson.{sha256,metadata}
+          rm -f planet-coastline-*.osm.parquet planet-coastline-*.osm.parquet.{sha256,metadata}
           find /tmp -name "tmp.*" -user "$USER" -delete 2>/dev/null || true
           # Clean up osmcoastline build directory if it exists
           rm -rf /tmp/osmcoastline
