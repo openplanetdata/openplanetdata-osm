@@ -45,8 +45,20 @@ jobs:
       - name: Get latest DuckDB release tag
         id: get_duckdb_tag
         run: |
-          TAG=$(curl -s https://api.github.com/repos/duckdb/duckdb/releases/latest | jq -r .tag_name)
-          echo "tag=$TAG" >>"$GITHUB_OUTPUT"
+          for i in 1 2 3; do
+            RESPONSE=$(curl -s https://api.github.com/repos/duckdb/duckdb/releases/latest)
+            TAG=$(echo "$RESPONSE" | jq -r .tag_name)
+            if [ -n "$TAG" ] && [ "$TAG" != "null" ]; then
+              echo "tag=$TAG" >>"$GITHUB_OUTPUT"
+              echo "Successfully fetched DuckDB release tag: $TAG"
+              exit 0
+            fi
+            echo "::warning::Attempt $i failed to fetch DuckDB release tag, retrying..."
+            sleep 2
+          done
+          echo "::error::Failed to fetch DuckDB release tag after 3 attempts"
+          echo "Last API response: $RESPONSE"
+          exit 1
 
       - name: Install latest DuckDB cli
         run: |
@@ -62,8 +74,20 @@ jobs:
       - name: Get latest ohsome-planet release tag
         id: get_ohsome_tag
         run: |
-          TAG=$(curl -s https://api.github.com/repos/GIScience/ohsome-planet/releases/latest | jq -r .tag_name)
-          echo "tag=$TAG" >>"$GITHUB_OUTPUT"
+          for i in 1 2 3; do
+            RESPONSE=$(curl -s https://api.github.com/repos/GIScience/ohsome-planet/releases/latest)
+            TAG=$(echo "$RESPONSE" | jq -r .tag_name)
+            if [ -n "$TAG" ] && [ "$TAG" != "null" ]; then
+              echo "tag=$TAG" >>"$GITHUB_OUTPUT"
+              echo "Successfully fetched ohsome-planet release tag: $TAG"
+              exit 0
+            fi
+            echo "::warning::Attempt $i failed to fetch ohsome-planet release tag, retrying..."
+            sleep 2
+          done
+          echo "::error::Failed to fetch ohsome-planet release tag after 3 attempts"
+          echo "Last API response: $RESPONSE"
+          exit 1
 
       - name: Checkout ohsome-planet
         uses: actions/checkout@v5
