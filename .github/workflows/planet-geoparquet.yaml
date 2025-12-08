@@ -174,12 +174,13 @@ jobs:
           fi
 
           # Validate parquet files before processing with DuckDB
+          # Use LIMIT 1 to check file readability without scanning all rows
           echo "::group::Validating parquet files"
           VALIDATION_FAILED=0
           for parquet_file in "$OUT_DIR"/contributions/latest/*.parquet; do
             if [ -f "$parquet_file" ]; then
               echo "Validating: $parquet_file"
-              if ! ./duckdb -c "SELECT COUNT(*) FROM '$parquet_file'" > /dev/null 2>&1; then
+              if ! ./duckdb -c "SELECT * FROM '$parquet_file' LIMIT 1" > /dev/null 2>&1; then
                 echo "::error::Corrupted parquet file detected: $parquet_file"
                 VALIDATION_FAILED=1
               fi
