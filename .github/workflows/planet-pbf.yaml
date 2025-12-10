@@ -23,10 +23,12 @@ jobs:
       - name: Install core tools
         uses: openplanetdata/actions/install-packages@main
         with:
-          packages: aria2 jq osmium-tool python3 python3-pip unzip
+          packages: aria2 jq osmium-tool pipx unzip
       - name: Install PyOsmium replication tools
         run: |
-          pip3 install osmium
+          pipx install osmium
+          pipx ensurepath
+          export PATH="$HOME/.local/bin:$PATH"
           pyosmium-up-to-date --version
 
       - name: Install Rclone
@@ -58,6 +60,7 @@ jobs:
 
       - name: Generate new PBF version with latest changes
         run: |
+          export PATH="$HOME/.local/bin:$PATH"
           set +e  # Don't exit on error, we handle it manually
           f="planet-${{ steps.date.outputs.tag }}.osm.pbf"
           state_dir="$(mktemp -d)"
