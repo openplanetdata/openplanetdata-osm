@@ -36,6 +36,24 @@ jobs:
         env:
           RCLONE_CONFIG_DATA: ${{ secrets.RCLONE_CONFIG_DATA }}
 
+      - name: Check system resources
+        run: |
+          echo "=== Memory ==="
+          free -h
+          echo ""
+          echo "=== Disk space ==="
+          df -h
+          echo ""
+          echo "=== CPU info ==="
+          nproc
+          cat /proc/cpuinfo | grep "model name" | head -1
+          echo ""
+          echo "=== Cgroup limits ==="
+          cat /sys/fs/cgroup/memory.max 2>/dev/null || cat /sys/fs/cgroup/memory/memory.limit_in_bytes 2>/dev/null || echo "No cgroup memory limit found"
+          echo ""
+          echo "=== ulimits ==="
+          ulimit -a
+
       - name: Download latest OSM planet
         run: |
           aria2c \
