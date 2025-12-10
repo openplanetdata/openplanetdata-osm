@@ -57,6 +57,7 @@ jobs:
       - name: Download latest OSM planet
         run: |
           aria2c \
+            --allow-overwrite=true \
             --bt-max-peers=500 \
             --bt-request-peer-speed-limit=0 \
             --bt-save-metadata=false \
