@@ -20,23 +20,10 @@ jobs:
         id: date
         uses: openplanetdata/actions/set-date-tag@main
 
-      - name: Install core tools (skip if already present)
-        shell: bash
-        run: |
-          echo "test"
-          echo "${{ steps.date.outputs.tag }}"
-          need_install() { ! command -v "$1" >/dev/null 2>&1; }
-          pkgs=()
-          need_install aria2c    && pkgs+=(aria2)
-          need_install jq        && pkgs+=(jq)
-          need_install osmium    && pkgs+=(osmium-tool)
-          need_install unzip     && pkgs+=(unzip)
-          
-          if ((${#pkgs[@]})); then
-            sudo dnf -y install "${pkgs[@]}"
-          else
-            echo "All required packages already present."
-          fi
+      - name: Install core tools
+        uses: openplanetdata/actions/install-packages@main
+        with:
+          packages: aria2 jq osmium-tool unzip
       - name: Install PyOsmium replication tools
         run: |
           pip install osmium

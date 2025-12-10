@@ -26,19 +26,10 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      - name: Install core tools (skip if already present)
-        shell: bash
-        run: |
-          need_install() { ! command -v "$1" >/dev/null 2>&1; }
-          pkgs=()
-          need_install curl && pkgs+=(curl)
-          need_install jq   && pkgs+=(jq)
-
-          if ((${#pkgs[@]})); then
-            sudo dnf -y install "${pkgs[@]}"
-          else
-            echo "All required packages already present."
-          fi
+      - name: Install core tools
+        uses: openplanetdata/actions/install-packages@main
+        with:
+          packages: curl jq
 
       - name: Install Rclone
         uses: openplanetdata/actions/install-rclone@main

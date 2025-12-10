@@ -27,15 +27,9 @@ jobs:
         uses: openplanetdata/actions/set-date-tag@main
 
       - name: Install system dependencies
-        shell: bash
-        run: |
-          need_install() { ! command -v "$1" &>/dev/null; }
-          pkgs=()
-          need_install jq    && pkgs+=(jq)
-          need_install unzip && pkgs+=(unzip)
-          if [ ${#pkgs[@]} -gt 0 ]; then
-            sudo dnf -y install "${pkgs[@]}"
-          fi
+        uses: openplanetdata/actions/install-packages@main
+        with:
+          packages: jq unzip
 
       - uses: actions/setup-java@v5
         with:
