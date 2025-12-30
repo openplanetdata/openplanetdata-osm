@@ -246,6 +246,8 @@ jobs:
 
       - name: Cleanup generated files
         if: always()
+        env:
+          TAG: ${{ steps.date.outputs.tag }}
         run: |
           rm -f duckdb duckdb_cli-*.zip
           rm -f planet-*.osm.parquet planet-*.osm.parquet.{sha256,metadata}
@@ -253,4 +255,11 @@ jobs:
           rm -rf .duckdb-temp
           find . -name "*.jar" -delete
           find /tmp -name "tmp.*" -user "$USER" -delete 2>/dev/null || true
+          # Remove old PBF files and indexes, keep today's for caching
+          for f in planet-*.osm.pbf; do
+            [ -f "$f" ] && [ "$f" != "planet-${TAG}.osm.pbf" ] && rm -f "$f" || true
+          done
+          for d in planet-*.osm-indexes; do
+            [ -d "$d" ] && [ "$d" != "planet-${TAG}.osm-indexes" ] && rm -rf "$d" || true
+          done
           # Keep ohsome-* output folders for day-based caching (cleaned up on next day's run)

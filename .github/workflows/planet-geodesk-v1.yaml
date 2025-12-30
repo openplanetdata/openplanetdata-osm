@@ -91,6 +91,13 @@ jobs:
 
       - name: Cleanup generated files
         if: always()
+        env:
+          TAG: ${{ steps.date.outputs.tag }}
         run: |
           rm -f planet-*.osm.gol planet-*.osm.gol.{sha256,metadata}
+          rm -rf .tmp
           find /tmp -name "tmp.*" -user "$USER" -delete 2>/dev/null || true
+          # Remove old PBF files, keep today's for caching
+          for f in planet-*.osm.pbf; do
+            [ -f "$f" ] && [ "$f" != "planet-${TAG}.osm.pbf" ] && rm -f "$f" || true
+          done
