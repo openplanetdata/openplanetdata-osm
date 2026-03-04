@@ -177,6 +177,8 @@ with DAG(
     build_gol >> build_gob >> gob_upload
 
     copy_result = copy_to_shared()
-    [gol_upload, gob_upload] >> copy_result
-    copy_result >> done()
-    copy_result >> cleanup()
+    build_gol >> copy_result
+
+    done_result = done()
+    [gol_upload, gob_upload, copy_result] >> done_result
+    done_result >> cleanup()
