@@ -69,6 +69,7 @@ with DAG(
             source_filename="planet-latest.osm.pbf",
             source_path="osm/planet/pbf",
             source_version="v1",
+            verify_checksum=False,
         )
 
     build_contributions = DockerOperator(
