@@ -5,6 +5,7 @@ Schedule: Triggered by openplanetdata-osm-planet-pbf Asset
 Produces Assets: openplanetdata-osm-planet-gol-v2, openplanetdata-osm-planet-gob-v2
 """
 
+import os
 import shutil
 from datetime import timedelta
 
@@ -151,11 +152,11 @@ with DAG(
 
     @task(task_display_name="Copy GOL to Shared Directory")
     def copy_to_shared() -> None:
-        """Copy GOL to shared directory for use by other DAGs."""
-        import os
-
+        """Copy GOL to shared directory atomically for use by other DAGs."""
         os.makedirs(OPENPLANETDATA_SHARED_DIR, exist_ok=True)
-        shutil.copy2(GOL_PATH, SHARED_PLANET_OSM_GOL_PATH)
+        tmp_path = f"{SHARED_PLANET_OSM_GOL_PATH}.tmp"
+        shutil.copy2(GOL_PATH, tmp_path)
+        os.rename(tmp_path, SHARED_PLANET_OSM_GOL_PATH)
 
     @task(task_display_name="Done")
     def done() -> None:
