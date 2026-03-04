@@ -101,19 +101,17 @@ with DAG(
     def upload_gol() -> list[UploadItem]:
         """Upload GOL v1 to R2 (deprecated)."""
         return [UploadItem(
-            category="gol",
+            category="openstreetmap",
             destination_filename="planet-latest.osm.gol",
             destination_path="osm/planet/gol",
             destination_version="v1",
             entity="planet",
             extension="gol",
-            extra={
-                "deprecated": True,
-                "deprecation_reason": (
-                    "Users should switch to GeoDesk v2 and associated files; "
-                    "support for v1 will be removed after 30/09/2026."
-                ),
-            },
+            deprecated=True,
+            deprecation_reason=(
+                "Users should switch to GeoDesk v2 and associated files; "
+                "support for v1 will be removed after 30/09/2026."
+            ),
             media_type="application/octet-stream",
             source=GOL_PATH,
             tags=["deprecated", "geodesk", "gol", "openstreetmap", "public"],
