@@ -76,9 +76,16 @@ with DAG(
         image=OPENPLANETDATA_IMAGE,
         command=f"""bash -c '
             mkdir -p {WORK_DIR}/.tmp &&
+            echo "Installing GOL v1..." &&
+            GOL_URL=$(curl -sSL https://api.github.com/repos/clarisma/gol-tool/releases?per_page=100 \
+                | jq -r "[.[] | select(.draft==false and .prerelease==false and (.tag_name|tostring|ltrimstr(\\"v\\")|startswith(\\"1.\\")))] [0].assets[] | select(.name | test(\\"gol-tool-.*\\\\.zip$\\")) | .browser_download_url" | head -n1) &&
+            curl -sSL "$GOL_URL" -o /tmp/gol-v1.zip &&
+            unzip -q -o /tmp/gol-v1.zip -d /tmp/gol-v1 &&
+            GOL_BIN=$(find /tmp/gol-v1 -name gol -type f | head -n1) &&
+            chmod +x "$GOL_BIN" &&
             echo "Starting GOL v1 build at $(date -u +%Y-%m-%d_%H:%M:%S)" &&
             echo "JVM options: $JAVA_TOOL_OPTIONS" &&
-            time gol build --tag-duplicate-nodes=yes {GOL_PATH} {SHARED_PLANET_OSM_PBF_PATH} &&
+            time "$GOL_BIN" build --tag-duplicate-nodes=yes {GOL_PATH} {SHARED_PLANET_OSM_PBF_PATH} &&
             echo "Build finished at $(date -u +%Y-%m-%d_%H:%M:%S)" &&
             ls -lh {GOL_PATH}
         '""",
