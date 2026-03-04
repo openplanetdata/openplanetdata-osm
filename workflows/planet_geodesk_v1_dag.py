@@ -77,8 +77,9 @@ with DAG(
         command=f"""bash -c '
             mkdir -p {WORK_DIR}/.tmp &&
             echo "Installing GOL v1..." &&
-            GOL_URL=$(curl -sSL https://api.github.com/repos/clarisma/gol-tool/releases?per_page=100 \
-                | jq -r "[.[] | select(.draft==false and .prerelease==false and (.tag_name|tostring|ltrimstr(\\"v\\")|startswith(\\"1.\\")))] [0].assets[] | select(.name | test(\\"gol-tool-.*\\\\.zip$\\")) | .browser_download_url" | head -n1) &&
+            GOL_URL=$(curl -sSL https://api.github.com/repos/clarisma/gol-tool/releases/latest \
+                | grep -o "https://[^\\"]*gol-tool-[^\\"]*\\.zip" | head -n1) &&
+            echo "Downloading GOL v1 from $GOL_URL" &&
             curl -sSL "$GOL_URL" -o /tmp/gol-v1.zip &&
             unzip -q -o /tmp/gol-v1.zip -d /tmp/gol-v1 &&
             GOL_BIN=$(find /tmp/gol-v1 -name gol -type f | head -n1) &&
