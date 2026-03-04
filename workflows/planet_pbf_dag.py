@@ -16,9 +16,11 @@ from elaunira.r2index.storage import R2TransferConfig
 from openplanetdata.airflow.defaults import (
     DOCKER_MOUNT,
     OPENPLANETDATA_IMAGE,
+    OPENPLANETDATA_SHARED_DIR,
     OPENPLANETDATA_WORK_DIR,
     R2_BUCKET,
     R2INDEX_CONNECTION_ID,
+    SHARED_PLANET_OSM_PBF_PATH,
 )
 
 WORK_DIR = f"{OPENPLANETDATA_WORK_DIR}/osm/pbf"
@@ -162,6 +164,14 @@ with DAG(
             tags=["openstreetmap", "pbf", "public"],
         )]
 
+    @task(task_display_name="Copy to Shared Directory")
+    def copy_to_shared() -> None:
+        """Copy planet PBF to shared directory for use by other DAGs."""
+        import os
+
+        os.makedirs(OPENPLANETDATA_SHARED_DIR, exist_ok=True)
+        shutil.copy2(PBF_PATH, SHARED_PLANET_OSM_PBF_PATH)
+
     @task(task_display_name="Done")
     def done() -> None:
         """No-op gate task to propagate upstream failures to DAG run state."""
@@ -175,5 +185,7 @@ with DAG(
     download_planet >> update_planet
     upload_result = upload_pbf()
     update_planet >> upload_result
-    upload_result >> done()
-    upload_result >> cleanup()
+    copy_result = copy_to_shared()
+    upload_result >> copy_result
+    copy_result >> done()
+    copy_result >> cleanup()
