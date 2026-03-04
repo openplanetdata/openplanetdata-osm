@@ -16,9 +16,11 @@ from elaunira.r2index.storage import R2TransferConfig
 from openplanetdata.airflow.defaults import (
     DOCKER_MOUNT,
     OPENPLANETDATA_IMAGE,
+    OPENPLANETDATA_SHARED_DIR,
     OPENPLANETDATA_WORK_DIR,
     R2_BUCKET,
     R2INDEX_CONNECTION_ID,
+    SHARED_PLANET_OSM_GOL_PATH,
     SHARED_PLANET_OSM_PBF_PATH,
 )
 
@@ -147,6 +149,14 @@ with DAG(
             tags=["geodesk", "gob", "gol", "openstreetmap", "public"],
         )]
 
+    @task(task_display_name="Copy GOL to Shared Directory")
+    def copy_to_shared() -> None:
+        """Copy GOL to shared directory for use by other DAGs."""
+        import os
+
+        os.makedirs(OPENPLANETDATA_SHARED_DIR, exist_ok=True)
+        shutil.copy2(GOL_PATH, SHARED_PLANET_OSM_GOL_PATH)
+
     @task(task_display_name="Done")
     def done() -> None:
         """No-op gate task to propagate upstream failures to DAG run state."""
@@ -166,5 +176,7 @@ with DAG(
     build_gol >> gol_upload
     build_gol >> build_gob >> gob_upload
 
-    [gol_upload, gob_upload] >> done()
-    [gol_upload, gob_upload] >> cleanup()
+    copy_result = copy_to_shared()
+    [gol_upload, gob_upload] >> copy_result
+    copy_result >> done()
+    copy_result >> cleanup()
