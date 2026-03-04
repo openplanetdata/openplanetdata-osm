@@ -118,7 +118,7 @@ with DAG(
     def upload_gol() -> list[UploadItem]:
         """Upload GOL v2 to R2."""
         return [UploadItem(
-            category="gol",
+            category="openstreetmap",
             destination_filename="planet-latest.osm.gol",
             destination_path="osm/planet/gol",
             destination_version="v2",

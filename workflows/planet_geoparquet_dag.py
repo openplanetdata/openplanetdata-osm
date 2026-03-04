@@ -228,7 +228,7 @@ with DAG(
     def upload_geoparquet() -> list[UploadItem]:
         """Upload planet GeoParquet to R2."""
         return [UploadItem(
-            category="geoparquet",
+            category="openstreetmap",
             destination_filename="planet-latest.osm.parquet",
             destination_path="osm/planet/geoparquet",
             destination_version="v1",

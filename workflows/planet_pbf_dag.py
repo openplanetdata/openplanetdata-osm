@@ -153,7 +153,7 @@ with DAG(
     def upload_pbf() -> list[UploadItem]:
         """Upload planet PBF to R2."""
         return [UploadItem(
-            category="pbf",
+            category="openstreetmap",
             destination_filename="planet-latest.osm.pbf",
             destination_path="osm/planet/pbf",
             destination_version="v1",
