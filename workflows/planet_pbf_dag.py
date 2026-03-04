@@ -148,7 +148,7 @@ with DAG(
         bucket=R2_BUCKET,
         outlets=[PBF_ASSET],
         r2index_conn_id=R2INDEX_CONNECTION_ID,
-        transfer_config=R2TransferConfig(max_concurrency=64, multipart_chunksize=32 * 1024 * 1024),
+        transfer_config=R2TransferConfig(max_concurrency=16, multipart_chunksize=256 * 1024 * 1024),
     )
     def upload_pbf() -> list[UploadItem]:
         """Upload planet PBF to R2."""
