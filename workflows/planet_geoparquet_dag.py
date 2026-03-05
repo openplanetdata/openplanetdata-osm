@@ -58,6 +58,11 @@ with DAG(
             type="boolean",
             description="Force cleanup even if upstream tasks failed",
         ),
+        "multipolygon_member_limit": Param(
+            default="",
+            type="string",
+            description="Override --multipolygon-member-limit for ohsome-planet (e.g. -1 for unlimited)",
+        ),
     },
     schedule=PBF_ASSET,
     tags=["geoparquet", "openplanetdata", "osm", "planet"],
@@ -126,8 +131,12 @@ with DAG(
             else
                 rm -rf {OHSOME_DIR}
                 echo "Building ohsome contributions..."
+                EXTRA_OPTS=""
+                {{% if params.multipolygon_member_limit %}}
+                EXTRA_OPTS="--multipolygon-member-limit {{{{ params.multipolygon_member_limit }}}}"
+                {{% endif %}}
                 time java -Xms96g -Xmx96g -jar "$JAR_PATH" \
-                    contributions --pbf {SHARED_PLANET_OSM_PBF_PATH} --data {OHSOME_DIR}
+                    contributions --pbf {SHARED_PLANET_OSM_PBF_PATH} --data {OHSOME_DIR} $EXTRA_OPTS
             fi
 
             echo "Contributions build complete"
