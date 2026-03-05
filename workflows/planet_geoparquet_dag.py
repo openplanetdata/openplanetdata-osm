@@ -75,7 +75,7 @@ with DAG(
     build_contributions = DockerOperator(
         task_id="build_contributions",
         task_display_name="Build Ohsome Contributions",
-        image="eclipse-temurin:21-jdk",
+        image="eclipse-temurin:25-jdk",
         command=f"""bash -c '
             set -euo pipefail
 
@@ -109,8 +109,7 @@ with DAG(
             fi
             cd "$OHSOME_SRC"
             ./mvnw -q clean package -DskipTests
-            JAR_PATH=$(find "$OHSOME_SRC" -name "ohsome-planet*.jar" -path "*/target/*" \
-                -not -name "*sources*" -not -name "*javadoc*" | head -1)
+            JAR_PATH="$OHSOME_SRC/ohsome-planet-cli/target/ohsome-planet.jar"
 
             # Check if contributions already exist (caching for retries)
             if [ -d "{OHSOME_DIR}/contributions/latest" ]; then
