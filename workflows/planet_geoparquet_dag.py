@@ -53,11 +53,6 @@ with DAG(
     doc_md=__doc__,
     max_active_runs=1,
     params={
-        "force_cleanup": Param(
-            default=False,
-            type="boolean",
-            description="Force cleanup even if upstream tasks failed",
-        ),
         "multipolygon_member_limit": Param(
             default="",
             type="string",
@@ -261,19 +256,9 @@ ls -lh {PARQUET_PATH}
     def done() -> None:
         """No-op gate task to propagate upstream failures to DAG run state."""
 
-    @task(task_display_name="Cleanup", trigger_rule="all_done")
-    def cleanup(**context) -> None:
-        """Clean up working directory only if all upstream tasks succeeded or force_cleanup is set."""
-        force = context["params"].get("force_cleanup", False)
-        dag_run = context["dag_run"]
-        upstream_failed = any(
-            ti.state in ("failed", "upstream_failed")
-            for ti in dag_run.get_task_instances()
-            if ti.task_id != "cleanup"
-        )
-        if upstream_failed and not force:
-            print("Skipping cleanup: upstream tasks failed (set force_cleanup=true to override)")
-            return
+    @task(task_display_name="Cleanup")
+    def cleanup() -> None:
+        """Clean up working directory after successful run."""
         shutil.rmtree(WORK_DIR, ignore_errors=True)
 
     # Task flow
