@@ -71,9 +71,11 @@ with DAG(
             verify_checksum=False,
         )
 
-    build_gol = DockerOperator(
-        task_id="build_gol",
-        task_display_name="Build GOL v1",
+    GOL_INSTALL_DIR = f"{WORK_DIR}/gol-tool"
+
+    install_gol = DockerOperator(
+        task_id="install_gol",
+        task_display_name="Install GOL v1",
         image=OPENPLANETDATA_IMAGE,
         command=f"""bash -c '
             mkdir -p {WORK_DIR}/.tmp &&
@@ -82,11 +84,26 @@ with DAG(
                 | grep -o "https://[^\\"]*gol-tool-[^\\"]*\\.zip" | head -n1) &&
             echo "Downloading GOL v1 from $GOL_URL" &&
             curl -sSL "$GOL_URL" -o /tmp/gol-v1.zip &&
-            unzip -q -o /tmp/gol-v1.zip -d /tmp/gol-v1 &&
-            GOL_BIN=$(find /tmp/gol-v1 -name gol -type f | head -n1) &&
+            unzip -q -o /tmp/gol-v1.zip -d {GOL_INSTALL_DIR} &&
+            GOL_BIN=$(find {GOL_INSTALL_DIR} -name gol -type f | head -n1) &&
             chmod +x "$GOL_BIN" &&
+            echo "GOL v1 installed at $GOL_BIN"
+        '""",
+        force_pull=True,
+        mounts=[Mount(**DOCKER_MOUNT)],
+        mount_tmp_dir=False,
+        auto_remove="success",
+    )
+
+    build_gol = DockerOperator(
+        task_id="build_gol",
+        task_display_name="Build GOL v1",
+        image="eclipse-temurin:25-jre",
+        command=f"""bash -c '
+            GOL_BIN=$(find {GOL_INSTALL_DIR} -name gol -type f | head -n1) &&
             echo "Starting GOL v1 build at $(date -u +%Y-%m-%d_%H:%M:%S)" &&
             echo "JVM options: $JAVA_TOOL_OPTIONS" &&
+            echo "Java version: $(java -version 2>&1 | head -n1)" &&
             time "$GOL_BIN" build --tag-duplicate-nodes=yes {GOL_PATH} {SHARED_PLANET_OSM_PBF_PATH} &&
             echo "Build finished at $(date -u +%Y-%m-%d_%H:%M:%S)" &&
             ls -lh {GOL_PATH}
@@ -95,7 +112,6 @@ with DAG(
             "JAVA_TOOL_OPTIONS": "-Xms96g -Xmx96g",
             "TMPDIR": f"{WORK_DIR}/.tmp",
         },
-        force_pull=True,
         mounts=[Mount(**DOCKER_MOUNT)],
         mount_tmp_dir=False,
         auto_remove="success",
@@ -137,7 +153,7 @@ with DAG(
 
     # Task flow
     download_result = download_planet_pbf()
-    download_result >> build_gol
+    download_result >> install_gol >> build_gol
 
     gol_upload = upload_gol()
     build_gol >> gol_upload
