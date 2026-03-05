@@ -75,7 +75,7 @@ with DAG(
     build_contributions = DockerOperator(
         task_id="build_contributions",
         task_display_name="Build Ohsome Contributions",
-        image="eclipse-temurin:25-jdk",
+        image="eclipse-temurin:21-jdk",
         command=f"""bash -c '
             set -euo pipefail
 
