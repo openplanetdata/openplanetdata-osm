@@ -12,7 +12,7 @@ import shutil
 from datetime import timedelta
 
 from airflow.providers.docker.operators.docker import DockerOperator
-from airflow.sdk import DAG, Asset, task
+from airflow.sdk import DAG, Asset, Param, task
 from docker.types import Mount
 from elaunira.airflow.providers.r2index.operators import DownloadItem, UploadItem
 from elaunira.r2index.storage import R2TransferConfig
@@ -51,6 +51,13 @@ with DAG(
     description="Build planet GeoParquet from OSM PBF using ohsome-planet and DuckDB",
     doc_md=__doc__,
     max_active_runs=1,
+    params={
+        "force_cleanup": Param(
+            default=False,
+            type="boolean",
+            description="Force cleanup even if upstream tasks failed",
+        ),
+    },
     schedule=PBF_ASSET,
     tags=["geoparquet", "openplanetdata", "osm", "planet"],
 ) as dag:
@@ -246,8 +253,18 @@ with DAG(
         """No-op gate task to propagate upstream failures to DAG run state."""
 
     @task(task_display_name="Cleanup", trigger_rule="all_done")
-    def cleanup() -> None:
-        """Clean up working directory."""
+    def cleanup(**context) -> None:
+        """Clean up working directory only if all upstream tasks succeeded or force_cleanup is set."""
+        force = context["params"].get("force_cleanup", False)
+        dag_run = context["dag_run"]
+        upstream_failed = any(
+            ti.state in ("failed", "upstream_failed")
+            for ti in dag_run.get_task_instances()
+            if ti.task_id != "cleanup"
+        )
+        if upstream_failed and not force:
+            print("Skipping cleanup: upstream tasks failed (set force_cleanup=true to override)")
+            return
         shutil.rmtree(WORK_DIR, ignore_errors=True)
 
     # Task flow
