@@ -143,87 +143,85 @@ with DAG(
         task_id="validate_and_process",
         task_display_name="Validate and Process with DuckDB",
         image=OPENPLANETDATA_IMAGE,
-        command=f"""bash -c '
-            set -euo pipefail
+        command=["bash", "-c", f"""set -euo pipefail
 
-            # Install DuckDB
-            ARCH=$(uname -m)
-            case "$ARCH" in
-                x86_64)  DUCKDB_ARCH="linux-amd64" ;;
-                aarch64) DUCKDB_ARCH="linux-arm64" ;;
-                *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
-            esac
+# Install DuckDB
+ARCH=$(uname -m)
+case "$ARCH" in
+    x86_64)  DUCKDB_ARCH="linux-amd64" ;;
+    aarch64) DUCKDB_ARCH="linux-arm64" ;;
+    *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
+esac
 
-            DUCKDB_TAG=""
-            for i in 1 2 3; do
-                RESPONSE=$(curl -sf https://api.github.com/repos/duckdb/duckdb/releases/latest || true)
-                DUCKDB_TAG=$(echo "$RESPONSE" | jq -r ".tag_name // empty" 2>/dev/null || true)
-                if [ -n "$DUCKDB_TAG" ]; then break; fi
-                echo "Attempt $i failed to fetch DuckDB release tag, retrying..."
-                sleep 2
-            done
+DUCKDB_TAG=""
+for i in 1 2 3; do
+    RESPONSE=$(curl -sf https://api.github.com/repos/duckdb/duckdb/releases/latest || true)
+    DUCKDB_TAG=$(echo "$RESPONSE" | jq -r ".tag_name // empty" 2>/dev/null || true)
+    if [ -n "$DUCKDB_TAG" ]; then break; fi
+    echo "Attempt $i failed to fetch DuckDB release tag, retrying..."
+    sleep 2
+done
 
-            if [ -z "$DUCKDB_TAG" ]; then
-                echo "Failed to fetch DuckDB release tag after 3 attempts"
-                exit 1
-            fi
+if [ -z "$DUCKDB_TAG" ]; then
+    echo "Failed to fetch DuckDB release tag after 3 attempts"
+    exit 1
+fi
 
-            echo "Installing DuckDB $DUCKDB_TAG ($DUCKDB_ARCH)"
-            wget -q "https://github.com/duckdb/duckdb/releases/download/${{DUCKDB_TAG}}/duckdb_cli-${{DUCKDB_ARCH}}.zip" \
-                -O /tmp/duckdb.zip
-            unzip -o /tmp/duckdb.zip -d /tmp && chmod +x /tmp/duckdb
+echo "Installing DuckDB $DUCKDB_TAG ($DUCKDB_ARCH)"
+wget -q "https://github.com/duckdb/duckdb/releases/download/${{DUCKDB_TAG}}/duckdb_cli-${{DUCKDB_ARCH}}.zip" \
+    -O /tmp/duckdb.zip
+unzip -o /tmp/duckdb.zip -d /tmp && chmod +x /tmp/duckdb
 
-            # Validate parquet files (full scan to detect ZSTD corruption)
-            echo "Validating parquet files..."
-            VALIDATION_FAILED=0
-            for parquet_file in {OHSOME_DIR}/contributions/latest/*.parquet; do
-                if [ -f "$parquet_file" ]; then
-                    echo "Validating: $parquet_file"
-                    if ! printf "SELECT MAX(osm_id) FROM read_parquet(\\x27%s\\x27);\\n" "$parquet_file" | /tmp/duckdb 2>&1; then
-                        echo "Corrupted parquet file: $parquet_file"
-                        VALIDATION_FAILED=1
-                    fi
-                fi
-            done
+# Validate parquet files (full scan to detect ZSTD corruption)
+echo "Validating parquet files..."
+VALIDATION_FAILED=0
+for parquet_file in {OHSOME_DIR}/contributions/latest/*.parquet; do
+    if [ -f "$parquet_file" ]; then
+        echo "Validating: $parquet_file"
+        if ! /tmp/duckdb -c "SELECT MAX(osm_id) FROM '$parquet_file'" 2>&1; then
+            echo "Corrupted parquet file: $parquet_file"
+            VALIDATION_FAILED=1
+        fi
+    fi
+done
 
-            if [ $VALIDATION_FAILED -eq 1 ]; then
-                echo "Parquet validation failed, removing corrupted output"
-                rm -rf {OHSOME_DIR}
-                exit 1
-            fi
-            echo "All parquet files validated successfully"
+if [ $VALIDATION_FAILED -eq 1 ]; then
+    echo "Parquet validation failed, removing corrupted output"
+    rm -rf {OHSOME_DIR}
+    exit 1
+fi
+echo "All parquet files validated successfully"
 
-            # Process with DuckDB spatial extension
-            DUCKDB_TEMP_DIR="{WORK_DIR}/.duckdb-temp"
-            mkdir -p "$DUCKDB_TEMP_DIR"
+# Process with DuckDB spatial extension
+DUCKDB_TEMP_DIR="{WORK_DIR}/.duckdb-temp"
+mkdir -p "$DUCKDB_TEMP_DIR"
 
-            cat > /tmp/process.sql << DUCKDB_SQL
-INSTALL 'spatial'; LOAD 'spatial';
-SET temp_directory='$DUCKDB_TEMP_DIR';
-SET preserve_insertion_order=false;
+/tmp/duckdb -c "
+    INSTALL 'spatial'; LOAD 'spatial';
+    SET temp_directory='$DUCKDB_TEMP_DIR';
+    SET preserve_insertion_order=false;
 
-COPY (
-    SELECT
-        osm_type::ENUM ('node', 'way', 'relation') AS osm_type,
-        osm_id,
-        tags,
-        bbox,
-        geometry
-    FROM '{OHSOME_DIR}/contributions/latest/*.parquet'
-    ORDER BY bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax
-) TO '{PARQUET_PATH}' (
-    FORMAT PARQUET,
-    CODEC 'zstd',
-    COMPRESSION_LEVEL 13,
-    PARQUET_VERSION v2
-);
-DUCKDB_SQL
-            /tmp/duckdb < /tmp/process.sql
+    COPY (
+        SELECT
+            osm_type::ENUM ('node', 'way', 'relation') AS osm_type,
+            osm_id,
+            tags,
+            bbox,
+            geometry
+        FROM '{OHSOME_DIR}/contributions/latest/*.parquet'
+        ORDER BY bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax
+    ) TO '{PARQUET_PATH}' (
+        FORMAT PARQUET,
+        CODEC 'zstd',
+        COMPRESSION_LEVEL 13,
+        PARQUET_VERSION v2
+    );
+"
 
-            rm -rf "$DUCKDB_TEMP_DIR"
-            echo "GeoParquet processing complete"
-            ls -lh {PARQUET_PATH}
-        '""",
+rm -rf "$DUCKDB_TEMP_DIR"
+echo "GeoParquet processing complete"
+ls -lh {PARQUET_PATH}
+"""],
         force_pull=True,
         mounts=[Mount(**DOCKER_MOUNT)],
         mount_tmp_dir=False,
