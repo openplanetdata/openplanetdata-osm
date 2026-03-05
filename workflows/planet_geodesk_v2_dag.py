@@ -49,6 +49,7 @@ with DAG(
         "execution_timeout": timedelta(hours=4),
         "executor": "airflow.providers.edge3.executors.EdgeExecutor",
         "owner": "openplanetdata",
+        "pool": "openplanetdata_osm_planet",
         "queue": "cortex",
         "retries": 0,
     },
