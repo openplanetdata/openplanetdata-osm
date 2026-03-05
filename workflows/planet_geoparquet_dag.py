@@ -179,7 +179,7 @@ with DAG(
             for parquet_file in {OHSOME_DIR}/contributions/latest/*.parquet; do
                 if [ -f "$parquet_file" ]; then
                     echo "Validating: $parquet_file"
-                    if ! /tmp/duckdb -c "SELECT MAX(osm_id) FROM '\''$parquet_file'\''" > /dev/null 2>&1; then
+                    if ! /tmp/duckdb -c "SELECT MAX(osm_id) FROM '\''$parquet_file'\''" 2>&1; then
                         echo "Corrupted parquet file: $parquet_file"
                         VALIDATION_FAILED=1
                     fi
