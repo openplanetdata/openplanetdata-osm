@@ -197,27 +197,28 @@ with DAG(
             DUCKDB_TEMP_DIR="{WORK_DIR}/.duckdb-temp"
             mkdir -p "$DUCKDB_TEMP_DIR"
 
-            /tmp/duckdb -c "
-                INSTALL '\''spatial'\''; LOAD '\''spatial'\'';
-                SET temp_directory='\''$DUCKDB_TEMP_DIR'\'';
-                SET preserve_insertion_order=false;
+            cat > /tmp/process.sql << DUCKDB_SQL
+INSTALL 'spatial'; LOAD 'spatial';
+SET temp_directory='$DUCKDB_TEMP_DIR';
+SET preserve_insertion_order=false;
 
-                COPY (
-                    SELECT
-                        osm_type::ENUM ('\''node'\'', '\''way'\'', '\''relation'\'') AS osm_type,
-                        osm_id,
-                        tags,
-                        bbox,
-                        geometry
-                    FROM '\''{OHSOME_DIR}/contributions/latest/*.parquet'\''
-                    ORDER BY bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax
-                ) TO '\''{PARQUET_PATH}'\'' (
-                    FORMAT PARQUET,
-                    CODEC '\''zstd'\'',
-                    COMPRESSION_LEVEL 13,
-                    PARQUET_VERSION v2
-                );
-            "
+COPY (
+    SELECT
+        osm_type::ENUM ('node', 'way', 'relation') AS osm_type,
+        osm_id,
+        tags,
+        bbox,
+        geometry
+    FROM '{OHSOME_DIR}/contributions/latest/*.parquet'
+    ORDER BY bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax
+) TO '{PARQUET_PATH}' (
+    FORMAT PARQUET,
+    CODEC 'zstd',
+    COMPRESSION_LEVEL 13,
+    PARQUET_VERSION v2
+);
+DUCKDB_SQL
+            /tmp/duckdb < /tmp/process.sql
 
             rm -rf "$DUCKDB_TEMP_DIR"
             echo "GeoParquet processing complete"
