@@ -149,7 +149,7 @@ with DAG(
             DUCKDB_TAG=""
             for i in 1 2 3; do
                 DUCKDB_TAG=$(curl -sf https://api.github.com/repos/duckdb/duckdb/releases/latest | \
-                    grep -o "\"tag_name\": \"[^\"]*\"" | cut -d\" -f4 || true)
+                    grep -o '\''\"tag_name\": \"[^\"]*\"'\'' | cut -d'\''"'\'' -f4 || true)
                 if [ -n "$DUCKDB_TAG" ]; then break; fi
                 sleep 2
             done
