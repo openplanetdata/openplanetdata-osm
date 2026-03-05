@@ -33,12 +33,12 @@ PBF_ASSET = Asset(
 
 with DAG(
     dag_display_name="OpenPlanetData OSM Planet PBF",
-    dag_id="openplanetdata_osm_planet_pbf",
+    dag_id="openplanetdata_osm_pbf",
     default_args={
         "execution_timeout": timedelta(hours=4),
         "executor": "airflow.providers.edge3.executors.EdgeExecutor",
         "owner": "openplanetdata",
-        "pool": "openplanetdata_osm_planet",
+        "pool": "openplanetdata_osm",
         "queue": "cortex",
         "retries": 0,
     },

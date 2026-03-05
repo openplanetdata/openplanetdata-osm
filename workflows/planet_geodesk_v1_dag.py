@@ -39,12 +39,12 @@ GOL_V1_ASSET = Asset(
 
 with DAG(
     dag_display_name="OpenPlanetData OSM Planet GeoDesk v1 (deprecated)",
-    dag_id="openplanetdata_osm_planet_geodesk_v1",
+    dag_id="openplanetdata_osm_geodesk_v1",
     default_args={
         "execution_timeout": timedelta(hours=4),
         "executor": "airflow.providers.edge3.executors.EdgeExecutor",
         "owner": "openplanetdata",
-        "pool": "openplanetdata_osm_planet",
+        "pool": "openplanetdata_osm",
         "queue": "cortex",
         "retries": 0,
     },

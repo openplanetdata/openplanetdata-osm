@@ -40,12 +40,12 @@ GEOPARQUET_ASSET = Asset(
 
 with DAG(
     dag_display_name="OpenPlanetData OSM Planet GeoParquet",
-    dag_id="openplanetdata_osm_planet_geoparquet",
+    dag_id="openplanetdata_osm_geoparquet",
     default_args={
         "execution_timeout": timedelta(hours=6),
         "executor": "airflow.providers.edge3.executors.EdgeExecutor",
         "owner": "openplanetdata",
-        "pool": "openplanetdata_osm_planet",
+        "pool": "openplanetdata_osm",
         "queue": "cortex",
         "retries": 0,
     },

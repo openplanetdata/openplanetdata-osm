@@ -44,12 +44,12 @@ GOB_V2_ASSET = Asset(
 
 with DAG(
     dag_display_name="OpenPlanetData OSM Planet GeoDesk v2",
-    dag_id="openplanetdata_osm_planet_geodesk_v2",
+    dag_id="openplanetdata_osm_geodesk_v2",
     default_args={
         "execution_timeout": timedelta(hours=4),
         "executor": "airflow.providers.edge3.executors.EdgeExecutor",
         "owner": "openplanetdata",
-        "pool": "openplanetdata_osm_planet",
+        "pool": "openplanetdata_osm",
         "queue": "cortex",
         "retries": 0,
     },
