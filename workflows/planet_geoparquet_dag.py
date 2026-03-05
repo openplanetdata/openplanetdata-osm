@@ -103,7 +103,8 @@ with DAG(
 
             # Clone and build ohsome-planet
             OHSOME_SRC="{WORK_DIR}/ohsome-planet"
-            if [ ! -d "$OHSOME_SRC" ]; then
+            if [ ! -f "$OHSOME_SRC/mvnw" ]; then
+                rm -rf "$OHSOME_SRC"
                 git clone --branch "$OHSOME_TAG" --depth 1 --recurse-submodules \
                     https://github.com/GIScience/ohsome-planet.git "$OHSOME_SRC"
             fi
