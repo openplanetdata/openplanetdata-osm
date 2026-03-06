@@ -183,5 +183,7 @@ with DAG(
     build_gol >> copy_result
 
     done_result = done()
+    cleanup_result = cleanup()
+
     [gol_upload, gob_upload, copy_result] >> done_result
-    done_result >> cleanup()
+    [gol_upload, gob_upload, copy_result] >> cleanup_result
