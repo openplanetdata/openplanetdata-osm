@@ -101,6 +101,7 @@ with DAG(
         task_display_name="Build GOL v1",
         image="eclipse-temurin:25-jre",
         command=f"""bash -c '
+            mkdir -p {WORK_DIR}/.tmp &&
             GOL_BIN=$(find {GOL_INSTALL_DIR} -name gol -type f | head -n1) &&
             echo "Starting GOL v1 build at $(date -u +%Y-%m-%d_%H:%M:%S)" &&
             echo "JVM options: $JAVA_TOOL_OPTIONS" &&
