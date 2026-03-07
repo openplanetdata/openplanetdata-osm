@@ -54,9 +54,9 @@ with DAG(
     max_active_runs=1,
     params={
         "multipolygon_member_limit": Param(
-            default="",
+            default="-1",
             type="string",
-            description="Override --multipolygon-member-limit for ohsome-planet (e.g. -1 for unlimited)",
+            description="--multipolygon-member-limit for ohsome-planet (-1 for unlimited, empty to skip)",
         ),
     },
     schedule=PBF_ASSET,
@@ -120,19 +120,14 @@ with DAG(
             ./mvnw -q clean package -DskipTests
             JAR_PATH="$OHSOME_SRC/ohsome-planet-cli/target/ohsome-planet.jar"
 
-            # Check if contributions already exist (caching for retries)
-            if [ -d "{OHSOME_DIR}/contributions/latest" ]; then
-                echo "Found existing ohsome output, skipping build"
-            else
-                rm -rf {OHSOME_DIR}
-                echo "Building ohsome contributions..."
-                EXTRA_OPTS=""
-                {{% if params.multipolygon_member_limit %}}
-                EXTRA_OPTS="--multipolygon-member-limit {{{{ params.multipolygon_member_limit }}}}"
-                {{% endif %}}
-                time java -Xms96g -Xmx96g -jar "$JAR_PATH" \
-                    contributions --pbf {SHARED_PLANET_OSM_PBF_PATH} --data {OHSOME_DIR} $EXTRA_OPTS
-            fi
+            rm -rf {OHSOME_DIR}
+            echo "Building ohsome contributions..."
+            EXTRA_OPTS=""
+            {{% if params.multipolygon_member_limit %}}
+            EXTRA_OPTS="--multipolygon-member-limit {{{{ params.multipolygon_member_limit }}}}"
+            {{% endif %}}
+            time java -Xms96g -Xmx96g -jar "$JAR_PATH" \
+                contributions --pbf {SHARED_PLANET_OSM_PBF_PATH} --data {OHSOME_DIR} $EXTRA_OPTS
 
             echo "Contributions build complete"
             ls -lh {OHSOME_DIR}/contributions/latest/
