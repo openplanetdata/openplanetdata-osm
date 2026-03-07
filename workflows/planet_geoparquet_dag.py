@@ -12,7 +12,7 @@ import shutil
 from datetime import timedelta
 
 from airflow.providers.docker.operators.docker import DockerOperator
-from airflow.sdk import DAG, Asset, Param, task
+from airflow.sdk import DAG, Asset, task
 from docker.types import Mount
 from elaunira.airflow.providers.r2index.operators import DownloadItem, UploadItem
 from elaunira.r2index.storage import R2TransferConfig
@@ -52,13 +52,7 @@ with DAG(
     description="Build planet GeoParquet from OSM PBF using ohsome-planet and DuckDB",
     doc_md=__doc__,
     max_active_runs=1,
-    params={
-        "multipolygon_member_limit": Param(
-            default="-1",
-            type="string",
-            description="--multipolygon-member-limit for ohsome-planet (-1 for unlimited, empty to skip)",
-        ),
-    },
+    params={},
     schedule=PBF_ASSET,
     tags=["geoparquet", "openplanetdata", "osm", "planet"],
 ) as dag:
@@ -122,12 +116,8 @@ with DAG(
 
             rm -rf {OHSOME_DIR}
             echo "Building ohsome contributions..."
-            EXTRA_OPTS=""
-            {{% if params.multipolygon_member_limit %}}
-            EXTRA_OPTS="--multipolygon-member-limit {{{{ params.multipolygon_member_limit }}}}"
-            {{% endif %}}
             time java -Xms96g -Xmx96g -jar "$JAR_PATH" \
-                contributions --pbf {SHARED_PLANET_OSM_PBF_PATH} --data {OHSOME_DIR} $EXTRA_OPTS
+                contributions --pbf {SHARED_PLANET_OSM_PBF_PATH} --data {OHSOME_DIR}
 
             echo "Contributions build complete"
             ls -lh {OHSOME_DIR}/contributions/latest/
