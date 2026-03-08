@@ -171,6 +171,7 @@ fi
     build_geoparquet = DockerOperator(
         task_id="build_geoparquet",
         task_display_name="Build GeoParquet with DuckDB",
+        execution_timeout=None,
         image=OPENPLANETDATA_IMAGE,
         command=["bash", "-c", f"""set -euo pipefail
 
