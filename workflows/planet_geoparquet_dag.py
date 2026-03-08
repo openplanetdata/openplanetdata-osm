@@ -12,7 +12,7 @@ import shutil
 from datetime import timedelta
 
 from airflow.providers.docker.operators.docker import DockerOperator
-from airflow.sdk import DAG, Asset, task
+from airflow.sdk import DAG, Asset, Param, task
 from docker.types import Mount
 from elaunira.airflow.providers.r2index.operators import DownloadItem, UploadItem
 from elaunira.r2index.storage import R2TransferConfig
@@ -52,7 +52,13 @@ with DAG(
     description="Build planet GeoParquet from OSM PBF using ohsome-planet and DuckDB",
     doc_md=__doc__,
     max_active_runs=1,
-    params={},
+    params={
+        "multipolygon_member_limit": Param(
+            default="-1",
+            type="string",
+            description="--multipolygon-member-limit for ohsome-planet (-1 for unlimited, 0 to disable, default 500 in ohsome-planet)",
+        ),
+    },
     schedule=PBF_ASSET,
     tags=["geoparquet", "openplanetdata", "osm", "planet"],
 ) as dag:
@@ -81,33 +87,16 @@ with DAG(
         command=f"""bash -c '
             set -euo pipefail
 
-            apt-get update -qq && apt-get install -y -qq curl git jq > /dev/null 2>&1
+            apt-get update -qq && apt-get install -y -qq git > /dev/null 2>&1
 
             mkdir -p {WORK_DIR}
 
-            # Get latest ohsome-planet release tag
-            OHSOME_TAG=""
-            for i in 1 2 3; do
-                RESPONSE=$(curl -sf https://api.github.com/repos/GIScience/ohsome-planet/releases/latest || true)
-                OHSOME_TAG=$(echo "$RESPONSE" | jq -r ".tag_name // empty" 2>/dev/null || true)
-                if [ -n "$OHSOME_TAG" ]; then
-                    echo "Using ohsome-planet release: $OHSOME_TAG"
-                    break
-                fi
-                echo "Attempt $i failed to fetch ohsome-planet release tag, retrying..."
-                sleep 2
-            done
-
-            if [ -z "$OHSOME_TAG" ]; then
-                echo "Failed to fetch ohsome-planet release tag after 3 attempts"
-                exit 1
-            fi
-
-            # Clone and build ohsome-planet
+            # Clone and build ohsome-planet from main branch
+            # (--multipolygon-member-limit support is not yet in a release)
             OHSOME_SRC="{WORK_DIR}/ohsome-planet"
             if [ ! -f "$OHSOME_SRC/mvnw" ]; then
                 rm -rf "$OHSOME_SRC"
-                git clone --branch "$OHSOME_TAG" --depth 1 --recurse-submodules \
+                git clone --depth 1 --recurse-submodules \
                     https://github.com/GIScience/ohsome-planet.git "$OHSOME_SRC"
             fi
             cd "$OHSOME_SRC"
@@ -117,7 +106,8 @@ with DAG(
             rm -rf {OHSOME_DIR}
             echo "Building ohsome contributions..."
             time java -Xms96g -Xmx96g -jar "$JAR_PATH" \
-                contributions --pbf {SHARED_PLANET_OSM_PBF_PATH} --data {OHSOME_DIR}
+                contributions --pbf {SHARED_PLANET_OSM_PBF_PATH} --data {OHSOME_DIR} \
+                --multipolygon-member-limit {{{{ params.multipolygon_member_limit }}}}
 
             echo "Contributions build complete"
             ls -lh {OHSOME_DIR}/contributions/latest/
