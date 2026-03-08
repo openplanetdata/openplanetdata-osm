@@ -94,11 +94,9 @@ with DAG(
             # Clone and build ohsome-planet from main branch
             # (--multipolygon-member-limit support is not yet in a release)
             OHSOME_SRC="{WORK_DIR}/ohsome-planet"
-            if [ ! -f "$OHSOME_SRC/mvnw" ]; then
-                rm -rf "$OHSOME_SRC"
-                git clone --depth 1 --recurse-submodules \
-                    https://github.com/GIScience/ohsome-planet.git "$OHSOME_SRC"
-            fi
+            rm -rf "$OHSOME_SRC"
+            git clone --depth 1 --recurse-submodules \
+                https://github.com/GIScience/ohsome-planet.git "$OHSOME_SRC"
             cd "$OHSOME_SRC"
             ./mvnw -q clean package -DskipTests
             JAR_PATH="$OHSOME_SRC/ohsome-planet-cli/target/ohsome-planet.jar"
