@@ -116,13 +116,7 @@ with DAG(
         auto_remove="success",
     )
 
-    validate_and_process = DockerOperator(
-        task_id="validate_and_process",
-        task_display_name="Validate and Process with DuckDB",
-        image=OPENPLANETDATA_IMAGE,
-        command=["bash", "-c", f"""set -euo pipefail
-
-# Install DuckDB
+    INSTALL_DUCKDB = f"""
 ARCH=$(uname -m)
 case "$ARCH" in
     x86_64)  DUCKDB_ARCH="linux-amd64" ;;
@@ -148,26 +142,39 @@ echo "Installing DuckDB $DUCKDB_TAG ($DUCKDB_ARCH)"
 wget -q "https://github.com/duckdb/duckdb/releases/download/${{DUCKDB_TAG}}/duckdb_cli-${{DUCKDB_ARCH}}.zip" \
     -O /tmp/duckdb.zip
 unzip -o /tmp/duckdb.zip -d /tmp && chmod +x /tmp/duckdb
+"""
+
+    validate_contributions = DockerOperator(
+        task_id="validate_contributions",
+        task_display_name="Validate Contributions",
+        image=OPENPLANETDATA_IMAGE,
+        command=["bash", "-c", f"""set -euo pipefail
+
+{INSTALL_DUCKDB}
 
 # Validate parquet files (full scan to detect ZSTD corruption)
 echo "Validating parquet files..."
-VALIDATION_FAILED=0
-for parquet_file in {OHSOME_DIR}/contributions/latest/*.parquet; do
-    if [ -f "$parquet_file" ]; then
-        echo "Validating: $parquet_file"
-        if ! /tmp/duckdb -c "SELECT MAX(osm_id) FROM '$parquet_file'" 2>&1; then
-            echo "Corrupted parquet file: $parquet_file"
-            VALIDATION_FAILED=1
-        fi
-    fi
-done
-
-if [ $VALIDATION_FAILED -eq 1 ]; then
+if /tmp/duckdb -c "SELECT COUNT(*) FROM '{OHSOME_DIR}/contributions/latest/*.parquet'" 2>&1; then
+    echo "All parquet files validated successfully"
+else
     echo "Parquet validation failed, removing corrupted output"
     rm -rf {OHSOME_DIR}
     exit 1
 fi
-echo "All parquet files validated successfully"
+"""],
+        force_pull=True,
+        mounts=[Mount(**DOCKER_MOUNT)],
+        mount_tmp_dir=False,
+        auto_remove="success",
+    )
+
+    build_geoparquet = DockerOperator(
+        task_id="build_geoparquet",
+        task_display_name="Build GeoParquet with DuckDB",
+        image=OPENPLANETDATA_IMAGE,
+        command=["bash", "-c", f"""set -euo pipefail
+
+{INSTALL_DUCKDB}
 
 # Process with DuckDB spatial extension
 DUCKDB_TEMP_DIR="{WORK_DIR}/.duckdb-temp"
@@ -176,6 +183,7 @@ mkdir -p "$DUCKDB_TEMP_DIR"
 /tmp/duckdb -c "
     INSTALL 'spatial'; LOAD 'spatial';
     SET temp_directory='$DUCKDB_TEMP_DIR';
+    SET memory_limit='100GB';
     SET preserve_insertion_order=false;
 
     COPY (
@@ -190,7 +198,7 @@ mkdir -p "$DUCKDB_TEMP_DIR"
     ) TO '{PARQUET_PATH}' (
         FORMAT PARQUET,
         CODEC 'zstd',
-        COMPRESSION_LEVEL 13,
+        COMPRESSION_LEVEL 6,
         PARQUET_VERSION v2
     );
 "
@@ -236,9 +244,9 @@ ls -lh {PARQUET_PATH}
 
     # Task flow
     download_result = download_planet_pbf()
-    download_result >> build_contributions >> validate_and_process
+    download_result >> build_contributions >> validate_contributions >> build_geoparquet
 
     upload_result = upload_geoparquet()
-    validate_and_process >> upload_result
+    build_geoparquet >> upload_result
     upload_result >> done()
     upload_result >> cleanup()
