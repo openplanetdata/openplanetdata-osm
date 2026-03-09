@@ -103,7 +103,7 @@ with DAG(
 
             rm -rf {OHSOME_DIR}
             echo "Building ohsome contributions..."
-            time java -Xms96g -Xmx96g -jar "$JAR_PATH" \
+            time java -Xms84g -Xmx84g -XX:+UseCompactObjectHeaders -jar "$JAR_PATH" \
                 contributions --pbf {SHARED_PLANET_OSM_PBF_PATH} --data {OHSOME_DIR} \
                 --multipolygon-member-limit {{{{ params.multipolygon_member_limit }}}}
 
