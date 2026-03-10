@@ -181,10 +181,19 @@ fi
 DUCKDB_TEMP_DIR="{WORK_DIR}/.duckdb-temp"
 mkdir -p "$DUCKDB_TEMP_DIR"
 
+echo "System memory:" && free -h
+echo "Input parquet files:"
+ls -lh {OHSOME_DIR}/contributions/latest/*.parquet | head -5
+echo "..."
+ls {OHSOME_DIR}/contributions/latest/*.parquet | wc -l
+echo " parquet file(s) total"
+echo "Starting DuckDB processing..."
+
+set +e
 /tmp/duckdb -c "
     INSTALL 'spatial'; LOAD 'spatial';
     SET temp_directory='$DUCKDB_TEMP_DIR';
-    SET memory_limit='100GB';
+    SET memory_limit='90GB';
     SET preserve_insertion_order=false;
 
     COPY (
@@ -203,6 +212,18 @@ mkdir -p "$DUCKDB_TEMP_DIR"
         PARQUET_VERSION v2
     );
 "
+DUCKDB_EXIT=$?
+set -e
+
+if [ $DUCKDB_EXIT -ne 0 ]; then
+    echo "DuckDB failed with exit code $DUCKDB_EXIT"
+    if [ $DUCKDB_EXIT -eq 137 ]; then
+        echo "Exit code 137 indicates the process was killed (likely OOM)"
+    fi
+    echo "System memory after failure:" && free -h
+    dmesg -T 2>/dev/null | tail -20 || true
+    exit $DUCKDB_EXIT
+fi
 
 rm -rf "$DUCKDB_TEMP_DIR"
 echo "GeoParquet processing complete"
