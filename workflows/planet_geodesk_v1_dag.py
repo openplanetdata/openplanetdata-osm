@@ -130,10 +130,12 @@ with DAG(
         """Upload GOL v1 to R2 (deprecated)."""
         return [UploadItem(
             category="openstreetmap",
+            name="OpenStreetMap Planet GOL",
+            subcategory="planet",
             destination_filename="planet-latest.osm.gol",
             destination_path="osm/planet/gol",
             destination_version="v1",
-            entity="planet",
+            entity="planet-gol",
             extension="gol",
             deprecated=True,
             deprecation_reason=(
@@ -142,7 +144,7 @@ with DAG(
             ),
             media_type="application/octet-stream",
             source=GOL_PATH,
-            tags=["deprecated", "geodesk", "gol", "openstreetmap", "public"],
+            tags=["deprecated", "geodesk", "gol", "openstreetmap"],
         )]
 
     @task(task_display_name="Done")

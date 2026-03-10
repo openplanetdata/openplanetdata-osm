@@ -122,14 +122,16 @@ with DAG(
         """Upload GOL v2 to R2."""
         return [UploadItem(
             category="openstreetmap",
+            name="OpenStreetMap Planet GOL",
+            subcategory="planet",
             destination_filename="planet-latest.osm.gol",
             destination_path="osm/planet/gol",
             destination_version="v2",
-            entity="planet",
+            entity="planet-gol",
             extension="gol",
             media_type="application/octet-stream",
             source=GOL_PATH,
-            tags=["geodesk", "gol", "openstreetmap", "public"],
+            tags=["geodesk", "gol", "openstreetmap"],
         )]
 
     @task.r2index_upload(
@@ -141,11 +143,13 @@ with DAG(
     def upload_gob() -> list[UploadItem]:
         """Upload GOB v2 to R2."""
         return [UploadItem(
-            category="gob",
+            category="openstreetmap",
+            name="OpenStreetMap Planet GOB",
+            subcategory="planet",
             destination_filename="planet-latest.osm.gob",
             destination_path="osm/planet/gob",
             destination_version="v2",
-            entity="planet",
+            entity="planet-gob",
             extension="gob",
             media_type="application/octet-stream",
             source=GOB_PATH,

@@ -224,14 +224,16 @@ ls -lh {PARQUET_PATH}
         """Upload planet GeoParquet to R2."""
         return [UploadItem(
             category="openstreetmap",
+            name="OpenStreetMap Planet GeoParquet",
+            subcategory="planet",
             destination_filename="planet-latest.osm.parquet",
             destination_path="osm/planet/geoparquet",
             destination_version="v1",
-            entity="planet",
+            entity="planet-geoparquet",
             extension="parquet",
             media_type="application/vnd.apache.parquet",
             source=PARQUET_PATH,
-            tags=["geoparquet", "openstreetmap", "public"],
+            tags=["geoparquet", "openstreetmap"],
         )]
 
     @task(task_display_name="Done")

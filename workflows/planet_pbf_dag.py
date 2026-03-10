@@ -155,14 +155,16 @@ with DAG(
         """Upload planet PBF to R2."""
         return [UploadItem(
             category="openstreetmap",
+            name="OpenStreetMap Planet PBF",
+            subcategory="planet",
             destination_filename="planet-latest.osm.pbf",
             destination_path="osm/planet/pbf",
             destination_version="v1",
-            entity="planet",
+            entity="planet-pbf",
             extension="pbf",
             media_type="application/x-protobuf",
             source=PBF_PATH,
-            tags=["openstreetmap", "pbf", "public"],
+            tags=["openstreetmap", "pbf"],
         )]
 
     @task(task_display_name="Copy to Shared Directory")
