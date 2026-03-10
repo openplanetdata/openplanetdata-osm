@@ -141,19 +141,19 @@ with DAG(
         r2index_conn_id=R2INDEX_CONNECTION_ID,
     )
     def upload_gob() -> list[UploadItem]:
-        """Upload GOB v2 to R2."""
+        """Upload GOB to R2."""
         return [UploadItem(
             category="openstreetmap",
             name="OpenStreetMap Planet GOB",
             subcategory="planet",
             destination_filename="planet-latest.osm.gob",
             destination_path="osm/planet/gob",
-            destination_version="v2",
+            destination_version="v1",
             entity="planet-gob",
             extension="gob",
             media_type="application/octet-stream",
             source=GOB_PATH,
-            tags=["geodesk", "gob", "gol", "openstreetmap", "public"],
+            tags=["geodesk", "gob", "gol", "openstreetmap"],
         )]
 
     @task(task_display_name="Copy GOL to Shared Directory")
