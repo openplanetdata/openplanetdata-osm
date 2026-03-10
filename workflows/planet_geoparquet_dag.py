@@ -181,7 +181,7 @@ fi
 DUCKDB_TEMP_DIR="{WORK_DIR}/.duckdb-temp"
 mkdir -p "$DUCKDB_TEMP_DIR"
 
-echo "System memory:" && free -h
+cat /proc/meminfo | head -3 || true
 echo "Input parquet files:"
 ls -lh {OHSOME_DIR}/contributions/latest/*.parquet | head -5
 echo "..."
@@ -220,8 +220,7 @@ if [ $DUCKDB_EXIT -ne 0 ]; then
     if [ $DUCKDB_EXIT -eq 137 ]; then
         echo "Exit code 137 indicates the process was killed (likely OOM)"
     fi
-    echo "System memory after failure:" && free -h
-    dmesg -T 2>/dev/null | tail -20 || true
+    cat /proc/meminfo | head -3 || true
     exit $DUCKDB_EXIT
 fi
 
