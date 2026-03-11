@@ -183,9 +183,9 @@ mkdir -p "$DUCKDB_TEMP_DIR"
 
 cat /proc/meminfo | head -3 || true
 echo "Input parquet files:"
-ls -lh {OHSOME_DIR}/contributions/latest/*.parquet | head -5
+ls -lh {OHSOME_DIR}/contributions/latest/*.parquet | head -5 || true
 echo "..."
-ls {OHSOME_DIR}/contributions/latest/*.parquet | wc -l
+ls {OHSOME_DIR}/contributions/latest/*.parquet | wc -l || true
 echo " parquet file(s) total"
 echo "Starting DuckDB processing..."
 
@@ -253,7 +253,7 @@ ls -lh {PARQUET_PATH}
             extension="parquet",
             media_type="application/vnd.apache.parquet",
             source=PARQUET_PATH,
-            tags=["geoparquet", "openstreetmap"],
+            tags=["aggregate", "geoparquet", "openstreetmap"],
         )]
 
     @task(task_display_name="Done")
