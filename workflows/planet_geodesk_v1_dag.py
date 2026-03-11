@@ -130,7 +130,7 @@ with DAG(
         """Upload GOL v1 to R2 (deprecated)."""
         return [UploadItem(
             category="openstreetmap",
-            name="OpenStreetMap Planet GOL",
+            name="Planet",
             subcategory="planet",
             destination_filename="planet-latest.osm.gol",
             destination_path="osm/planet/gol",

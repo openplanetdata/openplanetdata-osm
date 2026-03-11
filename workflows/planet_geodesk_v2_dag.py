@@ -122,7 +122,7 @@ with DAG(
         """Upload GOL v2 to R2."""
         return [UploadItem(
             category="openstreetmap",
-            name="OpenStreetMap Planet GOL",
+            name="Planet",
             subcategory="planet",
             destination_filename="planet-latest.osm.gol",
             destination_path="osm/planet/gol",
@@ -144,7 +144,7 @@ with DAG(
         """Upload GOB to R2."""
         return [UploadItem(
             category="openstreetmap",
-            name="OpenStreetMap Planet GOB",
+            name="Planet",
             subcategory="planet",
             destination_filename="planet-latest.osm.gob",
             destination_path="osm/planet/gob",

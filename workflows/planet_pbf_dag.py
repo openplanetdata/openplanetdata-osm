@@ -155,7 +155,7 @@ with DAG(
         """Upload planet PBF to R2."""
         return [UploadItem(
             category="openstreetmap",
-            name="OpenStreetMap Planet PBF",
+            name="Planet",
             subcategory="planet",
             destination_filename="planet-latest.osm.pbf",
             destination_path="osm/planet/pbf",
