@@ -193,7 +193,7 @@ set +e
 /tmp/duckdb -c "
     INSTALL 'spatial'; LOAD 'spatial';
     SET temp_directory='$DUCKDB_TEMP_DIR';
-    SET memory_limit='90GB';
+    SET memory_limit='65GB';
     SET preserve_insertion_order=false;
 
     COPY (
