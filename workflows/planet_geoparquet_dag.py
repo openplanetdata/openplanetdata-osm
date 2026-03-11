@@ -202,7 +202,17 @@ set +e
             osm_id,
             tags,
             bbox,
-            geometry
+            CASE
+                WHEN osm_type = 'relation'
+                     AND ST_NPoints(geometry) = 5
+                     AND ST_Equals(geometry, ST_Envelope(geometry))
+                     AND members IS NOT NULL
+                THEN ST_Collect(list_transform(
+                    list_filter(members, lambda m: m.geometry IS NOT NULL),
+                    lambda m: ST_GeomFromWKB(m.geometry)
+                ))
+                ELSE geometry
+            END AS geometry
         FROM '{OHSOME_DIR}/contributions/latest/*.parquet'
         ORDER BY bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax
     ) TO '{PARQUET_PATH}' (
