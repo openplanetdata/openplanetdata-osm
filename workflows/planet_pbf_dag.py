@@ -147,7 +147,6 @@ with DAG(
     @task.r2index_upload(
         task_display_name="Upload PBF to R2",
         bucket=R2_BUCKET,
-        outlets=[PBF_ASSET],
         r2index_conn_id=R2INDEX_CONNECTION_ID,
         transfer_config=R2TransferConfig(max_concurrency=16, multipart_chunksize=256 * 1024 * 1024),
     )
@@ -167,7 +166,7 @@ with DAG(
             tags=["openstreetmap", "pbf"],
         )]
 
-    @task(task_display_name="Copy to Shared Directory")
+    @task(task_display_name="Copy to Shared Directory", outlets=[PBF_ASSET])
     def copy_to_shared() -> None:
         """Copy planet PBF to shared directory for use by other DAGs."""
         import os
