@@ -115,7 +115,6 @@ with DAG(
     @task.r2index_upload(
         task_display_name="Upload GOL to R2",
         bucket=R2_BUCKET,
-        outlets=[GOL_V2_ASSET],
         r2index_conn_id=R2INDEX_CONNECTION_ID,
     )
     def upload_gol() -> list[UploadItem]:
@@ -156,7 +155,7 @@ with DAG(
             tags=["geodesk", "gob", "gol", "openstreetmap"],
         )]
 
-    @task(task_display_name="Copy GOL to Shared Directory")
+    @task(task_display_name="Copy GOL to Shared Directory", outlets=[GOL_V2_ASSET])
     def copy_to_shared() -> None:
         """Copy GOL to shared directory atomically for use by other DAGs."""
         os.makedirs(OPENPLANETDATA_SHARED_DIR, exist_ok=True)
