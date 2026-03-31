@@ -52,6 +52,7 @@ with DAG(
         "pool": "openplanetdata_osm",
         "queue": "cortex",
         "retries": 0,
+        "weight_rule": "elaunira.airflow.priority.OldestFirstPriorityStrategy",
     },
     description="Build GeoDesk GOL and GOB indexes from OSM planet PBF",
     doc_md=__doc__,

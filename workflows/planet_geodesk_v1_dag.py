@@ -47,6 +47,7 @@ with DAG(
         "pool": "openplanetdata_osm",
         "queue": "cortex",
         "retries": 0,
+        "weight_rule": "elaunira.airflow.priority.OldestFirstPriorityStrategy",
     },
     description="Build GeoDesk GOL v1 index from OSM planet PBF (deprecated)",
     doc_md=__doc__,

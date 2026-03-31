@@ -48,6 +48,7 @@ with DAG(
         "pool": "openplanetdata_osm",
         "queue": "cortex",
         "retries": 0,
+        "weight_rule": "elaunira.airflow.priority.OldestFirstPriorityStrategy",
     },
     description="Build planet GeoParquet from OSM PBF using ohsome-planet and DuckDB",
     doc_md=__doc__,

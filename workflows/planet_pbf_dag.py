@@ -41,6 +41,7 @@ with DAG(
         "pool": "openplanetdata_osm",
         "queue": "cortex",
         "retries": 0,
+        "weight_rule": "elaunira.airflow.priority.OldestFirstPriorityStrategy",
     },
     description="Daily OSM planet PBF download via torrent and replication update",
     doc_md=__doc__,
