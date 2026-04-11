@@ -164,11 +164,11 @@ with DAG(
         shutil.copy2(GOL_PATH, tmp_path)
         os.rename(tmp_path, SHARED_PLANET_OSM_GOL_PATH)
 
-    @task(task_display_name="Done")
+    @task(task_id="osm_geodesk_v2_done", task_display_name="Done")
     def done() -> None:
         """No-op gate task to propagate upstream failures to DAG run state."""
 
-    @task(task_display_name="Cleanup", trigger_rule="all_done")
+    @task(task_id="osm_geodesk_v2_cleanup", task_display_name="Cleanup", trigger_rule="all_done")
     def cleanup() -> None:
         """Clean up working directory."""
         shutil.rmtree(WORK_DIR, ignore_errors=True)
