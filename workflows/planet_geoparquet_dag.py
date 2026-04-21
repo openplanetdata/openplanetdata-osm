@@ -109,7 +109,7 @@ with DAG(
                 --multipolygon-member-limit {{{{ params.multipolygon_member_limit }}}}
 
             echo "Contributions build complete"
-            ls -lh {OHSOME_DIR}/contributions/latest/
+            ls -lh {OHSOME_DIR}/contributions/
         '""",
         force_pull=True,
         mounts=[Mount(**DOCKER_MOUNT)],
@@ -155,7 +155,7 @@ unzip -o /tmp/duckdb.zip -d /tmp && chmod +x /tmp/duckdb
 
 # Validate parquet files (full scan to detect ZSTD corruption)
 echo "Validating parquet files..."
-if /tmp/duckdb -c "SELECT COUNT(*) FROM '{OHSOME_DIR}/contributions/latest/*.parquet'" 2>&1; then
+if /tmp/duckdb -c "SELECT COUNT(*) FROM '{OHSOME_DIR}/contributions/*.parquet'" 2>&1; then
     echo "All parquet files validated successfully"
 else
     echo "Parquet validation failed, removing corrupted output"
@@ -184,9 +184,9 @@ mkdir -p "$DUCKDB_TEMP_DIR"
 
 cat /proc/meminfo | head -3 || true
 echo "Input parquet files:"
-ls -lh {OHSOME_DIR}/contributions/latest/*.parquet | head -5 || true
+ls -lh {OHSOME_DIR}/contributions/*.parquet | head -5 || true
 echo "..."
-ls {OHSOME_DIR}/contributions/latest/*.parquet | wc -l || true
+ls {OHSOME_DIR}/contributions/*.parquet | wc -l || true
 echo " parquet file(s) total"
 echo "Starting DuckDB processing..."
 
@@ -214,7 +214,7 @@ set +e
                 ))
                 ELSE geometry
             END AS geometry
-        FROM '{OHSOME_DIR}/contributions/latest/*.parquet'
+        FROM '{OHSOME_DIR}/contributions/*.parquet'
         ORDER BY bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax
     ) TO '{PARQUET_PATH}' (
         FORMAT PARQUET,
