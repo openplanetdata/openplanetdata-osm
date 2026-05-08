@@ -8,6 +8,7 @@ Schedule: Triggered by openplanetdata-osm-planet-pbf Asset
 Produces Asset: openplanetdata-osm-planet-geoparquet
 """
 
+import os
 import shutil
 from datetime import timedelta
 
@@ -80,6 +81,13 @@ with DAG(
             source_version="v1",
             verify_checksum=False,
         )
+
+    @task(task_display_name="Prepare Work Directory")
+    def prepare_work_dir() -> None:
+        # Pre-create WORK_DIR as the airflow user. The next task (build_contributions)
+        # runs as root in eclipse-temurin and would otherwise own WORK_DIR, blocking
+        # the later airflow-user task from creating .duckdb-temp inside it.
+        os.makedirs(WORK_DIR, exist_ok=True)
 
     build_contributions = DockerOperator(
         task_id="build_contributions",
@@ -278,7 +286,7 @@ ls -lh {PARQUET_PATH}
 
     # Task flow
     download_result = download_planet_pbf()
-    download_result >> build_contributions >> validate_contributions >> build_geoparquet
+    download_result >> prepare_work_dir() >> build_contributions >> validate_contributions >> build_geoparquet
 
     upload_result = upload_geoparquet()
     build_geoparquet >> upload_result
