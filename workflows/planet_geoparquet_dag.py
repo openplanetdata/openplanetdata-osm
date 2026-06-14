@@ -13,7 +13,7 @@ import shutil
 from datetime import timedelta
 
 from airflow.providers.docker.operators.docker import DockerOperator
-from airflow.sdk import DAG, Asset, Param, task
+from airflow.sdk import DAG, Asset, task
 from docker.types import Mount
 from elaunira.airflow.providers.r2index.operators import DownloadItem, UploadItem
 from elaunira.r2index.storage import R2TransferConfig
@@ -54,13 +54,6 @@ with DAG(
     description="Build planet GeoParquet from OSM PBF using ohsome-planet and DuckDB",
     doc_md=__doc__,
     max_active_runs=1,
-    params={
-        "multipolygon_member_limit": Param(
-            default="-1",
-            type="string",
-            description="--multipolygon-member-limit for ohsome-planet (-1 for unlimited, 0 to disable, default 500 in ohsome-planet)",
-        ),
-    },
     schedule=PBF_ASSET,
     tags=["geoparquet", "openplanetdata", "osm", "planet"],
 ) as dag:
@@ -101,7 +94,6 @@ with DAG(
             mkdir -p {WORK_DIR}
 
             # Clone and build ohsome-planet from main branch
-            # (--multipolygon-member-limit support is not yet in a release)
             OHSOME_SRC="{WORK_DIR}/ohsome-planet"
             rm -rf "$OHSOME_SRC"
             git clone --depth 1 --recurse-submodules \
@@ -113,8 +105,7 @@ with DAG(
             rm -rf {OHSOME_DIR}
             echo "Building ohsome contributions..."
             time java -Xms84g -Xmx84g -XX:+UseCompactObjectHeaders -jar "$JAR_PATH" \
-                contributions --pbf {SHARED_PLANET_OSM_PBF_PATH} --data {OHSOME_DIR} \
-                --multipolygon-member-limit {{{{ params.multipolygon_member_limit }}}}
+                contributions --pbf {SHARED_PLANET_OSM_PBF_PATH} --data {OHSOME_DIR}
 
             echo "Contributions build complete"
             ls -lh {OHSOME_DIR}/contributions/
