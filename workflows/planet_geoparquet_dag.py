@@ -9,7 +9,6 @@ Produces Asset: openplanetdata-osm-planet-geoparquet
 """
 
 import os
-import shutil
 from datetime import timedelta
 
 from airflow.providers.docker.operators.docker import DockerOperator
@@ -308,10 +307,17 @@ echo "All (osm_type, osm_id) pairs are unique"
     def done() -> None:
         """No-op gate task to propagate upstream failures to DAG run state."""
 
-    @task(task_id="osm_geoparquet_cleanup", task_display_name="Cleanup")
-    def cleanup() -> None:
-        """Clean up working directory after successful run."""
-        shutil.rmtree(WORK_DIR, ignore_errors=True)
+    # Runs in a container as root: the ohsome/duckdb outputs are root-owned, so
+    # removing them from the airflow user would silently fail
+    cleanup = DockerOperator(
+        task_id="osm_geoparquet_cleanup",
+        task_display_name="Cleanup",
+        image=OPENPLANETDATA_IMAGE,
+        command=["bash", "-c", f"rm -rf {WORK_DIR}"],
+        mounts=[Mount(**DOCKER_MOUNT)],
+        mount_tmp_dir=False,
+        auto_remove="success",
+    )
 
     # Task flow
     download_result = download_planet_pbf()
@@ -320,4 +326,4 @@ echo "All (osm_type, osm_id) pairs are unique"
     upload_result = upload_geoparquet()
     validate_geoparquet >> upload_result
     upload_result >> done()
-    upload_result >> cleanup()
+    upload_result >> cleanup
