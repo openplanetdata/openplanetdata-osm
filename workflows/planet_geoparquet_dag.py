@@ -214,6 +214,7 @@ set +e
                 ELSE geometry
             END AS geometry
         FROM '{OHSOME_DIR}/contributions/*.parquet'
+        WHERE status = 'latest'
         ORDER BY bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax
     ) TO '{PARQUET_PATH}' (
         FORMAT PARQUET,
