@@ -26,6 +26,7 @@ from openplanetdata.airflow.defaults import (
     SHARED_PLANET_OSM_PBF_PATH,
 )
 
+OHSOME_PLANET_VERSION = "1.3.1"
 WORK_DIR = f"{OPENPLANETDATA_WORK_DIR}/osm/geoparquet"
 OHSOME_DIR = f"{WORK_DIR}/ohsome-output"
 PARQUET_PATH = f"{WORK_DIR}/planet-latest.osm.parquet"
@@ -93,10 +94,10 @@ with DAG(
 
             mkdir -p {WORK_DIR}
 
-            # Clone and build ohsome-planet from main branch
+            # Clone and build ohsome-planet at a pinned release tag
             OHSOME_SRC="{WORK_DIR}/ohsome-planet"
             rm -rf "$OHSOME_SRC"
-            git clone --depth 1 --recurse-submodules \
+            git clone --depth 1 --branch {OHSOME_PLANET_VERSION} --recurse-submodules \
                 https://github.com/GIScience/ohsome-planet.git "$OHSOME_SRC"
             cd "$OHSOME_SRC"
             ./mvnw -q clean package -DskipTests
