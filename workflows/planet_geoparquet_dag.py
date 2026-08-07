@@ -182,6 +182,10 @@ fi
 DUCKDB_TEMP_DIR="{WORK_DIR}/.duckdb-temp"
 mkdir -p "$DUCKDB_TEMP_DIR"
 
+# Remove any output left by a previous run so a failure here can never
+# let the upload task publish a stale file
+rm -f "{PARQUET_PATH}" "{PARQUET_PATH}.tmp"
+
 cat /proc/meminfo | head -3 || true
 echo "Input parquet files:"
 ls -lh {OHSOME_DIR}/contributions/*.parquet | head -5 || true
@@ -217,7 +221,7 @@ set +e
         FROM '{OHSOME_DIR}/contributions/*.parquet'
         WHERE status = 'latest'
         ORDER BY bbox.xmin, bbox.ymin, bbox.xmax, bbox.ymax
-    ) TO '{PARQUET_PATH}' (
+    ) TO '{PARQUET_PATH}.tmp' (
         FORMAT PARQUET,
         CODEC 'zstd',
         COMPRESSION_LEVEL 6,
@@ -237,6 +241,7 @@ if [ $DUCKDB_EXIT -ne 0 ]; then
 fi
 
 rm -rf "$DUCKDB_TEMP_DIR"
+mv "{PARQUET_PATH}.tmp" "{PARQUET_PATH}"
 echo "GeoParquet processing complete"
 ls -lh {PARQUET_PATH}
 """],
