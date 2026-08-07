@@ -251,6 +251,37 @@ ls -lh {PARQUET_PATH}
         auto_remove="success",
     )
 
+    validate_geoparquet = DockerOperator(
+        task_id="validate_geoparquet",
+        task_display_name="Validate GeoParquet",
+        image=OPENPLANETDATA_IMAGE,
+        command=["bash", "-c", f"""set -euo pipefail
+
+{INSTALL_DUCKDB}
+
+DUCKDB_TEMP_DIR="{WORK_DIR}/.duckdb-temp-validate"
+mkdir -p "$DUCKDB_TEMP_DIR"
+
+echo "Checking (osm_type, osm_id) uniqueness..."
+DUPLICATE_ROWS=$(/tmp/duckdb -csv -noheader -c "
+    SET temp_directory='$DUCKDB_TEMP_DIR';
+    SET memory_limit='65GB';
+    SELECT count(*) - count(DISTINCT (osm_type, osm_id)) FROM '{PARQUET_PATH}';
+")
+rm -rf "$DUCKDB_TEMP_DIR"
+
+if [ "$DUPLICATE_ROWS" != "0" ]; then
+    echo "Found $DUPLICATE_ROWS rows with duplicate (osm_type, osm_id), refusing to publish"
+    exit 1
+fi
+echo "All (osm_type, osm_id) pairs are unique"
+"""],
+        force_pull=True,
+        mounts=[Mount(**DOCKER_MOUNT)],
+        mount_tmp_dir=False,
+        auto_remove="success",
+    )
+
     @task.r2index_upload(
         task_display_name="Upload GeoParquet to R2",
         bucket=R2_BUCKET,
@@ -284,9 +315,9 @@ ls -lh {PARQUET_PATH}
 
     # Task flow
     download_result = download_planet_pbf()
-    download_result >> prepare_work_dir() >> build_contributions >> validate_contributions >> build_geoparquet
+    download_result >> prepare_work_dir() >> build_contributions >> validate_contributions >> build_geoparquet >> validate_geoparquet
 
     upload_result = upload_geoparquet()
-    build_geoparquet >> upload_result
+    validate_geoparquet >> upload_result
     upload_result >> done()
     upload_result >> cleanup()
