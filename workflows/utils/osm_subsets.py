@@ -180,8 +180,8 @@ def prepare_boundary(code: str, boundaries_dir: str) -> str | None:
 
     try:
         sql = (
-            f"SELECT ST_SimplifyPreserveTopology(ST_Buffer(ST_Union(geom), {BOUNDARY_BUFFER_DEG}), "
-            f"{BOUNDARY_SIMPLIFY_DEG}) AS geom FROM boundary"
+            f"SELECT ST_SimplifyPreserveTopology(ST_Buffer(ST_Union(geometry), {BOUNDARY_BUFFER_DEG}), "
+            f"{BOUNDARY_SIMPLIFY_DEG}) AS geometry FROM boundary"
         )
         args = shlex.join([
             "ogr2ogr", "-f", "GeoJSON", prepared_path, raw_path,
