@@ -307,12 +307,13 @@ echo "All (osm_type, osm_id) pairs are unique"
     def done() -> None:
         """No-op gate task to propagate upstream failures to DAG run state."""
 
-    # Runs in a container as root: the ohsome/duckdb outputs are root-owned, so
-    # removing them from the airflow user would silently fail
+    # Must run as root: the image defaults to USER airflow, but the ohsome
+    # output is root-owned (written by eclipse-temurin running as root)
     cleanup = DockerOperator(
         task_id="osm_geoparquet_cleanup",
         task_display_name="Cleanup",
         image=OPENPLANETDATA_IMAGE,
+        user="root",
         command=["bash", "-c", f"rm -rf {WORK_DIR}"],
         mounts=[Mount(**DOCKER_MOUNT)],
         mount_tmp_dir=False,
