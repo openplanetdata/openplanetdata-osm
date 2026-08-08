@@ -193,9 +193,13 @@ def prepare_boundary(code: str, boundaries_dir: str) -> str | None:
     try:
         # Pre-simplify each input geometry BEFORE union/buffer: buffering the
         # full-resolution coastline is what exhausts memory, not the union.
+        # Plain ST_Simplify (Douglas-Peucker), not ST_SimplifyPreserveTopology:
+        # the topology-preserving variant needs >1h of CPU on the ~25M-vertex
+        # europe boundary while DP takes seconds. DP may self-intersect, so
+        # ST_Buffer(.., 0) repairs each geometry before the union.
         sql = (
             f"SELECT ST_SimplifyPreserveTopology(ST_Buffer(ST_Union("
-            f"ST_SimplifyPreserveTopology(geometry, {BOUNDARY_PRESIMPLIFY_DEG})), "
+            f"ST_Buffer(ST_Simplify(geometry, {BOUNDARY_PRESIMPLIFY_DEG}), 0)), "
             f"{BOUNDARY_BUFFER_DEG}), {BOUNDARY_SIMPLIFY_DEG}) AS geometry FROM boundary"
         )
         args = shlex.join([
