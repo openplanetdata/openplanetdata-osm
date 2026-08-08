@@ -5,9 +5,12 @@ Schedule: manual trigger only.
 
 Runs the full subset pipeline (gol query -> PBF, gol build -> GOL, gol save ->
 GOB, DuckDB -> GeoParquet) for one continent (europe), one country with
-overseas territories (FR) and one region (FR-IDF), printing per-step wall
-times and output sizes. Use the numbers to calibrate the daily/weekly cadence
-of the subsets DAGs.
+overseas territories (FR) and one region (FR-IDF). Each subset step is its own
+Airflow task (prepare boundary / build files / geoparquet per subset), so
+progress and per-step wall times are visible directly in the UI and a crash
+loses at most one step's log. The final report task aggregates the timings
+into a summary. Use the numbers to calibrate the daily/weekly cadence of the
+subsets DAGs.
 
 Also verifies extract semantics:
 - the FR PBF includes overseas territories (Reunion bbox must match features)
@@ -58,6 +61,14 @@ def _utils():
     from workflows.utils import osm_subsets
 
     return osm_subsets
+
+
+def _print_sizes(code: str, level: str) -> None:
+    subset_dir = f"{WORK_DIR}/{level}/{code}"
+    print(f"[{code}] output sizes:")
+    for entry in sorted(os.listdir(subset_dir)):
+        size = os.path.getsize(f"{subset_dir}/{entry}")
+        print(f"  {entry}: {size / 1024**3:,.2f} GiB")
 
 
 with DAG(
@@ -136,26 +147,15 @@ with DAG(
             with open(raw_path, "w", encoding="utf-8") as fh:
                 json.dump(data, fh)
 
-    @task(task_display_name="Run Benchmark", execution_timeout=timedelta(hours=8))
-    def run_benchmark() -> None:
-        """Run the timed pipeline for each benchmark subset and print a report."""
-        from airflow.exceptions import AirflowException
+    @task(task_display_name="Reset Previous Outputs")
+    def reset_outputs() -> None:
+        """Remove outputs of previous benchmark runs.
 
+        The pipeline helpers skip existing outputs, which would turn re-run
+        timings into no-ops.
+        """
         import shutil
 
-        subsets = _utils()
-        timings: list[tuple[str, str, float]] = []
-
-        def timed(code: str, step: str, fn):
-            start = time.monotonic()
-            result = fn()
-            elapsed = time.monotonic() - start
-            timings.append((code, step, elapsed))
-            print(f"[{code}] {step}: {elapsed:,.1f}s")
-            return result
-
-        # Remove outputs of previous benchmark runs: the pipeline helpers skip
-        # existing outputs, which would turn re-run timings into no-ops.
         for code, level, _path, _filename in BENCHMARK_SUBSETS:
             shutil.rmtree(f"{WORK_DIR}/{level}/{code}", ignore_errors=True)
             for leftover in (f"{WORK_DIR}/{level}/{code}.done", f"{BOUNDARIES_DIR}/{code}.meta.json",
@@ -163,35 +163,59 @@ with DAG(
                 if os.path.exists(leftover):
                     os.remove(leftover)
 
-        for code, level, _path, _filename in BENCHMARK_SUBSETS:
-            level_dir = f"{WORK_DIR}/{level}"
-            os.makedirs(level_dir, exist_ok=True)
+    @task
+    def prepare_boundary(code: str) -> dict:
+        """Buffer + simplify one boundary; fail loudly if preparation fails."""
+        from airflow.exceptions import AirflowException
 
-            failure = timed(code, "prepare boundary", lambda c=code: subsets.prepare_boundary(c, BOUNDARIES_DIR))
-            if failure is not None:
-                raise AirflowException(f"[{code}] boundary preparation failed")
+        subsets = _utils()
+        start = time.monotonic()
+        failure = subsets.prepare_boundary(code, BOUNDARIES_DIR)
+        elapsed = time.monotonic() - start
+        print(f"[{code}] prepare boundary: {elapsed:,.1f}s")
+        if failure is not None:
+            raise AirflowException(f"[{code}] boundary preparation failed")
+        return {"code": code, "step": "prepare boundary", "elapsed": elapsed}
 
-            result = timed(
-                code, "pbf + gol + gob",
-                lambda c=code, ld=level_dir: subsets.build_subset_files(c, ld, BOUNDARIES_DIR, SNAPSHOT_GOL),
-            )
-            if result is not None:
-                raise AirflowException(f"[{code}] pipeline failed: {result}")
+    @task
+    def build_files(code: str, level: str) -> dict:
+        """gol query -> PBF, gol build -> GOL, gol save -> GOB for one subset."""
+        from airflow.exceptions import AirflowException
 
-            parquet_failed = timed(
-                code, "geoparquet",
-                lambda c=code, ld=level_dir: subsets.run_parquet_batch(
-                    [c], ld, BOUNDARIES_DIR, SNAPSHOT_PARQUET, WORK_DIR,
-                ),
-            )
-            if parquet_failed:
-                raise AirflowException(f"[{code}] parquet extraction failed")
+        subsets = _utils()
+        level_dir = f"{WORK_DIR}/{level}"
+        os.makedirs(level_dir, exist_ok=True)
+        start = time.monotonic()
+        result = subsets.build_subset_files(code, level_dir, BOUNDARIES_DIR, SNAPSHOT_GOL)
+        elapsed = time.monotonic() - start
+        print(f"[{code}] pbf + gol + gob: {elapsed:,.1f}s")
+        if result is not None:
+            raise AirflowException(f"[{code}] pipeline failed: {result}")
+        _print_sizes(code, level)
+        return {"code": code, "step": "pbf + gol + gob", "elapsed": elapsed}
 
-            subset_dir = f"{level_dir}/{code}"
-            print(f"[{code}] output sizes:")
-            for entry in sorted(os.listdir(subset_dir)):
-                size = os.path.getsize(f"{subset_dir}/{entry}")
-                print(f"  {entry}: {size / 1024**3:,.2f} GiB")
+    @task
+    def build_geoparquet(code: str, level: str) -> dict:
+        """Extract one subset GeoParquet from the planet GeoParquet snapshot."""
+        from airflow.exceptions import AirflowException
+
+        subsets = _utils()
+        level_dir = f"{WORK_DIR}/{level}"
+        start = time.monotonic()
+        failed = subsets.run_parquet_batch([code], level_dir, BOUNDARIES_DIR, SNAPSHOT_PARQUET, WORK_DIR)
+        elapsed = time.monotonic() - start
+        print(f"[{code}] geoparquet: {elapsed:,.1f}s")
+        if failed:
+            raise AirflowException(f"[{code}] parquet extraction failed")
+        _print_sizes(code, level)
+        return {"code": code, "step": "geoparquet", "elapsed": elapsed}
+
+    @task(task_display_name="Verify Semantics & Report")
+    def verify_and_report(timings: list[dict]) -> None:
+        """Check overseas-territory semantics on FR and print the timing summary."""
+        from airflow.exceptions import AirflowException
+
+        subsets = _utils()
 
         # Semantics check: FR must include Reunion (overseas territory).
         minx, miny, maxx, maxy = REUNION_BBOX
@@ -224,11 +248,12 @@ with DAG(
         print("[FR] Reunion present in subset GOL")
 
         print("\n=== Benchmark summary ===")
-        for code, step, elapsed in timings:
-            print(f"{code:10s} {step:20s} {elapsed:10,.1f}s")
+        for timing in timings:
+            print(f"{timing['code']:10s} {timing['step']:20s} {timing['elapsed']:10,.1f}s")
         print(f"\nOutputs kept in {WORK_DIR} for inspection - remove manually when done.")
 
-    # Task flow
+    # Task flow: one prepare/build/geoparquet chain per subset, run
+    # sequentially (max_active_tasks=1) so timings never overlap.
     snapshot = snapshot_inputs()
     downloads = [
         download_boundary.override(task_id=f"download_boundary_{code.lower().replace('-', '_')}")(
@@ -236,9 +261,31 @@ with DAG(
         )
         for code, _level, path, filename in BENCHMARK_SUBSETS
     ]
-    duckdb_install = install_duckdb()
     normalized = normalize_boundaries()
+    duckdb_install = install_duckdb()
+    reset = reset_outputs()
 
-    benchmark = run_benchmark()
     snapshot >> downloads
-    downloads >> normalized >> duckdb_install >> benchmark
+    downloads >> normalized >> duckdb_install >> reset
+
+    timings = []
+    previous = reset
+    for code, level, _path, _filename in BENCHMARK_SUBSETS:
+        slug = code.lower().replace("-", "_")
+        prepared = prepare_boundary.override(
+            task_id=f"prepare_boundary_{slug}",
+            task_display_name=f"Prepare Boundary [{code}]",
+        )(code)
+        built = build_files.override(
+            task_id=f"build_files_{slug}",
+            task_display_name=f"Build PBF/GOL/GOB [{code}]",
+        )(code, level)
+        parquet = build_geoparquet.override(
+            task_id=f"build_geoparquet_{slug}",
+            task_display_name=f"Build GeoParquet [{code}]",
+        )(code, level)
+        previous >> prepared >> built >> parquet
+        timings += [prepared, built, parquet]
+        previous = parquet
+
+    verify_and_report(timings=timings)
