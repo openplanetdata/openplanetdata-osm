@@ -217,6 +217,13 @@ def prepare_boundary(code: str, boundaries_dir: str) -> str | None:
             print(f"[{code}] Boundary simplification produced no geometry, skipping")
             return code
 
+        # gol's --area parser only accepts a bare GeoJSON geometry object; a
+        # Feature/FeatureCollection wrapper fails with "area: Expected string".
+        tmp_path = f"{prepared_path}.tmp"
+        with open(tmp_path, "w", encoding="utf-8") as fh:
+            json.dump(geometry, fh)
+        os.rename(tmp_path, prepared_path)
+
         minx, miny, maxx, maxy = _geometry_bbox(geometry)
         with open(meta_path, "w", encoding="utf-8") as fh:
             json.dump({"bbox": [minx, miny, maxx, maxy], "geometry": geometry}, fh)
