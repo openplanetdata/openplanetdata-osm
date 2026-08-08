@@ -10,11 +10,15 @@ the daily planet artifacts:
               row-group pruning + ST_Intersects with the boundary)
 
 Boundary polygons come from the openplanetdata-boundaries planet aggregates and
-are buffered (0.02 deg) then simplified (0.01 deg) once per run: the raw
-coastline-clipped boundaries have millions of vertices, which would cripple
-both gol's and DuckDB's point-in-polygon tests. The buffer keeps a superset of
-the land boundary so nearshore objects are retained; deep-offshore objects are
-excluded (land-extract semantics).
+are pre-simplified (0.005 deg) per input geometry, then unioned, buffered
+(0.02 deg) and simplified (0.01 deg) once per run: the raw coastline-clipped
+boundaries have millions of vertices (europe is a ~620 MB GeoJSON), which
+would cripple both gol's and DuckDB's point-in-polygon tests - and buffering
+them at full resolution exhausts GEOS memory (a full-res europe buffer got
+OOM-killed along with the edge worker). Pre-simplification error (0.005) plus
+final simplification error (0.01) stays below the 0.02 buffer, so the result
+remains a superset of the land boundary: nearshore objects are retained,
+deep-offshore objects are excluded (land-extract semantics).
 """
 
 from __future__ import annotations
@@ -34,6 +38,12 @@ from openplanetdata.airflow.defaults import (
 
 BOUNDARY_BUFFER_DEG = 0.02
 BOUNDARY_SIMPLIFY_DEG = 0.01
+BOUNDARY_PRESIMPLIFY_DEG = 0.005
+
+# Hard cap for the boundary-prep GDAL container: a runaway ST_Buffer must die
+# alone instead of triggering the host OOM killer (which also takes down the
+# Airflow edge worker and loses the task logs).
+BOUNDARY_PREP_MEM_LIMIT = "64g"
 
 # A PBF smaller than this holds only a header: the boundary matched nothing.
 EMPTY_PBF_THRESHOLD_BYTES = 1024
@@ -84,6 +94,7 @@ def run_in_container(
     image: str = OPENPLANETDATA_IMAGE,
     env: dict | None = None,
     stdout_only: bool = False,
+    mem_limit: str | None = None,
 ) -> bytes:
     """Run a shell command in a Docker container with the /data mount.
 
@@ -110,6 +121,7 @@ def run_in_container(
         command=f"bash -c {shlex.quote(cmd)}",
         detach=True,
         environment=env or {},
+        mem_limit=mem_limit,
         mounts=[Mount(**DOCKER_MOUNT)],
         user=DOCKER_USER,
     )
@@ -179,15 +191,19 @@ def prepare_boundary(code: str, boundaries_dir: str) -> str | None:
         return None
 
     try:
+        # Pre-simplify each input geometry BEFORE union/buffer: buffering the
+        # full-resolution coastline is what exhausts memory, not the union.
         sql = (
-            f"SELECT ST_SimplifyPreserveTopology(ST_Buffer(ST_Union(geometry), {BOUNDARY_BUFFER_DEG}), "
-            f"{BOUNDARY_SIMPLIFY_DEG}) AS geometry FROM boundary"
+            f"SELECT ST_SimplifyPreserveTopology(ST_Buffer(ST_Union("
+            f"ST_SimplifyPreserveTopology(geometry, {BOUNDARY_PRESIMPLIFY_DEG})), "
+            f"{BOUNDARY_BUFFER_DEG}), {BOUNDARY_SIMPLIFY_DEG}) AS geometry FROM boundary"
         )
         args = shlex.join([
             "ogr2ogr", "-f", "GeoJSON", prepared_path, raw_path,
             "-dialect", "sqlite", "-sql", sql,
         ])
-        run_in_container(args, image=GDAL_FULL_IMAGE, env={"OGR_GEOJSON_MAX_OBJ_SIZE": "0"})
+        run_in_container(args, image=GDAL_FULL_IMAGE, env={"OGR_GEOJSON_MAX_OBJ_SIZE": "0"},
+                         mem_limit=BOUNDARY_PREP_MEM_LIMIT)
 
         with open(prepared_path, "r", encoding="utf-8") as fh:
             prepared = json.load(fh)
