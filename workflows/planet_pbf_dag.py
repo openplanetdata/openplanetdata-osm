@@ -169,11 +169,17 @@ with DAG(
 
     @task(task_display_name="Copy to Shared Directory", outlets=[PBF_ASSET])
     def copy_to_shared() -> None:
-        """Copy planet PBF to shared directory for use by other DAGs."""
+        """Copy planet PBF to shared directory atomically for use by other DAGs."""
         import os
 
         os.makedirs(OPENPLANETDATA_SHARED_DIR, exist_ok=True)
-        shutil.copy2(PBF_PATH, SHARED_PLANET_OSM_PBF_PATH)
+        tmp_path = f"{SHARED_PLANET_OSM_PBF_PATH}.tmp"
+        try:
+            shutil.copy2(PBF_PATH, tmp_path)
+            os.rename(tmp_path, SHARED_PLANET_OSM_PBF_PATH)
+        finally:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
 
     @task(task_id="osm_pbf_done", task_display_name="Done")
     def done() -> None:

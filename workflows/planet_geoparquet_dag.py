@@ -9,6 +9,7 @@ Produces Asset: openplanetdata-osm-planet-geoparquet
 """
 
 import os
+import shutil
 from datetime import timedelta
 
 from airflow.providers.docker.operators.docker import DockerOperator
@@ -19,9 +20,11 @@ from elaunira.r2index.storage import R2TransferConfig
 from openplanetdata.airflow.defaults import (
     DOCKER_MOUNT,
     OPENPLANETDATA_IMAGE,
+    OPENPLANETDATA_SHARED_DIR,
     OPENPLANETDATA_WORK_DIR,
     R2_BUCKET,
     R2INDEX_CONNECTION_ID,
+    SHARED_PLANET_OSM_PARQUET_PATH,
     SHARED_PLANET_OSM_PBF_PATH,
 )
 
@@ -37,6 +40,10 @@ PBF_ASSET = Asset(
 GEOPARQUET_ASSET = Asset(
     name="openplanetdata-osm-planet-geoparquet",
     uri=f"s3://{R2_BUCKET}/osm/planet/geoparquet/v1/planet-latest.osm.parquet",
+)
+GEOPARQUET_SHARED_ASSET = Asset(
+    name="openplanetdata-osm-planet-geoparquet-shared",
+    uri=f"file://{SHARED_PLANET_OSM_PARQUET_PATH}",
 )
 
 with DAG(
@@ -303,6 +310,18 @@ echo "All (osm_type, osm_id) pairs are unique"
             tags=["aggregate", "geoparquet", "openstreetmap"],
         )]
 
+    @task(task_display_name="Copy to Shared Directory", outlets=[GEOPARQUET_SHARED_ASSET])
+    def copy_to_shared() -> None:
+        """Copy planet GeoParquet to shared directory atomically for use by other DAGs."""
+        os.makedirs(OPENPLANETDATA_SHARED_DIR, exist_ok=True)
+        tmp_path = f"{SHARED_PLANET_OSM_PARQUET_PATH}.tmp"
+        try:
+            shutil.copy2(PARQUET_PATH, tmp_path)
+            os.rename(tmp_path, SHARED_PLANET_OSM_PARQUET_PATH)
+        finally:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+
     @task(task_id="osm_geoparquet_done", task_display_name="Done")
     def done() -> None:
         """No-op gate task to propagate upstream failures to DAG run state."""
@@ -312,6 +331,7 @@ echo "All (osm_type, osm_id) pairs are unique"
     cleanup = DockerOperator(
         task_id="osm_geoparquet_cleanup",
         task_display_name="Cleanup",
+        trigger_rule="all_done",
         image=OPENPLANETDATA_IMAGE,
         user="root",
         command=["bash", "-c", f"rm -rf {WORK_DIR}"],
@@ -326,5 +346,7 @@ echo "All (osm_type, osm_id) pairs are unique"
 
     upload_result = upload_geoparquet()
     validate_geoparquet >> upload_result
-    upload_result >> done()
-    upload_result >> cleanup
+    copy_result = copy_to_shared()
+    upload_result >> copy_result
+    copy_result >> done()
+    copy_result >> cleanup
