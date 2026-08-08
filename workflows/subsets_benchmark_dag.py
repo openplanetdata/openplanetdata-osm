@@ -82,7 +82,12 @@ with DAG(
         "pool": "openplanetdata_osm",
         "priority_weight": 1,
         "queue": "cortex",
-        "retries": 0,
+        # The edge worker is co-located with memory-hungry pipelines and gets
+        # taken down by host OOM pressure; every pipeline step is idempotent
+        # (.built marker, meta.json skip, atomic parquet rename), so retry
+        # instead of failing the whole benchmark on a transient worker death.
+        "retries": 2,
+        "retry_delay": timedelta(minutes=10),
         "weight_rule": "absolute",
     },
     description="Phase 0 calibration benchmark for the OSM subset pipeline",
