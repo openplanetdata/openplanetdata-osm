@@ -45,6 +45,12 @@ BOUNDARY_PRESIMPLIFY_DEG = 0.005
 # Airflow edge worker and loses the task logs).
 BOUNDARY_PREP_MEM_LIMIT = "64g"
 
+# Same protection for the gol containers: gol 2.3's PBF exporter buffers the
+# whole result set in memory (a europe extract reached ~120 GiB RSS on the
+# 124 GiB host and the global OOM killer took out neighboring pods and the
+# edge worker three runs in a row).
+GOL_MEM_LIMIT = "100g"
+
 # A PBF smaller than this holds only a header: the boundary matched nothing.
 EMPTY_PBF_THRESHOLD_BYTES = 1024
 
@@ -266,7 +272,7 @@ def build_subset_files(code: str, level_dir: str, boundaries_dir: str, snapshot_
             "--area", f"{boundaries_dir}/{code}.prepared.geojson",
             "-f", "pbf",
         ])
-        run_in_container(f"{query} > {shlex.quote(pbf_path)}")
+        run_in_container(f"{query} > {shlex.quote(pbf_path)}", mem_limit=GOL_MEM_LIMIT)
 
         if os.path.getsize(pbf_path) < EMPTY_PBF_THRESHOLD_BYTES:
             print(f"[{code}] Empty extract ({os.path.getsize(pbf_path)} bytes), skipping")
@@ -275,11 +281,11 @@ def build_subset_files(code: str, level_dir: str, boundaries_dir: str, snapshot_
 
         print(f"[{code}] gol build")
         build = shlex.join(["gol", "build", "--yes", gol_path, pbf_path])
-        run_in_container(build, env={"TMPDIR": tmp_dir})
+        run_in_container(build, env={"TMPDIR": tmp_dir}, mem_limit=GOL_MEM_LIMIT)
 
         print(f"[{code}] gol save")
         save = shlex.join(["gol", "save", gol_path, gob_path])
-        run_in_container(save)
+        run_in_container(save, mem_limit=GOL_MEM_LIMIT)
 
         shutil.rmtree(tmp_dir, ignore_errors=True)
         with open(marker_path, "w", encoding="utf-8") as fh:
