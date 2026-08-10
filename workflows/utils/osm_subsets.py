@@ -3,7 +3,8 @@
 Every subset is produced with the same four-step pipeline against snapshots of
 the daily planet artifacts:
 
-1. PBF        gol query <planet.gol> --area <boundary> -f pbf   (GOL >= 2.3)
+1. PBF        gol query <planet.gol> --area <boundary> -f pbf   (GOL >= 2.3),
+              or osmium extract from <planet.osm.pbf> for planet-scale areas
 2. GOL v2     gol build from the subset PBF
 3. GOB        gol save from the subset GOL
 4. GeoParquet DuckDB COPY from the planet GeoParquet (bbox prefilter for
@@ -51,6 +52,11 @@ BOUNDARY_PREP_MEM_LIMIT = "64g"
 # edge worker three runs in a row).
 GOL_MEM_LIMIT = "100g"
 
+# osmium's complete_ways extractor uses compact ID bitsets and two input passes,
+# but keep a generous hard cap so regressions cannot take down the edge worker.
+OSMIUM_MEM_LIMIT = "32g"
+OSMIUM_IMAGE = "docker.io/iboates/osmium:1.19.0"
+
 # A PBF smaller than this holds only a header: the boundary matched nothing.
 EMPTY_PBF_THRESHOLD_BYTES = 1024
 
@@ -96,20 +102,22 @@ _PULLED_IMAGES: set[str] = set()
 
 
 def run_in_container(
-    cmd: str,
+    cmd: str | list[str],
     image: str = OPENPLANETDATA_IMAGE,
     env: dict | None = None,
     stdout_only: bool = False,
     mem_limit: str | None = None,
+    shell: bool = True,
 ) -> bytes:
-    """Run a shell command in a Docker container with the /data mount.
+    """Run a command in a Docker container with the /data mount.
 
     Thread-safe (Docker SDK). The image is pulled once per process (mirroring
     DockerOperator's force_pull). The container is started detached and force-
     removed in a finally block, so an exception raised in the calling thread
     (task kill, timeout) kills the container instead of orphaning it. Raises
-    docker.errors.ContainerError on non-zero exit. Returns the stdout logs
-    (plus stderr unless stdout_only).
+    docker.errors.ContainerError on non-zero exit. By default cmd runs through
+    bash; set shell=False for images that expose their CLI as the entrypoint.
+    Returns the stdout logs (plus stderr unless stdout_only).
     """
     import docker
     from docker.errors import ContainerError
@@ -122,9 +130,16 @@ def run_in_container(
         client.images.pull(image)
         _PULLED_IMAGES.add(image)
 
+    if shell:
+        if not isinstance(cmd, str):
+            raise TypeError("shell commands must be strings")
+        container_command: str | list[str] = f"bash -c {shlex.quote(cmd)}"
+    else:
+        container_command = cmd
+
     container = client.containers.run(
         image=image,
-        command=f"bash -c {shlex.quote(cmd)}",
+        command=container_command,
         detach=True,
         environment=env or {},
         mem_limit=mem_limit,
@@ -239,8 +254,17 @@ def prepare_boundary(code: str, boundaries_dir: str) -> str | None:
         return code
 
 
-def build_subset_files(code: str, level_dir: str, boundaries_dir: str, snapshot_gol: str) -> tuple[str, str] | None:
-    """Run gol query (PBF) -> gol build (GOL) -> gol save (GOB) for one subset.
+def build_subset_files(
+    code: str,
+    level_dir: str,
+    boundaries_dir: str,
+    snapshot_gol: str,
+    snapshot_pbf: str | None = None,
+) -> tuple[str, str] | None:
+    """Extract PBF -> gol build (GOL) -> gol save (GOB) for one subset.
+
+    Uses osmium's bounded-memory complete_ways extraction when snapshot_pbf is
+    provided; otherwise uses gol query against snapshot_gol.
 
     Thread-safe. Returns None on success, ("skipped", code) when the boundary
     matches no features, ("failed", code) on error.
@@ -266,13 +290,43 @@ def build_subset_files(code: str, level_dir: str, boundaries_dir: str, snapshot_
         tmp_dir = f"{subset_dir}/.tmp"
         os.makedirs(tmp_dir, exist_ok=True)
 
-        print(f"[{code}] gol query -> pbf")
-        query = shlex.join([
-            "gol", "query", snapshot_gol, "*",
-            "--area", f"{boundaries_dir}/{code}.prepared.geojson",
-            "-f", "pbf",
-        ])
-        run_in_container(f"{query} > {shlex.quote(pbf_path)}", mem_limit=GOL_MEM_LIMIT)
+        if snapshot_pbf is None:
+            print(f"[{code}] gol query -> pbf")
+            query = shlex.join([
+                "gol", "query", snapshot_gol, "*",
+                "--area", f"{boundaries_dir}/{code}.prepared.geojson",
+                "-f", "pbf",
+            ])
+            run_in_container(f"{query} > {shlex.quote(pbf_path)}", mem_limit=GOL_MEM_LIMIT)
+        else:
+            # gol needs a bare GeoJSON geometry, while osmium requires a
+            # Feature or FeatureCollection. Build the wrapper from the metadata
+            # sidecar so both extractors use exactly the same prepared geometry.
+            with open(f"{boundaries_dir}/{code}.meta.json", "r", encoding="utf-8") as fh:
+                geometry = json.load(fh)["geometry"]
+            osmium_boundary_path = f"{subset_dir}/{code}.osmium.geojson"
+            with open(osmium_boundary_path, "w", encoding="utf-8") as fh:
+                json.dump({
+                    "type": "Feature",
+                    "properties": {},
+                    "geometry": geometry,
+                }, fh)
+
+            print(f"[{code}] osmium extract (complete_ways) -> pbf")
+            run_in_container(
+                [
+                    "extract",
+                    "--strategy", "complete_ways",
+                    "--polygon", osmium_boundary_path,
+                    "--set-bounds",
+                    "--overwrite",
+                    "--output", pbf_path,
+                    snapshot_pbf,
+                ],
+                image=OSMIUM_IMAGE,
+                mem_limit=OSMIUM_MEM_LIMIT,
+                shell=False,
+            )
 
         if os.path.getsize(pbf_path) < EMPTY_PBF_THRESHOLD_BYTES:
             print(f"[{code}] Empty extract ({os.path.getsize(pbf_path)} bytes), skipping")

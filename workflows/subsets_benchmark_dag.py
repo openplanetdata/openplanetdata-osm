@@ -3,7 +3,7 @@ OSM Subsets Benchmark DAG - Phase 0 calibration for the subset pipeline.
 
 Schedule: manual trigger only.
 
-Runs the full subset pipeline (gol query -> PBF, gol build -> GOL, gol save ->
+Runs the full subset pipeline (osmium/gol -> PBF, gol build -> GOL, gol save ->
 GOB, DuckDB -> GeoParquet) for one continent (europe), one country with
 overseas territories (FR) and one region (FR-IDF). Each subset step is its own
 Airflow task (prepare boundary / build files / geoparquet per subset), so
@@ -35,12 +35,14 @@ from openplanetdata.airflow.defaults import (
     R2INDEX_CONNECTION_ID,
     SHARED_PLANET_OSM_GOL_PATH,
     SHARED_PLANET_OSM_PARQUET_PATH,
+    SHARED_PLANET_OSM_PBF_PATH,
 )
 
 WORK_DIR = f"{OPENPLANETDATA_WORK_DIR}/osm/subsets/benchmark"
 BOUNDARIES_DIR = f"{WORK_DIR}/boundaries"
 SNAPSHOT_GOL = f"{WORK_DIR}/planet-latest.osm.gol"
 SNAPSHOT_PARQUET = f"{WORK_DIR}/planet-latest.osm.parquet"
+SNAPSHOT_PBF = f"{WORK_DIR}/planet-latest.osm.pbf"
 
 # (code, level, R2 boundary path, boundary filename)
 BENCHMARK_SUBSETS = [
@@ -82,10 +84,9 @@ with DAG(
         "pool": "openplanetdata_osm",
         "priority_weight": 1,
         "queue": "cortex",
-        # The edge worker is co-located with memory-hungry pipelines and gets
-        # taken down by host OOM pressure; every pipeline step is idempotent
-        # (.built marker, meta.json skip, atomic parquet rename), so retry
-        # instead of failing the whole benchmark on a transient worker death.
+        # Every pipeline step is idempotent (.built marker, meta.json skip,
+        # atomic parquet rename), so retry transient infrastructure failures
+        # without redoing successful steps.
         "retries": 2,
         "retry_delay": timedelta(minutes=10),
         "weight_rule": "absolute",
@@ -100,11 +101,12 @@ with DAG(
 
     @task(task_display_name="Snapshot Planet Inputs")
     def snapshot_inputs() -> None:
-        """Hardlink the shared planet GOL and GeoParquet for a stable snapshot."""
+        """Hardlink the shared planet PBF, GOL and GeoParquet for a stable snapshot."""
         from airflow.exceptions import AirflowException
 
         os.makedirs(WORK_DIR, exist_ok=True)
         for source, snapshot in [
+            (SHARED_PLANET_OSM_PBF_PATH, SNAPSHOT_PBF),
             (SHARED_PLANET_OSM_GOL_PATH, SNAPSHOT_GOL),
             (SHARED_PLANET_OSM_PARQUET_PATH, SNAPSHOT_PARQUET),
         ]:
@@ -184,14 +186,20 @@ with DAG(
 
     @task
     def build_files(code: str, level: str) -> dict:
-        """gol query -> PBF, gol build -> GOL, gol save -> GOB for one subset."""
+        """Extract PBF, then run gol build and gol save for one subset."""
         from airflow.exceptions import AirflowException
 
         subsets = _utils()
         level_dir = f"{WORK_DIR}/{level}"
         os.makedirs(level_dir, exist_ok=True)
         start = time.monotonic()
-        result = subsets.build_subset_files(code, level_dir, BOUNDARIES_DIR, SNAPSHOT_GOL)
+        result = subsets.build_subset_files(
+            code,
+            level_dir,
+            BOUNDARIES_DIR,
+            SNAPSHOT_GOL,
+            snapshot_pbf=SNAPSHOT_PBF if level == "continents" else None,
+        )
         elapsed = time.monotonic() - start
         print(f"[{code}] pbf + gol + gob: {elapsed:,.1f}s")
         if result is not None:
