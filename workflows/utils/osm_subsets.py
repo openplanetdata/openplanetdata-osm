@@ -57,6 +57,14 @@ GOL_MEM_LIMIT = "100g"
 OSMIUM_MEM_LIMIT = "32g"
 OSMIUM_IMAGE = "docker.io/iboates/osmium:1.19.0"
 
+# DuckDB's allocator limit does not include every allocation or filesystem
+# cache page charged to the container. Keep both an internal working-memory
+# limit and a larger cgroup cap, and leave CPU capacity for the edge worker's
+# heartbeat and the host control plane.
+PARQUET_CONTAINER_MEM_LIMIT = "64g"
+PARQUET_DUCKDB_MEMORY_LIMIT = "32GB"
+PARQUET_DUCKDB_THREADS = 24
+
 # A PBF smaller than this holds only a header: the boundary matched nothing.
 EMPTY_PBF_THRESHOLD_BYTES = 1024
 
@@ -408,12 +416,17 @@ def run_parquet_batch(codes: list[str], level_dir: str, boundaries_dir: str, sna
 SET extension_directory='{work_dir}/.duckdb-extensions';
 SET temp_directory='{work_dir}/.duckdb-temp';
 INSTALL 'spatial'; LOAD 'spatial';
-SET memory_limit='40GB';
+SET memory_limit='{PARQUET_DUCKDB_MEMORY_LIMIT}';
+SET threads={PARQUET_DUCKDB_THREADS};
 {parquet_copy_sql(code, tmp_path, boundaries_dir, snapshot_parquet)}
 """)
         try:
             print(f"[{code}] duckdb parquet extract")
-            run_in_container(f"{work_dir}/duckdb -f {shlex.quote(sql_path)}", env={"HOME": work_dir})
+            run_in_container(
+                f"{work_dir}/duckdb -f {shlex.quote(sql_path)}",
+                env={"HOME": work_dir},
+                mem_limit=PARQUET_CONTAINER_MEM_LIMIT,
+            )
             os.rename(tmp_path, parquet_path)
             os.remove(sql_path)
         except Exception as e:
