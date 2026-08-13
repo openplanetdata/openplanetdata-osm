@@ -183,6 +183,25 @@ def _geometry_bbox(geometry: dict) -> tuple[float, float, float, float]:
     return minx, miny, maxx, maxy
 
 
+def _clamp_geometry_to_world(geometry: dict) -> dict:
+    """Clamp GeoJSON positions to osmium's valid longitude/latitude range.
+
+    Buffered boundaries that touch the antimeridian or a pole can extend up to
+    BOUNDARY_BUFFER_DEG beyond the world envelope. No valid OSM location can
+    occupy that overflow, so clamping it does not change extract membership.
+    """
+    def clamp(coords: list) -> list:
+        if isinstance(coords[0], (int, float)):
+            return [
+                max(-180.0, min(180.0, coords[0])),
+                max(-90.0, min(90.0, coords[1])),
+                *coords[2:],
+            ]
+        return [clamp(part) for part in coords]
+
+    return {**geometry, "coordinates": clamp(geometry["coordinates"])}
+
+
 def split_boundary_aggregate(aggregate_path: str, code_property: str, boundaries_dir: str) -> list[str]:
     """Split a planet boundary aggregate into per-code raw GeoJSON files.
 
@@ -312,6 +331,7 @@ def build_subset_files(
             # sidecar so both extractors use exactly the same prepared geometry.
             with open(f"{boundaries_dir}/{code}.meta.json", "r", encoding="utf-8") as fh:
                 geometry = json.load(fh)["geometry"]
+            geometry = _clamp_geometry_to_world(geometry)
             osmium_boundary_path = f"{subset_dir}/{code}.osmium.geojson"
             with open(osmium_boundary_path, "w", encoding="utf-8") as fh:
                 json.dump({
