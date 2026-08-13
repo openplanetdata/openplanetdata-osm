@@ -3,8 +3,9 @@
 Every subset is produced with the same four-step pipeline against snapshots of
 the daily planet artifacts:
 
-1. PBF        gol query <planet.gol> --area <boundary> -f pbf   (GOL >= 2.3),
-              or osmium extract from <planet.osm.pbf> for planet-scale areas
+1. PBF        gol query <planet.gol> --area <boundary> -f pbf followed by an
+              osmium complete_ways post-filter, or direct osmium extraction
+              from <planet.osm.pbf> for planet-scale areas
 2. GOL v2     gol build from the subset PBF
 3. GOB        gol save from the subset GOL
 4. GeoParquet DuckDB COPY from the planet GeoParquet (bbox prefilter for
@@ -107,6 +108,14 @@ rm -f {work_dir}/duckdb.zip
 
 
 _PULLED_IMAGES: set[str] = set()
+
+
+def _marker_matches(path: str, expected: str) -> bool:
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            return fh.read().strip() == expected
+    except FileNotFoundError:
+        return False
 
 
 def run_in_container(
@@ -264,6 +273,7 @@ def prepare_boundary(code: str, boundaries_dir: str) -> str | None:
         if geometry is None:
             print(f"[{code}] Boundary simplification produced no geometry, skipping")
             return code
+        geometry = _clamp_geometry_to_world(geometry)
 
         # gol's --area parser only accepts a bare GeoJSON geometry object; a
         # Feature/FeatureCollection wrapper fails with "area: Expected string".
@@ -287,11 +297,14 @@ def build_subset_files(
     boundaries_dir: str,
     snapshot_gol: str,
     snapshot_pbf: str | None = None,
+    refilter_gol_pbf: bool = False,
 ) -> tuple[str, str] | None:
     """Extract PBF -> gol build (GOL) -> gol save (GOB) for one subset.
 
     Uses osmium's bounded-memory complete_ways extraction when snapshot_pbf is
-    provided; otherwise uses gol query against snapshot_gol.
+    provided; otherwise uses gol query against snapshot_gol. When
+    refilter_gol_pbf is true, osmium spatially re-filters gol's PBF before the
+    build, removing global members pulled in by recursive relation closure.
 
     Thread-safe. Returns None on success, ("skipped", code) when the boundary
     matches no features, ("failed", code) on error.
@@ -301,38 +314,39 @@ def build_subset_files(
     gol_path = f"{subset_dir}/{code}-latest.osm.gol"
     gob_path = f"{subset_dir}/{code}-latest.osm.gob"
     marker_path = f"{subset_dir}/.built"
+    marker_value = "built-refiltered" if refilter_gol_pbf else "built"
+    query_pbf_path = f"{pbf_path}.gol-query.tmp"
 
     # Idempotent retries: gol writes all outputs in place, so mere file
     # existence cannot distinguish complete from truncated (killed task).
     # Only the marker, written after the last step, proves completeness.
-    if os.path.exists(marker_path):
+    if _marker_matches(marker_path, marker_value):
         print(f"[{code}] Already built, skipping")
         return None
 
     try:
         os.makedirs(subset_dir, exist_ok=True)
-        for stale in (pbf_path, gol_path, gob_path):
+        for stale in (
+            pbf_path,
+            query_pbf_path,
+            gol_path,
+            f"{gol_path}.tmp",
+            gob_path,
+            f"{gob_path}.tmp",
+            f"{gob_path}.tmp.tmp",
+        ):
             if os.path.exists(stale):
                 os.remove(stale)
         tmp_dir = f"{subset_dir}/.tmp"
         os.makedirs(tmp_dir, exist_ok=True)
 
-        if snapshot_pbf is None:
-            print(f"[{code}] gol query -> pbf")
-            query = shlex.join([
-                "gol", "query", snapshot_gol, "*",
-                "--area", f"{boundaries_dir}/{code}.prepared.geojson",
-                "-f", "pbf",
-            ])
-            run_in_container(f"{query} > {shlex.quote(pbf_path)}", mem_limit=GOL_MEM_LIMIT)
-        else:
+        osmium_boundary_path = f"{subset_dir}/{code}.osmium.geojson"
+        if snapshot_pbf is not None or refilter_gol_pbf:
             # gol needs a bare GeoJSON geometry, while osmium requires a
             # Feature or FeatureCollection. Build the wrapper from the metadata
             # sidecar so both extractors use exactly the same prepared geometry.
             with open(f"{boundaries_dir}/{code}.meta.json", "r", encoding="utf-8") as fh:
                 geometry = json.load(fh)["geometry"]
-            geometry = _clamp_geometry_to_world(geometry)
-            osmium_boundary_path = f"{subset_dir}/{code}.osmium.geojson"
             with open(osmium_boundary_path, "w", encoding="utf-8") as fh:
                 json.dump({
                     "type": "Feature",
@@ -340,6 +354,43 @@ def build_subset_files(
                     "geometry": geometry,
                 }, fh)
 
+        if snapshot_pbf is None:
+            print(f"[{code}] gol query -> pbf")
+            query_output_path = query_pbf_path if refilter_gol_pbf else pbf_path
+            query = shlex.join([
+                "gol", "query", snapshot_gol, "*",
+                "--area", f"{boundaries_dir}/{code}.prepared.geojson",
+                "-f", "pbf",
+            ])
+            run_in_container(f"{query} > {shlex.quote(query_output_path)}", mem_limit=GOL_MEM_LIMIT)
+
+            if os.path.getsize(query_output_path) < EMPTY_PBF_THRESHOLD_BYTES:
+                print(f"[{code}] Empty extract ({os.path.getsize(query_output_path)} bytes), skipping")
+                shutil.rmtree(subset_dir, ignore_errors=True)
+                return ("skipped", code)
+
+            if refilter_gol_pbf:
+                print(f"[{code}] osmium complete_ways post-filter -> pbf")
+                run_in_container(
+                    [
+                        "extract",
+                        "--strategy", "complete_ways",
+                        "--polygon", osmium_boundary_path,
+                        "--set-bounds",
+                        "--overwrite",
+                        "--output", pbf_path,
+                        query_pbf_path,
+                    ],
+                    image=OSMIUM_IMAGE,
+                    mem_limit=OSMIUM_MEM_LIMIT,
+                    shell=False,
+                )
+                print(
+                    f"[{code}] post-filtered PBF: "
+                    f"{os.path.getsize(query_pbf_path):,} -> {os.path.getsize(pbf_path):,} bytes"
+                )
+                os.remove(query_pbf_path)
+        else:
             print(f"[{code}] osmium extract (complete_ways) -> pbf")
             run_in_container(
                 [
@@ -371,7 +422,7 @@ def build_subset_files(
 
         shutil.rmtree(tmp_dir, ignore_errors=True)
         with open(marker_path, "w", encoding="utf-8") as fh:
-            fh.write("built")
+            fh.write(marker_value)
         return None
     except Exception as e:
         from docker.errors import ContainerError
@@ -505,11 +556,13 @@ def process_subset_batch(
     r2index_conn_id: str,
     build_workers: int = 2,
     snapshot_pbf: str | None = None,
+    refilter_gol_pbf: bool = False,
 ) -> None:
     """Full pipeline for one batch: build PBF/GOL/GOB, extract parquet, upload.
 
     When snapshot_pbf is provided, PBF extraction uses osmium instead of gol;
     callers should reserve this bounded-memory path for planet-scale batches.
+    refilter_gol_pbf removes recursive relation closure from gol-produced PBFs.
     Raises AirflowException when any code fails; skipped codes (empty extracts)
     are reported but do not fail the batch. Uploaded subset outputs are removed
     to bound disk usage; a {code}.done marker records success.
@@ -519,7 +572,11 @@ def process_subset_batch(
     from airflow.exceptions import AirflowException
     from elaunira.airflow.providers.r2index.hooks import R2IndexHook
 
-    codes = [c for c in codes if not os.path.exists(f"{level_dir}/{c}.done")]
+    done_marker_value = "uploaded-refiltered" if refilter_gol_pbf else "uploaded"
+    codes = [
+        code for code in codes
+        if not _marker_matches(f"{level_dir}/{code}.done", done_marker_value)
+    ]
     if not codes:
         print("All codes in batch already uploaded")
         return
@@ -532,6 +589,7 @@ def process_subset_batch(
                 boundaries_dir,
                 snapshot_gol,
                 snapshot_pbf=snapshot_pbf,
+                refilter_gol_pbf=refilter_gol_pbf,
             ),
             codes,
         ))
@@ -551,7 +609,7 @@ def process_subset_batch(
             continue
         if upload_subset(code, names.get(code, code), level, level_dir, hook) is None:
             with open(f"{level_dir}/{code}.done", "w", encoding="utf-8") as fh:
-                fh.write("uploaded")
+                fh.write(done_marker_value)
             shutil.rmtree(f"{level_dir}/{code}", ignore_errors=True)
         else:
             failed.add(code)

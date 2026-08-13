@@ -6,8 +6,8 @@ have all been refreshed (same-day snapshot consistency) - i.e. it follows the
 planet pipeline's cadence, currently daily.
 
 Pipeline per subset (see workflows/utils/osm_subsets.py):
-1. osmium extract from planet PBF for continents; gol query against planet GOL
-   for countries
+1. osmium extract from planet PBF for continents; gol query followed by an
+   osmium complete_ways post-filter for countries
 2. gol build + gol save for the subset GOL/GOB
 3. DuckDB COPY from a snapshot of the planet GeoParquet (bbox pruning + ST_Intersects)
 4. Upload all four formats to R2
@@ -210,7 +210,7 @@ with DAG(
             })
         return batches
 
-    @task(task_display_name="Process Batch", retries=1)
+    @task(task_display_name="Process Batch", retries=2, retry_delay=timedelta(minutes=10))
     def process_batch(batch: dict) -> None:
         """Build PBF/GOL/GOB, extract GeoParquet and upload for one batch."""
         subsets = _utils()
@@ -226,6 +226,7 @@ with DAG(
             r2index_conn_id=R2INDEX_CONNECTION_ID,
             build_workers=BUILD_WORKERS,
             snapshot_pbf=SNAPSHOT_PBF if batch["level"] == "continents" else None,
+            refilter_gol_pbf=batch["level"] == "countries",
         )
 
     @task(task_display_name="Report Failures", trigger_rule="all_done")
