@@ -484,9 +484,12 @@ def process_subset_batch(
     work_dir: str,
     r2index_conn_id: str,
     build_workers: int = 2,
+    snapshot_pbf: str | None = None,
 ) -> None:
     """Full pipeline for one batch: build PBF/GOL/GOB, extract parquet, upload.
 
+    When snapshot_pbf is provided, PBF extraction uses osmium instead of gol;
+    callers should reserve this bounded-memory path for planet-scale batches.
     Raises AirflowException when any code fails; skipped codes (empty extracts)
     are reported but do not fail the batch. Uploaded subset outputs are removed
     to bound disk usage; a {code}.done marker records success.
@@ -503,7 +506,13 @@ def process_subset_batch(
 
     with ThreadPoolExecutor(max_workers=build_workers) as executor:
         build_results = list(executor.map(
-            lambda code: build_subset_files(code, level_dir, boundaries_dir, snapshot_gol),
+            lambda code: build_subset_files(
+                code,
+                level_dir,
+                boundaries_dir,
+                snapshot_gol,
+                snapshot_pbf=snapshot_pbf,
+            ),
             codes,
         ))
 

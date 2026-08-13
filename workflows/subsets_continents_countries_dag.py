@@ -1,12 +1,13 @@
 """
 OSM Subsets Continents & Countries DAG - extracts in PBF, GeoParquet, GOL and GOB.
 
-Schedule: Triggered when BOTH the planet GOL v2 and planet GeoParquet shared
-copies have been refreshed (same-day snapshot consistency) - i.e. it follows
-the planet pipeline's cadence, currently daily.
+Schedule: Triggered when the planet PBF, GOL v2 and GeoParquet shared copies
+have all been refreshed (same-day snapshot consistency) - i.e. it follows the
+planet pipeline's cadence, currently daily.
 
 Pipeline per subset (see workflows/utils/osm_subsets.py):
-1. gol query --area <boundary> -f pbf against a snapshot of the planet GOL
+1. osmium extract from planet PBF for continents; gol query against planet GOL
+   for countries
 2. gol build + gol save for the subset GOL/GOB
 3. DuckDB COPY from a snapshot of the planet GeoParquet (bbox pruning + ST_Intersects)
 4. Upload all four formats to R2
@@ -36,12 +37,14 @@ from openplanetdata.airflow.defaults import (
     R2INDEX_CONNECTION_ID,
     SHARED_PLANET_OSM_GOL_PATH,
     SHARED_PLANET_OSM_PARQUET_PATH,
+    SHARED_PLANET_OSM_PBF_PATH,
 )
 
 WORK_DIR = f"{OPENPLANETDATA_WORK_DIR}/osm/subsets/continents-countries"
 BOUNDARIES_DIR = f"{WORK_DIR}/boundaries"
 SNAPSHOT_GOL = f"{WORK_DIR}/planet-latest.osm.gol"
 SNAPSHOT_PARQUET = f"{WORK_DIR}/planet-latest.osm.parquet"
+SNAPSHOT_PBF = f"{WORK_DIR}/planet-latest.osm.pbf"
 
 CONTINENTS_AGGREGATE = f"{WORK_DIR}/planet-latest.continents.geojson"
 COUNTRIES_AGGREGATE = f"{WORK_DIR}/planet-latest.countries.geojson"
@@ -51,13 +54,20 @@ COUNTRIES_AGGREGATE = f"{WORK_DIR}/planet-latest.countries.geojson"
 # behind more than one continent's work. Countries are far smaller.
 CONTINENT_BATCH_SIZE = 1
 COUNTRY_BATCH_SIZE = 32
-BUILD_WORKERS = 2
+# Large-country gol exports can use 45-60 GiB each. Keep builds serial so two
+# countries cannot exhaust the 124 GiB edge host when a control-plane or other
+# Docker workload is also present.
+BUILD_WORKERS = 1
 
-# Both assets are emitted by the planet DAGs' copy_to_shared tasks, so a
+# All three assets are emitted by the planet DAGs' copy_to_shared tasks, so a
 # trigger guarantees the shared files this DAG snapshots actually exist.
 GOL_V2_ASSET = Asset(
     name="openplanetdata-osm-planet-gol-v2",
     uri=f"s3://{R2_BUCKET}/osm/planet/gol/v2/planet-latest.osm.gol",
+)
+PBF_ASSET = Asset(
+    name="openplanetdata-osm-planet-pbf",
+    uri=f"s3://{R2_BUCKET}/osm/planet/pbf/v1/planet-latest.osm.pbf",
 )
 GEOPARQUET_SHARED_ASSET = Asset(
     name="openplanetdata-osm-planet-geoparquet-shared",
@@ -93,13 +103,13 @@ with DAG(
     doc_md=__doc__,
     max_active_runs=1,
     max_active_tasks=1,
-    schedule=[GOL_V2_ASSET, GEOPARQUET_SHARED_ASSET],
+    schedule=[PBF_ASSET, GOL_V2_ASSET, GEOPARQUET_SHARED_ASSET],
     tags=["continents", "countries", "openplanetdata", "osm", "subsets"],
 ) as dag:
 
     @task(task_display_name="Snapshot Planet Inputs")
     def snapshot_inputs() -> None:
-        """Hardlink the shared planet GOL and GeoParquet for a stable snapshot.
+        """Hardlink the shared planet PBF, GOL and GeoParquet snapshots.
 
         The shared files are replaced atomically (rename) by the planet DAGs,
         so hardlinks keep this run's inputs consistent even if the next daily
@@ -107,6 +117,7 @@ with DAG(
         """
         os.makedirs(WORK_DIR, exist_ok=True)
         for source, snapshot in [
+            (SHARED_PLANET_OSM_PBF_PATH, SNAPSHOT_PBF),
             (SHARED_PLANET_OSM_GOL_PATH, SNAPSHOT_GOL),
             (SHARED_PLANET_OSM_PARQUET_PATH, SNAPSHOT_PARQUET),
         ]:
@@ -214,6 +225,7 @@ with DAG(
             work_dir=WORK_DIR,
             r2index_conn_id=R2INDEX_CONNECTION_ID,
             build_workers=BUILD_WORKERS,
+            snapshot_pbf=SNAPSHOT_PBF if batch["level"] == "continents" else None,
         )
 
     @task(task_display_name="Report Failures", trigger_rule="all_done")
