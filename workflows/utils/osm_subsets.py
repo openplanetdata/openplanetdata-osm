@@ -166,8 +166,8 @@ def run_in_container(
     try:
         status = container.wait()["StatusCode"]
         if status != 0:
-            stderr = container.logs(stdout=False, stderr=True)
-            raise ContainerError(container, status, cmd, image, stderr)
+            output = container.logs(stdout=True, stderr=True)
+            raise ContainerError(container, status, cmd, image, output)
         return container.logs(stdout=True, stderr=not stdout_only)
     finally:
         container.remove(force=True)
@@ -315,7 +315,9 @@ def build_subset_files(
     gob_path = f"{subset_dir}/{code}-latest.osm.gob"
     marker_path = f"{subset_dir}/.built"
     marker_value = "built-refiltered" if refilter_gol_pbf else "built"
-    query_pbf_path = f"{pbf_path}.gol-query.tmp"
+    # Osmium infers the input format from the filename, so temporary PBFs must
+    # retain a recognized .osm.pbf suffix.
+    query_pbf_path = f"{subset_dir}/{code}-gol-query.tmp.osm.pbf"
 
     # Idempotent retries: gol writes all outputs in place, so mere file
     # existence cannot distinguish complete from truncated (killed task).
