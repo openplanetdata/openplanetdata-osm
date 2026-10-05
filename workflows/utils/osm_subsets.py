@@ -44,7 +44,9 @@ BOUNDARY_PRESIMPLIFY_DEG = 0.005
 
 # Hard cap for the boundary-prep GDAL container: a runaway ST_Buffer must die
 # alone instead of triggering the host OOM killer (which also takes down the
-# Airflow edge worker and loses the task logs).
+# Airflow edge worker and loses the task logs). Callers preparing many small
+# boundaries in parallel (regions) pass a lower cap so that workers x cap fits
+# the task's cortex pool reservation.
 BOUNDARY_PREP_MEM_LIMIT = "64g"
 
 # Same protection for the gol containers: gol 2.3's PBF exporter buffers the
@@ -65,6 +67,11 @@ OSMIUM_IMAGE = "docker.io/iboates/osmium:1.19.0"
 PARQUET_CONTAINER_MEM_LIMIT = "64g"
 PARQUET_DUCKDB_MEMORY_LIMIT = "32GB"
 PARQUET_DUCKDB_THREADS = 24
+
+# Cap for containers whose callers pass no explicit limit (DuckDB install,
+# small verification queries). Nothing on the shared cortex host may run
+# uncapped: the cortex pool reserves memory by container cap.
+DEFAULT_MEM_LIMIT = "8g"
 
 # A PBF smaller than this holds only a header: the boundary matched nothing.
 EMPTY_PBF_THRESHOLD_BYTES = 1024
@@ -123,7 +130,7 @@ def run_in_container(
     image: str = OPENPLANETDATA_IMAGE,
     env: dict | None = None,
     stdout_only: bool = False,
-    mem_limit: str | None = None,
+    mem_limit: str = DEFAULT_MEM_LIMIT,
     shell: bool = True,
 ) -> bytes:
     """Run a command in a Docker container with the /data mount.
@@ -131,7 +138,10 @@ def run_in_container(
     Thread-safe (Docker SDK). The image is pulled once per process (mirroring
     DockerOperator's force_pull). The container is started detached and force-
     removed in a finally block, so an exception raised in the calling thread
-    (task kill, timeout) kills the container instead of orphaning it. Raises
+    (task kill, timeout) kills the container instead of orphaning it. The
+    container gets oom_score_adj=1000 so that if the host still runs out of
+    memory, the kernel kills these containers before Ipregistry JVMs or the
+    edge worker. Raises
     docker.errors.ContainerError on non-zero exit. By default cmd runs through
     bash; set shell=False for images that expose their CLI as the entrypoint.
     Returns the stdout logs (plus stderr unless stdout_only).
@@ -161,6 +171,7 @@ def run_in_container(
         environment=env or {},
         mem_limit=mem_limit,
         mounts=[Mount(**DOCKER_MOUNT)],
+        oom_score_adj=1000,
         user=DOCKER_USER,
     )
     try:
@@ -234,7 +245,7 @@ def split_boundary_aggregate(aggregate_path: str, code_property: str, boundaries
     return sorted(features_by_code.keys())
 
 
-def prepare_boundary(code: str, boundaries_dir: str) -> str | None:
+def prepare_boundary(code: str, boundaries_dir: str, mem_limit: str = BOUNDARY_PREP_MEM_LIMIT) -> str | None:
     """Buffer + simplify one raw boundary and write its metadata sidecar.
 
     Produces {code}.prepared.geojson (single unioned feature) and {code}.meta.json
@@ -264,7 +275,7 @@ def prepare_boundary(code: str, boundaries_dir: str) -> str | None:
             "-dialect", "sqlite", "-sql", sql,
         ])
         run_in_container(args, image=GDAL_FULL_IMAGE, env={"OGR_GEOJSON_MAX_OBJ_SIZE": "0"},
-                         mem_limit=BOUNDARY_PREP_MEM_LIMIT)
+                         mem_limit=mem_limit)
 
         with open(prepared_path, "r", encoding="utf-8") as fh:
             prepared = json.load(fh)
@@ -298,6 +309,7 @@ def build_subset_files(
     snapshot_gol: str,
     snapshot_pbf: str | None = None,
     refilter_gol_pbf: bool = False,
+    gol_mem_limit: str = GOL_MEM_LIMIT,
 ) -> tuple[str, str] | None:
     """Extract PBF -> gol build (GOL) -> gol save (GOB) for one subset.
 
@@ -305,6 +317,7 @@ def build_subset_files(
     provided; otherwise uses gol query against snapshot_gol. When
     refilter_gol_pbf is true, osmium spatially re-filters gol's PBF before the
     build, removing global members pulled in by recursive relation closure.
+    gol_mem_limit caps each gol container (query, build, save).
 
     Thread-safe. Returns None on success, ("skipped", code) when the boundary
     matches no features, ("failed", code) on error.
@@ -364,7 +377,7 @@ def build_subset_files(
                 "--area", f"{boundaries_dir}/{code}.prepared.geojson",
                 "-f", "pbf",
             ])
-            run_in_container(f"{query} > {shlex.quote(query_output_path)}", mem_limit=GOL_MEM_LIMIT)
+            run_in_container(f"{query} > {shlex.quote(query_output_path)}", mem_limit=gol_mem_limit)
 
             if os.path.getsize(query_output_path) < EMPTY_PBF_THRESHOLD_BYTES:
                 print(f"[{code}] Empty extract ({os.path.getsize(query_output_path)} bytes), skipping")
@@ -416,11 +429,11 @@ def build_subset_files(
 
         print(f"[{code}] gol build")
         build = shlex.join(["gol", "build", "--yes", gol_path, pbf_path])
-        run_in_container(build, env={"TMPDIR": tmp_dir}, mem_limit=GOL_MEM_LIMIT)
+        run_in_container(build, env={"TMPDIR": tmp_dir}, mem_limit=gol_mem_limit)
 
         print(f"[{code}] gol save")
         save = shlex.join(["gol", "save", gol_path, gob_path])
-        run_in_container(save, mem_limit=GOL_MEM_LIMIT)
+        run_in_container(save, mem_limit=gol_mem_limit)
 
         shutil.rmtree(tmp_dir, ignore_errors=True)
         with open(marker_path, "w", encoding="utf-8") as fh:
@@ -559,12 +572,15 @@ def process_subset_batch(
     build_workers: int = 2,
     snapshot_pbf: str | None = None,
     refilter_gol_pbf: bool = False,
+    gol_mem_limit: str = GOL_MEM_LIMIT,
 ) -> None:
     """Full pipeline for one batch: build PBF/GOL/GOB, extract parquet, upload.
 
     When snapshot_pbf is provided, PBF extraction uses osmium instead of gol;
     callers should reserve this bounded-memory path for planet-scale batches.
     refilter_gol_pbf removes recursive relation closure from gol-produced PBFs.
+    Up to build_workers gol containers capped at gol_mem_limit run at once, so
+    the calling task must reserve build_workers x gol_mem_limit pool slots.
     Raises AirflowException when any code fails; skipped codes (empty extracts)
     are reported but do not fail the batch. Uploaded subset outputs are removed
     to bound disk usage; a {code}.done marker records success.
@@ -592,6 +608,7 @@ def process_subset_batch(
                 snapshot_gol,
                 snapshot_pbf=snapshot_pbf,
                 refilter_gol_pbf=refilter_gol_pbf,
+                gol_mem_limit=gol_mem_limit,
             ),
             codes,
         ))

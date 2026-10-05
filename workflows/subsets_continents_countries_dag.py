@@ -12,13 +12,16 @@ Pipeline per subset (see workflows/utils/osm_subsets.py):
 3. DuckDB COPY from a snapshot of the planet GeoParquet (bbox pruning + ST_Intersects)
 4. Upload all four formats to R2
 
-Scheduling policy: every task runs in the shared openplanetdata_osm pool with
-an absolute priority weight of 1, far below the planet DAGs (their
-OldestFirstPriorityStrategy weight is the run age in seconds), so whenever a
-planet task and a subset task are both queued, the planet task always takes
-the free slot first. Airflow never preempts a running task, so a planet task
-can still wait behind an in-flight subset batch; batches are deliberately
-small so that wait is bounded by a single batch, not the whole run.
+Scheduling policy: every task runs in the shared cortex pool, which budgets
+the cortex edge host's memory (1 slot = 1 GiB). Each task reserves the most
+memory it can use at once (the sum of the caps of the containers it runs
+concurrently, plus its in-process work), so Airflow never starts tasks whose
+combined caps exceed the host. Tasks run with an absolute priority weight of
+1, below the planet DAGs (1000) and Ipregistry (1,000,000), so whenever
+another cortex task is queued it takes the next free memory first. Airflow
+never preempts a running task, so other work can still wait behind an
+in-flight subset batch; batches are deliberately small so that wait is
+bounded by a single batch, not the whole run.
 """
 
 import os
@@ -46,18 +49,35 @@ SNAPSHOT_GOL = f"{WORK_DIR}/planet-latest.osm.gol"
 SNAPSHOT_PARQUET = f"{WORK_DIR}/planet-latest.osm.parquet"
 SNAPSHOT_PBF = f"{WORK_DIR}/planet-latest.osm.pbf"
 
+# Shared memory-budget pool for the cortex edge host (1 slot = 1 GiB).
+CORTEX_POOL = "cortex"
+
 CONTINENTS_AGGREGATE = f"{WORK_DIR}/planet-latest.continents.geojson"
 COUNTRIES_AGGREGATE = f"{WORK_DIR}/planet-latest.countries.geojson"
 
-# Continents are planet-scale extracts: one per batch, so the pool slot is
-# yielded after every single continent and a queued planet task never waits
-# behind more than one continent's work. Countries are far smaller.
+# Continents are planet-scale extracts: one per batch, so the pool memory is
+# yielded after every single continent and a queued planet or Ipregistry task
+# never waits behind more than one continent's work. Countries are far
+# smaller, but large ones still take minutes each, so batches stay small.
 CONTINENT_BATCH_SIZE = 1
-COUNTRY_BATCH_SIZE = 32
+COUNTRY_BATCH_SIZE = 8
 # Large-country gol exports can use 45-60 GiB each. Keep builds serial so two
 # countries cannot exhaust the 124 GiB edge host when a control-plane or other
 # Docker workload is also present.
 BUILD_WORKERS = 1
+# One GDAL container at a time: each is capped at BOUNDARY_PREP_MEM_LIMIT
+# (64g) and the planet-scale continent boundaries need that headroom.
+BOUNDARY_PREP_WORKERS = 1
+
+# Cortex pool reservations in GiB. Prepare Boundaries json-loads the planet
+# aggregates in-process (several GiB each) before running the GDAL containers.
+# Process Batch runs BUILD_WORKERS gol containers capped at GOL_MEM_LIMIT
+# (100g); its osmium (32g) and DuckDB (64g) containers run one at a time and
+# stay below that.
+PREPARE_BOUNDARIES_POOL_SLOTS = 80
+PROCESS_BATCH_POOL_SLOTS = BUILD_WORKERS * 100
+DOWNLOAD_POOL_SLOTS = 2
+SMALL_CONTAINER_POOL_SLOTS = 8
 
 # All three assets are emitted by the planet DAGs' copy_to_shared tasks, so a
 # trigger guarantees the shared files this DAG snapshots actually exist.
@@ -93,7 +113,8 @@ with DAG(
         "execution_timeout": timedelta(hours=6),
         "executor": "airflow.providers.edge3.executors.EdgeExecutor",
         "owner": "openplanetdata",
-        "pool": "openplanetdata_osm",
+        "pool": CORTEX_POOL,
+        "pool_slots": 1,
         "priority_weight": 1,
         "queue": "cortex",
         "retries": 0,
@@ -128,6 +149,7 @@ with DAG(
     @task.r2index_download(
         task_display_name="Download Continent Boundaries",
         bucket=R2_BUCKET,
+        pool_slots=DOWNLOAD_POOL_SLOTS,
         r2index_conn_id=R2INDEX_CONNECTION_ID,
     )
     def download_continent_boundaries() -> DownloadItem:
@@ -142,6 +164,7 @@ with DAG(
     @task.r2index_download(
         task_display_name="Download Country Boundaries",
         bucket=R2_BUCKET,
+        pool_slots=DOWNLOAD_POOL_SLOTS,
         r2index_conn_id=R2INDEX_CONNECTION_ID,
     )
     def download_country_boundaries() -> DownloadItem:
@@ -153,14 +176,14 @@ with DAG(
             source_version="v2",
         )
 
-    @task(task_display_name="Install DuckDB")
+    @task(task_display_name="Install DuckDB", pool_slots=SMALL_CONTAINER_POOL_SLOTS)
     def install_duckdb() -> None:
         """Download the DuckDB CLI once per run into the work directory."""
         subsets = _utils()
         script = "set -euo pipefail\n" + subsets.INSTALL_DUCKDB_TEMPLATE.format(work_dir=WORK_DIR)
         subsets.run_in_container(script)
 
-    @task(task_display_name="Prepare Boundaries")
+    @task(task_display_name="Prepare Boundaries", pool_slots=PREPARE_BOUNDARIES_POOL_SLOTS)
     def prepare_boundaries() -> list[dict]:
         """Split, buffer and simplify boundaries; return processing batches."""
         from concurrent.futures import ThreadPoolExecutor
@@ -173,7 +196,7 @@ with DAG(
         country_codes = subsets.split_boundary_aggregate(COUNTRIES_AGGREGATE, "code", BOUNDARIES_DIR)
         print(f"Found {len(continent_codes)} continents and {len(country_codes)} countries")
 
-        with ThreadPoolExecutor(max_workers=4) as executor:
+        with ThreadPoolExecutor(max_workers=BOUNDARY_PREP_WORKERS) as executor:
             failures = {
                 code for code in executor.map(
                     lambda code: subsets.prepare_boundary(code, BOUNDARIES_DIR),
@@ -210,7 +233,12 @@ with DAG(
             })
         return batches
 
-    @task(task_display_name="Process Batch", retries=2, retry_delay=timedelta(minutes=10))
+    @task(
+        task_display_name="Process Batch",
+        pool_slots=PROCESS_BATCH_POOL_SLOTS,
+        retries=2,
+        retry_delay=timedelta(minutes=10),
+    )
     def process_batch(batch: dict) -> None:
         """Build PBF/GOL/GOB, extract GeoParquet and upload for one batch."""
         subsets = _utils()

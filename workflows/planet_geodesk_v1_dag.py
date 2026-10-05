@@ -28,6 +28,15 @@ from openplanetdata.airflow.defaults import (
 WORK_DIR = f"{OPENPLANETDATA_WORK_DIR}/osm/geodesk/v1"
 GOL_PATH = f"{WORK_DIR}/planet-latest.osm.gol"
 
+# Shared memory-budget pool for the cortex edge host (1 slot = 1 GiB). Every
+# task reserves the memory cap of the containers it runs, so Airflow never
+# starts tasks whose combined caps exceed the host.
+CORTEX_POOL = "cortex"
+# Absolute weight between Ipregistry (1,000,000) and the OSM subsets DAGs (1):
+# planet tasks yield the next free memory to Ipregistry and take it ahead of
+# subset batches.
+PLANET_PRIORITY_WEIGHT = 1000
+
 PBF_ASSET = Asset(
     name="openplanetdata-osm-planet-pbf",
     uri=f"s3://{R2_BUCKET}/osm/planet/pbf/v1/planet-latest.osm.pbf",
@@ -44,10 +53,12 @@ with DAG(
         "execution_timeout": timedelta(hours=4),
         "executor": "airflow.providers.edge3.executors.EdgeExecutor",
         "owner": "openplanetdata",
-        "pool": "openplanetdata_osm",
+        "pool": CORTEX_POOL,
+        "pool_slots": 1,
+        "priority_weight": PLANET_PRIORITY_WEIGHT,
         "queue": "cortex",
         "retries": 0,
-        "weight_rule": "elaunira.airflow.priority.OldestFirstPriorityStrategy",
+        "weight_rule": "absolute",
     },
     description="Build GeoDesk GOL v1 index from OSM planet PBF (deprecated)",
     doc_md=__doc__,
@@ -59,6 +70,7 @@ with DAG(
     @task.r2index_download(
         task_display_name="Download Planet PBF",
         bucket=R2_BUCKET,
+        pool_slots=4,
         r2index_conn_id=R2INDEX_CONNECTION_ID,
         transfer_config=R2TransferConfig(max_concurrency=64, multipart_chunksize=32 * 1024 * 1024),
     )
@@ -92,9 +104,11 @@ with DAG(
             echo "GOL v1 installed at $GOL_BIN"
         '""",
         force_pull=True,
+        mem_limit="4g",
         mounts=[Mount(**DOCKER_MOUNT)],
         mount_tmp_dir=False,
         auto_remove="success",
+        pool_slots=4,
     )
 
     build_gol = DockerOperator(
@@ -116,15 +130,19 @@ with DAG(
             "JAVA_TOOL_OPTIONS": "-Xms96g -Xmx96g",
             "TMPDIR": f"{WORK_DIR}/.tmp",
         },
+        # 96 GiB heap plus JVM native overhead.
+        mem_limit="108g",
         mounts=[Mount(**DOCKER_MOUNT)],
         mount_tmp_dir=False,
         auto_remove="success",
+        pool_slots=108,
     )
 
     @task.r2index_upload(
         task_display_name="Upload GOL to R2",
         bucket=R2_BUCKET,
         outlets=[GOL_V1_ASSET],
+        pool_slots=4,
         r2index_conn_id=R2INDEX_CONNECTION_ID,
     )
     def upload_gol() -> list[UploadItem]:

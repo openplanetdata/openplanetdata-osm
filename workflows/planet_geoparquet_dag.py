@@ -33,6 +33,18 @@ WORK_DIR = f"{OPENPLANETDATA_WORK_DIR}/osm/geoparquet"
 OHSOME_DIR = f"{WORK_DIR}/ohsome-output"
 PARQUET_PATH = f"{WORK_DIR}/planet-latest.osm.parquet"
 
+# Shared memory-budget pool for the cortex edge host (1 slot = 1 GiB). Every
+# task reserves the memory cap of the containers it runs, so Airflow never
+# starts tasks whose combined caps exceed the host.
+CORTEX_POOL = "cortex"
+# Absolute weight between Ipregistry (1,000,000) and the OSM subsets DAGs (1):
+# planet tasks yield the next free memory to Ipregistry and take it ahead of
+# subset batches.
+PLANET_PRIORITY_WEIGHT = 1000
+# Cap for the 84 GiB ohsome JVM and the 65 GB DuckDB sessions: DuckDB's
+# memory_limit does not cover every allocation, so leave headroom above it.
+HEAVY_MEM_LIMIT_GIB = 100
+
 PBF_ASSET = Asset(
     name="openplanetdata-osm-planet-pbf",
     uri=f"s3://{R2_BUCKET}/osm/planet/pbf/v1/planet-latest.osm.pbf",
@@ -53,10 +65,12 @@ with DAG(
         "execution_timeout": timedelta(hours=6),
         "executor": "airflow.providers.edge3.executors.EdgeExecutor",
         "owner": "openplanetdata",
-        "pool": "openplanetdata_osm",
+        "pool": CORTEX_POOL,
+        "pool_slots": 1,
+        "priority_weight": PLANET_PRIORITY_WEIGHT,
         "queue": "cortex",
         "retries": 0,
-        "weight_rule": "elaunira.airflow.priority.OldestFirstPriorityStrategy",
+        "weight_rule": "absolute",
     },
     description="Build planet GeoParquet from OSM PBF using ohsome-planet and DuckDB",
     doc_md=__doc__,
@@ -68,6 +82,7 @@ with DAG(
     @task.r2index_download(
         task_display_name="Download Planet PBF",
         bucket=R2_BUCKET,
+        pool_slots=4,
         r2index_conn_id=R2INDEX_CONNECTION_ID,
         transfer_config=R2TransferConfig(max_concurrency=64, multipart_chunksize=32 * 1024 * 1024),
     )
@@ -118,9 +133,11 @@ with DAG(
             ls -lh {OHSOME_DIR}/contributions/
         '""",
         force_pull=True,
+        mem_limit=f"{HEAVY_MEM_LIMIT_GIB}g",
         mounts=[Mount(**DOCKER_MOUNT)],
         mount_tmp_dir=False,
         auto_remove="success",
+        pool_slots=HEAVY_MEM_LIMIT_GIB,
     )
 
     INSTALL_DUCKDB = f"""
@@ -170,9 +187,12 @@ else
 fi
 """],
         force_pull=True,
+        # No DuckDB memory_limit here: DuckDB sizes itself from this cap.
+        mem_limit="64g",
         mounts=[Mount(**DOCKER_MOUNT)],
         mount_tmp_dir=False,
         auto_remove="success",
+        pool_slots=64,
     )
 
     build_geoparquet = DockerOperator(
@@ -252,9 +272,11 @@ echo "GeoParquet processing complete"
 ls -lh {PARQUET_PATH}
 """],
         force_pull=True,
+        mem_limit=f"{HEAVY_MEM_LIMIT_GIB}g",
         mounts=[Mount(**DOCKER_MOUNT)],
         mount_tmp_dir=False,
         auto_remove="success",
+        pool_slots=HEAVY_MEM_LIMIT_GIB,
     )
 
     validate_geoparquet = DockerOperator(
@@ -283,15 +305,18 @@ fi
 echo "All (osm_type, osm_id) pairs are unique"
 """],
         force_pull=True,
+        mem_limit=f"{HEAVY_MEM_LIMIT_GIB}g",
         mounts=[Mount(**DOCKER_MOUNT)],
         mount_tmp_dir=False,
         auto_remove="success",
+        pool_slots=HEAVY_MEM_LIMIT_GIB,
     )
 
     @task.r2index_upload(
         task_display_name="Upload GeoParquet to R2",
         bucket=R2_BUCKET,
         outlets=[GEOPARQUET_ASSET],
+        pool_slots=4,
         r2index_conn_id=R2INDEX_CONNECTION_ID,
     )
     def upload_geoparquet() -> list[UploadItem]:
@@ -335,9 +360,11 @@ echo "All (osm_type, osm_id) pairs are unique"
         image=OPENPLANETDATA_IMAGE,
         user="root",
         command=["bash", "-c", f"rm -rf {WORK_DIR}"],
+        mem_limit="2g",
         mounts=[Mount(**DOCKER_MOUNT)],
         mount_tmp_dir=False,
         auto_remove="success",
+        pool_slots=2,
     )
 
     # Task flow

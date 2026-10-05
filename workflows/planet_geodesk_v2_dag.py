@@ -29,6 +29,18 @@ WORK_DIR = f"{OPENPLANETDATA_WORK_DIR}/osm/geodesk/v2"
 GOL_PATH = f"{WORK_DIR}/planet-latest.osm.gol"
 GOB_PATH = f"{WORK_DIR}/planet-latest.osm.gob"
 
+# Shared memory-budget pool for the cortex edge host (1 slot = 1 GiB). Every
+# task reserves the memory cap of the containers it runs, so Airflow never
+# starts tasks whose combined caps exceed the host.
+CORTEX_POOL = "cortex"
+# Absolute weight between Ipregistry (1,000,000) and the OSM subsets DAGs (1):
+# planet tasks yield the next free memory to Ipregistry and take it ahead of
+# subset batches.
+PLANET_PRIORITY_WEIGHT = 1000
+# Cap for the planet gol build and save containers (same as the subsets'
+# GOL_MEM_LIMIT); each task reserves the same amount of pool memory.
+GOL_MEM_LIMIT_GIB = 100
+
 PBF_ASSET = Asset(
     name="openplanetdata-osm-planet-pbf",
     uri=f"s3://{R2_BUCKET}/osm/planet/pbf/v1/planet-latest.osm.pbf",
@@ -49,10 +61,12 @@ with DAG(
         "execution_timeout": timedelta(hours=4),
         "executor": "airflow.providers.edge3.executors.EdgeExecutor",
         "owner": "openplanetdata",
-        "pool": "openplanetdata_osm",
+        "pool": CORTEX_POOL,
+        "pool_slots": 1,
+        "priority_weight": PLANET_PRIORITY_WEIGHT,
         "queue": "cortex",
         "retries": 0,
-        "weight_rule": "elaunira.airflow.priority.OldestFirstPriorityStrategy",
+        "weight_rule": "absolute",
     },
     description="Build GeoDesk GOL and GOB indexes from OSM planet PBF",
     doc_md=__doc__,
@@ -64,6 +78,7 @@ with DAG(
     @task.r2index_download(
         task_display_name="Download Planet PBF",
         bucket=R2_BUCKET,
+        pool_slots=4,
         r2index_conn_id=R2INDEX_CONNECTION_ID,
         transfer_config=R2TransferConfig(max_concurrency=64, multipart_chunksize=32 * 1024 * 1024),
     )
@@ -92,9 +107,11 @@ with DAG(
         '""",
         environment={"TMPDIR": f"{WORK_DIR}/.tmp"},
         force_pull=True,
+        mem_limit=f"{GOL_MEM_LIMIT_GIB}g",
         mounts=[Mount(**DOCKER_MOUNT)],
         mount_tmp_dir=False,
         auto_remove="success",
+        pool_slots=GOL_MEM_LIMIT_GIB,
     )
 
     build_gob = DockerOperator(
@@ -108,14 +125,17 @@ with DAG(
             ls -lh {GOB_PATH}
         '""",
         force_pull=True,
+        mem_limit=f"{GOL_MEM_LIMIT_GIB}g",
         mounts=[Mount(**DOCKER_MOUNT)],
         mount_tmp_dir=False,
         auto_remove="success",
+        pool_slots=GOL_MEM_LIMIT_GIB,
     )
 
     @task.r2index_upload(
         task_display_name="Upload GOL to R2",
         bucket=R2_BUCKET,
+        pool_slots=4,
         r2index_conn_id=R2INDEX_CONNECTION_ID,
     )
     def upload_gol() -> list[UploadItem]:
@@ -138,6 +158,7 @@ with DAG(
         task_display_name="Upload GOB to R2",
         bucket=R2_BUCKET,
         outlets=[GOB_V2_ASSET],
+        pool_slots=4,
         r2index_conn_id=R2INDEX_CONNECTION_ID,
     )
     def upload_gob() -> list[UploadItem]:

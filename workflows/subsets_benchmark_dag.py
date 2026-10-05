@@ -51,6 +51,17 @@ BENCHMARK_SUBSETS = [
     ("FR-IDF", "regions", "boundaries/regions/FR-IDF/geojson", "FR-IDF-latest.boundary.geojson"),
 ]
 
+# Shared memory-budget pool for the cortex edge host (1 slot = 1 GiB). Each
+# reservation covers the caps of the containers a task runs at once (see
+# workflows/utils/osm_subsets.py): 64g GDAL boundary prep, 100g gol (osmium's
+# 32g runs before it), 64g DuckDB parquet, 8g default for small containers.
+CORTEX_POOL = "cortex"
+PREPARE_BOUNDARY_POOL_SLOTS = 72
+BUILD_FILES_POOL_SLOTS = 100
+BUILD_GEOPARQUET_POOL_SLOTS = 64
+DOWNLOAD_POOL_SLOTS = 2
+SMALL_CONTAINER_POOL_SLOTS = 8
+
 # Reunion island: proof that the FR extract includes overseas territories.
 REUNION_BBOX = (55.2, -21.4, 55.9, -20.8)
 
@@ -81,7 +92,8 @@ with DAG(
         "execution_timeout": timedelta(hours=8),
         "executor": "airflow.providers.edge3.executors.EdgeExecutor",
         "owner": "openplanetdata",
-        "pool": "openplanetdata_osm",
+        "pool": CORTEX_POOL,
+        "pool_slots": 1,
         "priority_weight": 1,
         "queue": "cortex",
         # Every pipeline step is idempotent (.built marker, meta.json skip,
@@ -121,6 +133,7 @@ with DAG(
     @task.r2index_download(
         task_display_name="Download Benchmark Boundaries",
         bucket=R2_BUCKET,
+        pool_slots=DOWNLOAD_POOL_SLOTS,
         r2index_conn_id=R2INDEX_CONNECTION_ID,
     )
     def download_boundary(source_path: str, filename: str, code: str) -> DownloadItem:
@@ -132,14 +145,15 @@ with DAG(
             source_version="v2",
         )
 
-    @task(task_display_name="Install DuckDB")
+    @task(task_display_name="Install DuckDB", pool_slots=SMALL_CONTAINER_POOL_SLOTS)
     def install_duckdb() -> None:
         """Download the DuckDB CLI once into the work directory."""
         subsets = _utils()
         script = "set -euo pipefail\n" + subsets.INSTALL_DUCKDB_TEMPLATE.format(work_dir=WORK_DIR)
         subsets.run_in_container(script)
 
-    @task(task_display_name="Normalize Boundaries")
+    # Json-loads the ~620 MB europe boundary in-process.
+    @task(task_display_name="Normalize Boundaries", pool_slots=SMALL_CONTAINER_POOL_SLOTS)
     def normalize_boundaries() -> None:
         """Rewrite downloaded boundaries with the layer name the simplify SQL expects."""
         import json
@@ -170,7 +184,7 @@ with DAG(
                 if os.path.exists(leftover):
                     os.remove(leftover)
 
-    @task
+    @task(pool_slots=PREPARE_BOUNDARY_POOL_SLOTS)
     def prepare_boundary(code: str) -> dict:
         """Buffer + simplify one boundary; fail loudly if preparation fails."""
         from airflow.exceptions import AirflowException
@@ -184,7 +198,7 @@ with DAG(
             raise AirflowException(f"[{code}] boundary preparation failed")
         return {"code": code, "step": "prepare boundary", "elapsed": elapsed}
 
-    @task
+    @task(pool_slots=BUILD_FILES_POOL_SLOTS)
     def build_files(code: str, level: str) -> dict:
         """Extract PBF, then run gol build and gol save for one subset."""
         from airflow.exceptions import AirflowException
@@ -207,7 +221,7 @@ with DAG(
         _print_sizes(code, level)
         return {"code": code, "step": "pbf + gol + gob", "elapsed": elapsed}
 
-    @task
+    @task(pool_slots=BUILD_GEOPARQUET_POOL_SLOTS)
     def build_geoparquet(code: str, level: str) -> dict:
         """Extract one subset GeoParquet from the planet GeoParquet snapshot."""
         from airflow.exceptions import AirflowException
@@ -223,7 +237,7 @@ with DAG(
         _print_sizes(code, level)
         return {"code": code, "step": "geoparquet", "elapsed": elapsed}
 
-    @task(task_display_name="Verify Semantics & Report")
+    @task(task_display_name="Verify Semantics & Report", pool_slots=SMALL_CONTAINER_POOL_SLOTS)
     def verify_and_report(timings: list[dict]) -> None:
         """Check overseas-territory semantics on FR and print the timing summary."""
         from airflow.exceptions import AirflowException
