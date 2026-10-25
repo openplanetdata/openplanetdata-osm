@@ -149,7 +149,7 @@ with DAG(
     def install_duckdb() -> None:
         """Download the DuckDB CLI once into the work directory."""
         subsets = _utils()
-        script = "set -euo pipefail\n" + subsets.INSTALL_DUCKDB_TEMPLATE.format(work_dir=WORK_DIR)
+        script = "set -euo pipefail\n" + subsets.INSTALL_DUCKDB_TEMPLATE.format(work_dir=WORK_DIR, duckdb_version=subsets.DUCKDB_VERSION)
         subsets.run_in_container(script)
 
     # Json-loads the ~620 MB europe boundary in-process.

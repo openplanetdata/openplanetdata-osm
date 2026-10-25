@@ -132,7 +132,7 @@ with DAG(
     def install_duckdb() -> None:
         """Download the DuckDB CLI once per run into the work directory."""
         subsets = _utils()
-        script = "set -euo pipefail\n" + subsets.INSTALL_DUCKDB_TEMPLATE.format(work_dir=WORK_DIR)
+        script = "set -euo pipefail\n" + subsets.INSTALL_DUCKDB_TEMPLATE.format(work_dir=WORK_DIR, duckdb_version=subsets.DUCKDB_VERSION)
         subsets.run_in_container(script)
 
     @task(task_display_name="Prepare Boundaries", pool_slots=PREPARE_BOUNDARIES_POOL_SLOTS)

@@ -29,6 +29,8 @@ from openplanetdata.airflow.defaults import (
 )
 
 OHSOME_PLANET_VERSION = "1.3.1"
+# Pinned: DuckDB 2.x renamed its CLI release assets and is a major upgrade.
+DUCKDB_VERSION = "v1.5.6"
 WORK_DIR = f"{OPENPLANETDATA_WORK_DIR}/osm/geoparquet"
 OHSOME_DIR = f"{WORK_DIR}/ohsome-output"
 PARQUET_PATH = f"{WORK_DIR}/planet-latest.osm.parquet"
@@ -148,22 +150,8 @@ case "$ARCH" in
     *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
 esac
 
-DUCKDB_TAG=""
-for i in 1 2 3; do
-    RESPONSE=$(curl -sf https://api.github.com/repos/duckdb/duckdb/releases/latest || true)
-    DUCKDB_TAG=$(echo "$RESPONSE" | jq -r ".tag_name // empty" 2>/dev/null || true)
-    if [ -n "$DUCKDB_TAG" ]; then break; fi
-    echo "Attempt $i failed to fetch DuckDB release tag, retrying..."
-    sleep 2
-done
-
-if [ -z "$DUCKDB_TAG" ]; then
-    echo "Failed to fetch DuckDB release tag after 3 attempts"
-    exit 1
-fi
-
-echo "Installing DuckDB $DUCKDB_TAG ($DUCKDB_ARCH)"
-wget -q "https://github.com/duckdb/duckdb/releases/download/${{DUCKDB_TAG}}/duckdb_cli-${{DUCKDB_ARCH}}.zip" \
+echo "Installing DuckDB {DUCKDB_VERSION} ($DUCKDB_ARCH)"
+wget -q "https://github.com/duckdb/duckdb/releases/download/{DUCKDB_VERSION}/duckdb_cli-${{DUCKDB_ARCH}}.zip" \
     -O /tmp/duckdb.zip
 unzip -o /tmp/duckdb.zip -d /tmp && chmod +x /tmp/duckdb
 """

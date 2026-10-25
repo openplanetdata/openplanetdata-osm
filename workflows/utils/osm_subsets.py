@@ -84,6 +84,9 @@ SUBSET_FORMATS = [
     ("gob", "osm.gob", "gob", "v1", "application/octet-stream", ["geodesk", "gob", "gol", "openstreetmap"]),
 ]
 
+# Pinned: DuckDB 2.x renamed its CLI release assets and is a major upgrade.
+DUCKDB_VERSION = "v1.5.6"
+
 INSTALL_DUCKDB_TEMPLATE = """
 ARCH=$(uname -m)
 case "$ARCH" in
@@ -92,22 +95,8 @@ case "$ARCH" in
     *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
 esac
 
-DUCKDB_TAG=""
-for i in 1 2 3; do
-    RESPONSE=$(curl -sf https://api.github.com/repos/duckdb/duckdb/releases/latest || true)
-    DUCKDB_TAG=$(echo "$RESPONSE" | jq -r ".tag_name // empty" 2>/dev/null || true)
-    if [ -n "$DUCKDB_TAG" ]; then break; fi
-    echo "Attempt $i failed to fetch DuckDB release tag, retrying..."
-    sleep 2
-done
-
-if [ -z "$DUCKDB_TAG" ]; then
-    echo "Failed to fetch DuckDB release tag after 3 attempts"
-    exit 1
-fi
-
-echo "Installing DuckDB $DUCKDB_TAG ($DUCKDB_ARCH)"
-wget -q "https://github.com/duckdb/duckdb/releases/download/${{DUCKDB_TAG}}/duckdb_cli-${{DUCKDB_ARCH}}.zip" \
+echo "Installing DuckDB {duckdb_version} ($DUCKDB_ARCH)"
+wget -q "https://github.com/duckdb/duckdb/releases/download/{duckdb_version}/duckdb_cli-${{DUCKDB_ARCH}}.zip" \
     -O {work_dir}/duckdb.zip
 unzip -o {work_dir}/duckdb.zip -d {work_dir} && chmod +x {work_dir}/duckdb
 rm -f {work_dir}/duckdb.zip
