@@ -38,6 +38,8 @@ from openplanetdata.airflow.defaults import (
     R2_BUCKET,
 )
 
+from workflows.utils.versions import DUCKDB_VERSION  # noqa: F401 (re-exported to the subset DAGs)
+
 BOUNDARY_BUFFER_DEG = 0.02
 BOUNDARY_SIMPLIFY_DEG = 0.01
 BOUNDARY_PRESIMPLIFY_DEG = 0.005
@@ -83,8 +85,6 @@ SUBSET_FORMATS = [
     ("gol", "osm.gol", "gol", "v2", "application/octet-stream", ["geodesk", "gol", "openstreetmap"]),
     ("gob", "osm.gob", "gob", "v1", "application/octet-stream", ["geodesk", "gob", "gol", "openstreetmap"]),
 ]
-
-DUCKDB_VERSION = "v2.0.0"
 
 INSTALL_DUCKDB_TEMPLATE = """
 ARCH=$(uname -m)

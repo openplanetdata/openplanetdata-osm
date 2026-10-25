@@ -10,7 +10,9 @@ Produces Asset: openplanetdata-osm-planet-geoparquet
 
 import os
 import shutil
+import sys
 from datetime import timedelta
+from pathlib import Path
 
 from airflow.providers.docker.operators.docker import DockerOperator
 from airflow.sdk import DAG, Asset, task
@@ -28,8 +30,14 @@ from openplanetdata.airflow.defaults import (
     SHARED_PLANET_OSM_PBF_PATH,
 )
 
+# Bundle root on sys.path so workflows.utils resolves at parse time
+_BUNDLE_ROOT = str(Path(__file__).resolve().parent.parent)
+if _BUNDLE_ROOT not in sys.path:
+    sys.path.insert(0, _BUNDLE_ROOT)
+
+from workflows.utils.versions import DUCKDB_VERSION  # noqa: E402
+
 OHSOME_PLANET_VERSION = "1.3.1"
-DUCKDB_VERSION = "v2.0.0"
 WORK_DIR = f"{OPENPLANETDATA_WORK_DIR}/osm/geoparquet"
 OHSOME_DIR = f"{WORK_DIR}/ohsome-output"
 PARQUET_PATH = f"{WORK_DIR}/planet-latest.osm.parquet"
