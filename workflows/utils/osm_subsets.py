@@ -84,8 +84,7 @@ SUBSET_FORMATS = [
     ("gob", "osm.gob", "gob", "v1", "application/octet-stream", ["geodesk", "gob", "gol", "openstreetmap"]),
 ]
 
-# Pinned: DuckDB 2.x renamed its CLI release assets and is a major upgrade.
-DUCKDB_VERSION = "v1.5.6"
+DUCKDB_VERSION = "v2.0.0"
 
 INSTALL_DUCKDB_TEMPLATE = """
 ARCH=$(uname -m)
@@ -96,10 +95,10 @@ case "$ARCH" in
 esac
 
 echo "Installing DuckDB {duckdb_version} ($DUCKDB_ARCH)"
-wget -q "https://github.com/duckdb/duckdb/releases/download/{duckdb_version}/duckdb_cli-${{DUCKDB_ARCH}}.zip" \
-    -O {work_dir}/duckdb.zip
-unzip -o {work_dir}/duckdb.zip -d {work_dir} && chmod +x {work_dir}/duckdb
-rm -f {work_dir}/duckdb.zip
+wget -q "https://github.com/duckdb/duckdb/releases/download/{duckdb_version}/duckdb-cli-${{DUCKDB_ARCH}}.tar.gz" \
+    -O {work_dir}/duckdb.tar.gz
+tar -xzf {work_dir}/duckdb.tar.gz -C {work_dir} && chmod +x {work_dir}/duckdb
+rm -f {work_dir}/duckdb.tar.gz
 """
 
 

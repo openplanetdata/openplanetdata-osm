@@ -29,8 +29,7 @@ from openplanetdata.airflow.defaults import (
 )
 
 OHSOME_PLANET_VERSION = "1.3.1"
-# Pinned: DuckDB 2.x renamed its CLI release assets and is a major upgrade.
-DUCKDB_VERSION = "v1.5.6"
+DUCKDB_VERSION = "v2.0.0"
 WORK_DIR = f"{OPENPLANETDATA_WORK_DIR}/osm/geoparquet"
 OHSOME_DIR = f"{WORK_DIR}/ohsome-output"
 PARQUET_PATH = f"{WORK_DIR}/planet-latest.osm.parquet"
@@ -151,9 +150,9 @@ case "$ARCH" in
 esac
 
 echo "Installing DuckDB {DUCKDB_VERSION} ($DUCKDB_ARCH)"
-wget -q "https://github.com/duckdb/duckdb/releases/download/{DUCKDB_VERSION}/duckdb_cli-${{DUCKDB_ARCH}}.zip" \
-    -O /tmp/duckdb.zip
-unzip -o /tmp/duckdb.zip -d /tmp && chmod +x /tmp/duckdb
+wget -q "https://github.com/duckdb/duckdb/releases/download/{DUCKDB_VERSION}/duckdb-cli-${{DUCKDB_ARCH}}.tar.gz" \
+    -O /tmp/duckdb.tar.gz
+tar -xzf /tmp/duckdb.tar.gz -C /tmp && chmod +x /tmp/duckdb
 """
 
     validate_contributions = DockerOperator(
