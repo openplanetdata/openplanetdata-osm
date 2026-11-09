@@ -114,13 +114,15 @@ with DAG(
         pool_slots=GOL_MEM_LIMIT_GIB,
     )
 
+    # gol save drops way-node IDs unless asked to keep them; without them a GOL
+    # loaded from the GOB cannot return untagged way nodes or build routing graphs.
     build_gob = DockerOperator(
         task_id="build_gob",
         task_display_name="Build GOB from GOL",
         image=OPENPLANETDATA_IMAGE,
         command=f"""bash -c '
             echo "Starting GOB build at $(date -u +%Y-%m-%d_%H:%M:%S)" &&
-            time gol save {GOL_PATH} {GOB_PATH} &&
+            time gol save --waynode-ids {GOL_PATH} {GOB_PATH} &&
             echo "Build finished at $(date -u +%Y-%m-%d_%H:%M:%S)" &&
             ls -lh {GOB_PATH}
         '""",
