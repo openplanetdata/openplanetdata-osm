@@ -2,7 +2,7 @@
 Planet GeoDesk v2 DAG - Build GOL and GOB indexes from OSM planet PBF.
 
 Schedule: Triggered by openplanetdata-osm-planet-pbf Asset
-Produces Assets: openplanetdata-osm-planet-gol-v2, openplanetdata-osm-planet-gob-v2
+Produces Assets: openplanetdata-osm-planet-gol-v2, openplanetdata-osm-planet-gob-v1
 """
 
 import os
@@ -49,9 +49,9 @@ GOL_V2_ASSET = Asset(
     name="openplanetdata-osm-planet-gol-v2",
     uri=f"s3://{R2_BUCKET}/osm/planet/gol/v2/planet-latest.osm.gol",
 )
-GOB_V2_ASSET = Asset(
-    name="openplanetdata-osm-planet-gob-v2",
-    uri=f"s3://{R2_BUCKET}/osm/planet/gob/v2/planet-latest.osm.gob",
+GOB_V1_ASSET = Asset(
+    name="openplanetdata-osm-planet-gob-v1",
+    uri=f"s3://{R2_BUCKET}/osm/planet/gob/v1/planet-latest.osm.gob",
 )
 
 with DAG(
@@ -157,7 +157,7 @@ with DAG(
     @task.r2index_upload(
         task_display_name="Upload GOB to R2",
         bucket=R2_BUCKET,
-        outlets=[GOB_V2_ASSET],
+        outlets=[GOB_V1_ASSET],
         pool_slots=4,
         r2index_conn_id=R2INDEX_CONNECTION_ID,
     )
